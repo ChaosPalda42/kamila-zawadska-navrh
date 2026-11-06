@@ -1,0 +1,375 @@
+{
+  "atelier": {
+    "varianty": [
+      {
+        "soubor": "atelier-480.jpg",
+        "sirka": 480,
+        "vyska": 360
+      },
+      {
+        "soubor": "atelier-960.jpg",
+        "sirka": 960,
+        "vyska": 720
+      },
+      {
+        "soubor": "atelier-1600.jpg",
+        "sirka": 1024,
+        "vyska": 768
+      }
+    ],
+    "srcset": "obrazky/atelier-480.jpg 480w, obrazky/atelier-960.jpg 960w, obrazky/atelier-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 768
+  },
+  "dve-ruce": {
+    "varianty": [
+      {
+        "soubor": "dve-ruce-480.jpg",
+        "sirka": 480,
+        "vyska": 640
+      },
+      {
+        "soubor": "dve-ruce-960.jpg",
+        "sirka": 768,
+        "vyska": 1024
+      }
+    ],
+    "srcset": "obrazky/dve-ruce-480.jpg 480w, obrazky/dve-ruce-960.jpg 768w",
+    "sirka": 768,
+    "vyska": 1024
+  },
+  "horizont-i": {
+    "varianty": [
+      {
+        "soubor": "horizont-i-480.jpg",
+        "sirka": 480,
+        "vyska": 480
+      },
+      {
+        "soubor": "horizont-i-960.jpg",
+        "sirka": 896,
+        "vyska": 896
+      }
+    ],
+    "srcset": "obrazky/horizont-i-480.jpg 480w, obrazky/horizont-i-960.jpg 896w",
+    "sirka": 896,
+    "vyska": 896
+  },
+  "horizont-ii": {
+    "varianty": [
+      {
+        "soubor": "horizont-ii-480.jpg",
+        "sirka": 480,
+        "vyska": 480
+      },
+      {
+        "soubor": "horizont-ii-960.jpg",
+        "sirka": 896,
+        "vyska": 896
+      }
+    ],
+    "srcset": "obrazky/horizont-ii-480.jpg 480w, obrazky/horizont-ii-960.jpg 896w",
+    "sirka": 896,
+    "vyska": 896
+  },
+  "instalace-chvalsky-zamek": {
+    "varianty": [
+      {
+        "soubor": "instalace-chvalsky-zamek-480.jpg",
+        "sirka": 480,
+        "vyska": 315
+      },
+      {
+        "soubor": "instalace-chvalsky-zamek-960.jpg",
+        "sirka": 960,
+        "vyska": 630
+      },
+      {
+        "soubor": "instalace-chvalsky-zamek-1600.jpg",
+        "sirka": 1024,
+        "vyska": 672
+      }
+    ],
+    "srcset": "obrazky/instalace-chvalsky-zamek-480.jpg 480w, obrazky/instalace-chvalsky-zamek-960.jpg 960w, obrazky/instalace-chvalsky-zamek-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 672
+  },
+  "kresba-rukou-i": {
+    "varianty": [
+      {
+        "soubor": "kresba-rukou-i-480.jpg",
+        "sirka": 480,
+        "vyska": 698
+      },
+      {
+        "soubor": "kresba-rukou-i-960.jpg",
+        "sirka": 704,
+        "vyska": 1024
+      }
+    ],
+    "srcset": "obrazky/kresba-rukou-i-480.jpg 480w, obrazky/kresba-rukou-i-960.jpg 704w",
+    "sirka": 704,
+    "vyska": 1024
+  },
+  "kvetina-v-okne": {
+    "varianty": [
+      {
+        "soubor": "kvetina-v-okne-480.jpg",
+        "sirka": 480,
+        "vyska": 480
+      },
+      {
+        "soubor": "kvetina-v-okne-960.jpg",
+        "sirka": 896,
+        "vyska": 896
+      }
+    ],
+    "srcset": "obrazky/kvetina-v-okne-480.jpg 480w, obrazky/kvetina-v-okne-960.jpg 896w",
+    "sirka": 896,
+    "vyska": 896
+  },
+  "les-po-desti": {
+    "varianty": [
+      {
+        "soubor": "les-po-desti-480.jpg",
+        "sirka": 480,
+        "vyska": 330
+      },
+      {
+        "soubor": "les-po-desti-960.jpg",
+        "sirka": 960,
+        "vyska": 660
+      },
+      {
+        "soubor": "les-po-desti-1600.jpg",
+        "sirka": 1024,
+        "vyska": 704
+      }
+    ],
+    "srcset": "obrazky/les-po-desti-480.jpg 480w, obrazky/les-po-desti-960.jpg 960w, obrazky/les-po-desti-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 704
+  },
+  "most": {
+    "varianty": [
+      {
+        "soubor": "most-480.jpg",
+        "sirka": 480,
+        "vyska": 308
+      },
+      {
+        "soubor": "most-960.jpg",
+        "sirka": 960,
+        "vyska": 615
+      },
+      {
+        "soubor": "most-1600.jpg",
+        "sirka": 1024,
+        "vyska": 656
+      }
+    ],
+    "srcset": "obrazky/most-480.jpg 480w, obrazky/most-960.jpg 960w, obrazky/most-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 656
+  },
+  "noc-v-atelieru": {
+    "varianty": [
+      {
+        "soubor": "noc-v-atelieru-480.jpg",
+        "sirka": 480,
+        "vyska": 360
+      },
+      {
+        "soubor": "noc-v-atelieru-960.jpg",
+        "sirka": 960,
+        "vyska": 720
+      },
+      {
+        "soubor": "noc-v-atelieru-1600.jpg",
+        "sirka": 1024,
+        "vyska": 768
+      }
+    ],
+    "srcset": "obrazky/noc-v-atelieru-480.jpg 480w, obrazky/noc-v-atelieru-960.jpg 960w, obrazky/noc-v-atelieru-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 768
+  },
+  "pole-v-lednu": {
+    "varianty": [
+      {
+        "soubor": "pole-v-lednu-480.jpg",
+        "sirka": 480,
+        "vyska": 368
+      },
+      {
+        "soubor": "pole-v-lednu-960.jpg",
+        "sirka": 960,
+        "vyska": 735
+      },
+      {
+        "soubor": "pole-v-lednu-1600.jpg",
+        "sirka": 1024,
+        "vyska": 784
+      }
+    ],
+    "srcset": "obrazky/pole-v-lednu-480.jpg 480w, obrazky/pole-v-lednu-960.jpg 960w, obrazky/pole-v-lednu-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 784
+  },
+  "portret-m": {
+    "varianty": [
+      {
+        "soubor": "portret-m-480.jpg",
+        "sirka": 480,
+        "vyska": 640
+      },
+      {
+        "soubor": "portret-m-960.jpg",
+        "sirka": 768,
+        "vyska": 1024
+      }
+    ],
+    "srcset": "obrazky/portret-m-480.jpg 480w, obrazky/portret-m-960.jpg 768w",
+    "sirka": 768,
+    "vyska": 1024
+  },
+  "rano-nad-vltavou": {
+    "varianty": [
+      {
+        "soubor": "rano-nad-vltavou-480.jpg",
+        "sirka": 480,
+        "vyska": 315
+      },
+      {
+        "soubor": "rano-nad-vltavou-960.jpg",
+        "sirka": 960,
+        "vyska": 630
+      },
+      {
+        "soubor": "rano-nad-vltavou-1600.jpg",
+        "sirka": 1024,
+        "vyska": 672
+      }
+    ],
+    "srcset": "obrazky/rano-nad-vltavou-480.jpg 480w, obrazky/rano-nad-vltavou-960.jpg 960w, obrazky/rano-nad-vltavou-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 672
+  },
+  "ruka-s-jablkem": {
+    "varianty": [
+      {
+        "soubor": "ruka-s-jablkem-480.jpg",
+        "sirka": 480,
+        "vyska": 640
+      },
+      {
+        "soubor": "ruka-s-jablkem-960.jpg",
+        "sirka": 768,
+        "vyska": 1024
+      }
+    ],
+    "srcset": "obrazky/ruka-s-jablkem-480.jpg 480w, obrazky/ruka-s-jablkem-960.jpg 768w",
+    "sirka": 768,
+    "vyska": 1024
+  },
+  "sova": {
+    "varianty": [
+      {
+        "soubor": "sova-480.jpg",
+        "sirka": 480,
+        "vyska": 360
+      },
+      {
+        "soubor": "sova-960.jpg",
+        "sirka": 896,
+        "vyska": 672
+      }
+    ],
+    "srcset": "obrazky/sova-480.jpg 480w, obrazky/sova-960.jpg 896w",
+    "sirka": 896,
+    "vyska": 672
+  },
+  "studie-draperie": {
+    "varianty": [
+      {
+        "soubor": "studie-draperie-480.jpg",
+        "sirka": 480,
+        "vyska": 330
+      },
+      {
+        "soubor": "studie-draperie-960.jpg",
+        "sirka": 960,
+        "vyska": 660
+      },
+      {
+        "soubor": "studie-draperie-1600.jpg",
+        "sirka": 1024,
+        "vyska": 704
+      }
+    ],
+    "srcset": "obrazky/studie-draperie-480.jpg 480w, obrazky/studie-draperie-960.jpg 960w, obrazky/studie-draperie-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 704
+  },
+  "velka-vlna": {
+    "varianty": [
+      {
+        "soubor": "velka-vlna-480.jpg",
+        "sirka": 480,
+        "vyska": 330
+      },
+      {
+        "soubor": "velka-vlna-960.jpg",
+        "sirka": 960,
+        "vyska": 660
+      },
+      {
+        "soubor": "velka-vlna-1600.jpg",
+        "sirka": 1024,
+        "vyska": 704
+      }
+    ],
+    "srcset": "obrazky/velka-vlna-480.jpg 480w, obrazky/velka-vlna-960.jpg 960w, obrazky/velka-vlna-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 704
+  },
+  "vernisaz-pragovka": {
+    "varianty": [
+      {
+        "soubor": "vernisaz-pragovka-480.jpg",
+        "sirka": 480,
+        "vyska": 315
+      },
+      {
+        "soubor": "vernisaz-pragovka-960.jpg",
+        "sirka": 960,
+        "vyska": 630
+      },
+      {
+        "soubor": "vernisaz-pragovka-1600.jpg",
+        "sirka": 1024,
+        "vyska": 672
+      }
+    ],
+    "srcset": "obrazky/vernisaz-pragovka-480.jpg 480w, obrazky/vernisaz-pragovka-960.jpg 960w, obrazky/vernisaz-pragovka-1600.jpg 1024w",
+    "sirka": 1024,
+    "vyska": 672
+  },
+  "zatisi-s-hrnky": {
+    "varianty": [
+      {
+        "soubor": "zatisi-s-hrnky-480.jpg",
+        "sirka": 480,
+        "vyska": 377
+      },
+      {
+        "soubor": "zatisi-s-hrnky-960.jpg",
+        "sirka": 896,
+        "vyska": 704
+      }
+    ],
+    "srcset": "obrazky/zatisi-s-hrnky-480.jpg 480w, obrazky/zatisi-s-hrnky-960.jpg 896w",
+    "sirka": 896,
+    "vyska": 704
+  }
+}
