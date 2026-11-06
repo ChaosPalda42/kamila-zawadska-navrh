@@ -144,9 +144,9 @@
     "cs": "Do košíku",
     "en": "Add to cart"
   },
-  "eshop.v-kosiku": {
-    "cs": "V košíku",
-    "en": "In cart"
+  "eshop.odebrat": {
+    "cs": "Odebrat z košíku",
+    "en": "Remove from cart"
   },
   "eshop.nedostupne": {
     "cs": "Momentálně nedostupné",

@@ -268,6 +268,9 @@
     return out;
   }
 
+  /* Jedno tlačítko přidá i vrátí. Dřív se po přidání vyplo a dílo šlo
+     z košíku dostat jen tím malým „Odebrat" na stránce košíku — kdo ho
+     nenašel, měl dílo v košíku natrvalo. */
   function doKosiku() {
     var tlacitka = vse("[data-doKosiku]");
     if (!tlacitka.length || !KZ.kosik) return;
@@ -278,17 +281,19 @@
         var dilo = dila.filter(function (d) { return d.slug === slug; })[0];
         if (!dilo) return;
         var kosik = nactiKosik();
-        if (KZ.kosik.obsahuje(kosik, slug)) {
-          window.location.href = tlacitko.getAttribute("data-kosik-cesta") || "#";
-          return;
-        }
-        ulozKosik(KZ.kosik.pridej(kosik, dilo));
-        tlacitko.textContent = tlacitko.getAttribute("data-v-kosiku") || tlacitko.textContent;
-        tlacitko.disabled = true;
+        ulozKosik(KZ.kosik.obsahuje(kosik, slug)
+          ? KZ.kosik.uber(kosik, slug)
+          : KZ.kosik.pridej(kosik, dilo));
         oznacKosik();
       });
     });
     oznacKosik();
+  }
+
+  function popisTlacitka(tlacitko, vKosiku) {
+    var popis = tlacitko.getAttribute(vKosiku ? "data-odebrat" : "data-pridat");
+    if (popis) tlacitko.textContent = popis;
+    tlacitko.classList.toggle("lehke", vKosiku);
   }
 
   function oznacKosik() {
@@ -309,10 +314,7 @@
     // Odkaz na košík v bočním sloupci dává smysl jen s něčím v košíku.
     vse("[data-kosik-odkaz]").forEach(function (o) { o.hidden = !pocet; });
     vse("[data-doKosiku]").forEach(function (tlacitko) {
-      if (KZ.kosik.obsahuje(kosik, tlacitko.getAttribute("data-doKosiku"))) {
-        tlacitko.textContent = tlacitko.getAttribute("data-v-kosiku") || tlacitko.textContent;
-        tlacitko.disabled = true;
-      }
+      popisTlacitka(tlacitko, KZ.kosik.obsahuje(kosik, tlacitko.getAttribute("data-doKosiku")));
     });
   }
 

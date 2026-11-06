@@ -91,16 +91,22 @@
         v(".nazev", td1).textContent = p.nazev;
         v(".mini", td1).textContent = p.rozmer || "";
         var td2 = doc.createElement("td");
-        td2.innerHTML = '<span class="cena"></span> <button class="odebrat" type="button"></button>';
+        td2.innerHTML = '<span class="cena"></span>';
         v(".cena", td2).textContent = web.korun(p.cena);
-        var tlacitko = v("button", td2);
-        tlacitko.textContent = web.s("odebrat");
+        // Odebrat má vlastní sloupec a velikost tlačítka: podtržené slovo
+        // u ceny se na mobilu nedalo trefit a nikdo ho tam nehledal.
+        var td3 = doc.createElement("td");
+        td3.innerHTML = '<button class="odebrat" type="button"><span class="krizek" aria-hidden="true">×</span><span class="slovo"></span></button>';
+        var tlacitko = v("button", td3);
+        v(".slovo", tlacitko).textContent = web.s("odebrat");
+        tlacitko.setAttribute("aria-label", web.s("odebrat") + ": " + p.nazev);
+        tlacitko.setAttribute("title", web.s("odebrat") + ": " + p.nazev);
         tlacitko.addEventListener("click", function () {
           web.ulozKosik(KZ.kosik.uber(stav(), p.slug));
           prekresli();
           web.oznacKosik();
         });
-        tr.appendChild(td1); tr.appendChild(td2);
+        tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
         radky.appendChild(tr);
       });
 

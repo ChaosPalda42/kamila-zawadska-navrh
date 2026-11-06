@@ -371,8 +371,25 @@ p:last-child { margin-bottom: 0; }
 .ucet td:last-child, .ucet th:last-child { text-align: right; padding-right: 0; }
 .ucet tfoot td { border-bottom: 0; font-family: var(--pismo); font-weight: 500; }
 .ucet .mini { color: var(--tichy); font-size: 0.8rem; }
-.ucet .odebrat { border: 0; background: none; color: var(--tichy); cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
-.ucet .odebrat:hover { color: #a6301f; }
+/* Košík: cena vpravo, odebrání ve vlastním sloupci. Tlačítko je velké na
+   prst, protože je to jediná věc, kterou v košíku člověk potřebuje trefit. */
+.ucet.kosik td:nth-child(2) { text-align: right; white-space: nowrap; }
+.ucet.kosik td:last-child, .ucet.kosik th:last-child { width: 1%; padding-left: 1rem; }
+.ucet.kosik .odebrat {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  height: 2.3rem; padding: 0 0.9rem;
+  border: 1px solid var(--linka); border-radius: 999px; background: none;
+  color: var(--tichy); cursor: pointer;
+  font-family: var(--pismo); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.ucet.kosik .odebrat .krizek { font-size: 1.05rem; line-height: 1; }
+.ucet.kosik .odebrat:hover, .ucet.kosik .odebrat:focus-visible { border-color: #a6301f; color: #a6301f; background: rgba(166, 48, 31, 0.06); }
+/* Na úzkém displeji zůstane křížek a slovo si přečte jen hlasová čtečka. */
+@media (max-width: 34rem) {
+  .ucet.kosik .odebrat { padding: 0 0.7rem; }
+  .ucet.kosik .odebrat .slovo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 
 .doprava { list-style: none; margin: 1.5rem 0; padding: 0; }
 .doprava li { border-top: 1px solid var(--linka); }
@@ -426,8 +443,11 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 .kurz { border-top: 1px solid var(--linka); padding: 1.4rem 0; }
 .kurz .radek { display: flex; flex-wrap: wrap; gap: 0.3rem 1.4rem; font-family: var(--pismo); font-size: 0.82rem; color: var(--tichy); margin-bottom: 0.6em; }
-.kurz .terminy { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0 0; padding: 0; }
-.kurz .terminy li { font-family: var(--pismo); font-size: 0.8rem; border: 1px solid var(--linka); padding: 0.3rem 0.6rem; }
+.kurz .verzalky { margin: 1.5rem 0 0; }
+.kurz .terminy { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.7rem 0 0; padding: 0; }
+.kurz .terminy li { display: inline-flex; align-items: center; height: 2.1rem; font-family: var(--pismo); font-size: 0.8rem; border: 1px solid var(--linka); border-radius: 999px; padding: 0 0.85rem; }
+/* Přihláška nesmí být nalepená na termínech — jsou to dvě různé věci. */
+.kurz .prihlaska { margin: 1.5rem 0 0; }
 
 /* ---------- prohlížeč na celou obrazovku ---------- */
 

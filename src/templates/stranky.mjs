@@ -236,7 +236,7 @@ function eshopDlazdice(dilo, texty, jazyk) {
   const koupit = lzeKoupit(dilo);
   const tlacitko = koupit
     ? `<button class="tlacitko" type="button" data-doKosiku="${e(dilo.slug)}"
-data-v-kosiku="${e(t(texty, "eshop.v-kosiku", jazyk))}" data-kosik-cesta="${cesta("kosik", jazyk)}">${e(t(texty, "eshop.do-kosiku", jazyk))}</button>`
+data-pridat="${e(t(texty, "eshop.do-kosiku", jazyk))}" data-odebrat="${e(t(texty, "eshop.odebrat", jazyk))}">${e(t(texty, "eshop.do-kosiku", jazyk))}</button>`
     : `<button class="tlacitko" type="button" disabled>${e(t(texty, "eshop.nedostupne", jazyk))}</button>`;
   return `<li class="dlazdice" id="${e(dilo.slug)}" data-slug="${e(dilo.slug)}">
 <a href="${cestaDila(dilo.slug, jazyk)}">
@@ -286,12 +286,12 @@ export function kosikStranka(o) {
 <section>
 <h1>${e(t(texty, "kosik.titul", jazyk))}</h1>
 <div data-kosik hidden>
-<table class="ucet">
-<thead><tr><th>${e(t(texty, "kosik.dila", jazyk))}</th><th></th></tr></thead>
+<table class="ucet kosik">
+<thead><tr><th>${e(t(texty, "kosik.dila", jazyk))}</th><th></th><th></th></tr></thead>
 <tbody data-radky></tbody>
 <tfoot>
-<tr><td>${e(t(texty, "kosik.doprava", jazyk))}</td><td data-doprava-cena></td></tr>
-<tr><td>${e(t(texty, "kosik.celkem", jazyk))}</td><td data-celkem></td></tr>
+<tr><td>${e(t(texty, "kosik.doprava", jazyk))}</td><td data-doprava-cena></td><td></td></tr>
+<tr><td>${e(t(texty, "kosik.celkem", jazyk))}</td><td data-celkem></td><td></td></tr>
 </tfoot>
 </table>
 <ul class="doprava">${zpusoby}</ul>
@@ -447,7 +447,7 @@ export function kurzyStranka(o) {
 ${terminy.length
       ? `<ul class="terminy">${terminy.map((d) => `<li>${e(format({ od: d }, jazyk))}</li>`).join("")}</ul>`
       : `<p>${e(t(texty, "kurzy.terminy-chybi", jazyk))}</p>`}
-<p><a class="tlacitko lehke" href="${cesta("kontakt", jazyk)}?duvod=kurz&amp;kurz=${encodeURIComponent(k.id)}">${e(t(texty, "kurzy.mam-zajem", jazyk))}</a></p>
+<p class="prihlaska"><a class="tlacitko lehke" href="${cesta("kontakt", jazyk)}?duvod=kurz&amp;kurz=${encodeURIComponent(k.id)}">${e(t(texty, "kurzy.mam-zajem", jazyk))}</a></p>
 </article>`;
   }).join("");
   const telo = `
