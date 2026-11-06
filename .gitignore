@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.factory-runtime/
+.factory-run-*.log
+out/
+_balicek/
+.DS_Store
+podklady/

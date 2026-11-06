@@ -1,0 +1,863 @@
+{
+  "_poznamka": "Ukázková data. Fotky jsou vygenerované, díla, ceny, termíny i texty vymyšlené. Kontakty jsou ZÁSTUPNÉ: telefon je samé nuly a odkazy na sítě vedou na úvodní stránku Instagramu a Facebooku, aby vymyšlený údaj netrefil cizího člověka. Před spuštěním ostrého webu je vyplní klientka.",
+  "web": {
+    "jmeno": "Kamila Zawadská",
+    "domena": "kamilazawadska.com",
+    "email": "ahoj@kamilazawadska.com",
+    "telefon": "+420 000 000 000",
+    "ateliér": {
+      "nazev": {
+        "cs": "Ateliér Zawadská",
+        "en": "Zawadská Studio"
+      },
+      "adresa": "Pragovka Art District, Kolbenova 923/34a, 190 00 Praha 9",
+      "lat": 50.1106,
+      "lon": 14.5133,
+      "zoom": 15
+    },
+    "instagram": "https://www.instagram.com/",
+    "facebook": "https://www.facebook.com/"
+  },
+  "techniky": [
+    {
+      "id": "olej",
+      "nazev": {
+        "cs": "Olej na plátně",
+        "en": "Oil on canvas"
+      }
+    },
+    {
+      "id": "akryl",
+      "nazev": {
+        "cs": "Akryl na plátně",
+        "en": "Acrylic on canvas"
+      }
+    },
+    {
+      "id": "pyrografie",
+      "nazev": {
+        "cs": "Pyrografie",
+        "en": "Pyrography"
+      }
+    },
+    {
+      "id": "kombinovana",
+      "nazev": {
+        "cs": "Kombinovaná technika",
+        "en": "Mixed media"
+      }
+    },
+    {
+      "id": "kresba",
+      "nazev": {
+        "cs": "Kresba",
+        "en": "Drawing"
+      }
+    }
+  ],
+  "styly": [
+    {
+      "id": "abstrakce",
+      "nazev": {
+        "cs": "Abstrakce",
+        "en": "Abstraction"
+      }
+    },
+    {
+      "id": "krajina",
+      "nazev": {
+        "cs": "Krajina",
+        "en": "Landscape"
+      }
+    },
+    {
+      "id": "zatisi",
+      "nazev": {
+        "cs": "Zátiší",
+        "en": "Still life"
+      }
+    },
+    {
+      "id": "figura",
+      "nazev": {
+        "cs": "Figura",
+        "en": "Figure"
+      }
+    },
+    {
+      "id": "portret",
+      "nazev": {
+        "cs": "Portrét",
+        "en": "Portrait"
+      }
+    }
+  ],
+  "albumy": [
+    {
+      "id": "pragovka-2026",
+      "nazev": {
+        "cs": "Pop art v Pragovce",
+        "en": "Pop Art at Pragovka"
+      },
+      "rok": 2026,
+      "misto": {
+        "cs": "Pragovka Art District, Praha",
+        "en": "Pragovka Art District, Prague"
+      }
+    },
+    {
+      "id": "chvalsky-zamek-2025",
+      "nazev": {
+        "cs": "Chvalský zámek",
+        "en": "Chvaly Castle"
+      },
+      "rok": 2025,
+      "misto": {
+        "cs": "Chvalský zámek, Praha 9",
+        "en": "Chvaly Castle, Prague 9"
+      }
+    },
+    {
+      "id": "ruce-2024",
+      "nazev": {
+        "cs": "Ruce",
+        "en": "Hands"
+      },
+      "rok": 2024,
+      "misto": {
+        "cs": "Ateliér",
+        "en": "Studio"
+      }
+    },
+    {
+      "id": "atelier",
+      "nazev": {
+        "cs": "Z ateliéru",
+        "en": "From the studio"
+      },
+      "rok": 2026,
+      "misto": {
+        "cs": "Ateliér",
+        "en": "Studio"
+      }
+    }
+  ],
+  "dila": [
+    {
+      "slug": "rano-nad-vltavou",
+      "nazev": {
+        "cs": "Ráno nad Vltavou",
+        "en": "Morning over the Vltava"
+      },
+      "technika": "olej",
+      "styl": "krajina",
+      "album": "pragovka-2026",
+      "rok": 2026,
+      "rozmer": "120 × 80 cm",
+      "cena": 42000,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "rano-nad-vltavou",
+      "popis": {
+        "cs": "Olej na plátně, raná mlha nad řekou rozložená do vrstev studené modři a okru.",
+        "en": "Oil on canvas; early mist over the river laid out in layers of cold blue and ochre."
+      },
+      "alt": {
+        "cs": "Olejomalba krajiny: mlha nad řekou, studená modř a okr",
+        "en": "Oil landscape painting: mist over a river in cold blue and ochre"
+      }
+    },
+    {
+      "slug": "dve-ruce",
+      "nazev": {
+        "cs": "Dvě ruce",
+        "en": "Two Hands"
+      },
+      "technika": "olej",
+      "styl": "figura",
+      "album": "ruce-2024",
+      "rok": 2024,
+      "rozmer": "70 × 50 cm",
+      "cena": 28000,
+      "stav": "prodano",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "dve-ruce",
+      "popis": {
+        "cs": "Ze série Ruce. Dvě dlaně v jediném gestu, pozadí smeteno do teplé šedi.",
+        "en": "From the Hands series. Two palms in a single gesture against a warm grey ground."
+      },
+      "alt": {
+        "cs": "Olejomalba dvou dlaní v gestu na teple šedém pozadí",
+        "en": "Oil painting of two palms in a gesture on a warm grey ground"
+      }
+    },
+    {
+      "slug": "kvetina-v-okne",
+      "nazev": {
+        "cs": "Květina v okně",
+        "en": "Flower in the Window"
+      },
+      "technika": "akryl",
+      "styl": "zatisi",
+      "album": "chvalsky-zamek-2025",
+      "rok": 2025,
+      "rozmer": "60 × 60 cm",
+      "cena": 19500,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "kvetina-v-okne",
+      "popis": {
+        "cs": "Akryl na plátně. Zátiší proti světlu, váza drží celou kompozici.",
+        "en": "Acrylic on canvas. A still life against the light, held together by the vase."
+      },
+      "alt": {
+        "cs": "Akrylové zátiší: váza s květinou proti světlu v okně",
+        "en": "Acrylic still life: a vase of flowers backlit in a window"
+      }
+    },
+    {
+      "slug": "horizont-i",
+      "nazev": {
+        "cs": "Horizont I",
+        "en": "Horizon I"
+      },
+      "technika": "akryl",
+      "styl": "abstrakce",
+      "album": "pragovka-2026",
+      "rok": 2026,
+      "rozmer": "100 × 100 cm",
+      "cena": 36000,
+      "stav": "zamluveno",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "horizont-i",
+      "popis": {
+        "cs": "První z dvojice. Dělicí čára, která se při chůzi kolem obrazu posouvá.",
+        "en": "First of a pair. A dividing line that shifts as you walk past the canvas."
+      },
+      "alt": {
+        "cs": "Abstraktní akryl: vodorovná dělicí čára mezi dvěma plochami",
+        "en": "Abstract acrylic: a horizontal dividing line between two fields"
+      }
+    },
+    {
+      "slug": "horizont-ii",
+      "nazev": {
+        "cs": "Horizont II",
+        "en": "Horizon II"
+      },
+      "technika": "akryl",
+      "styl": "abstrakce",
+      "album": "pragovka-2026",
+      "rok": 2026,
+      "rozmer": "100 × 100 cm",
+      "cena": 36000,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "horizont-ii",
+      "popis": {
+        "cs": "Druhá z dvojice, tentokrát se světlem zdola.",
+        "en": "Second of the pair, this time lit from below."
+      },
+      "alt": {
+        "cs": "Abstraktní akryl se světlem přicházejícím zdola",
+        "en": "Abstract acrylic lit from below"
+      }
+    },
+    {
+      "slug": "sova",
+      "nazev": {
+        "cs": "Sova",
+        "en": "Owl"
+      },
+      "technika": "pyrografie",
+      "styl": "zatisi",
+      "album": "atelier",
+      "rok": 2026,
+      "rozmer": "40 × 30 cm",
+      "cena": 8900,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "sova",
+      "popis": {
+        "cs": "Pyrografie do lipové desky. Kresba vypálená horkým hrotem, bez barvy.",
+        "en": "Pyrography on a limewood panel: drawn with a hot tip, no pigment."
+      },
+      "alt": {
+        "cs": "Pyrografie sovy vypálená do lipové desky",
+        "en": "Pyrography of an owl burned into a limewood panel"
+      }
+    },
+    {
+      "slug": "les-po-desti",
+      "nazev": {
+        "cs": "Les po dešti",
+        "en": "Forest after Rain"
+      },
+      "technika": "pyrografie",
+      "styl": "krajina",
+      "album": "atelier",
+      "rok": 2025,
+      "rozmer": "50 × 35 cm",
+      "cena": 11500,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "les-po-desti",
+      "popis": {
+        "cs": "Pyrografie, kde tmavší tón znamená delší zastavení hrotu.",
+        "en": "Pyrography where a darker tone simply means the tip stayed longer."
+      },
+      "alt": {
+        "cs": "Pyrografie lesa, tmavé tóny z delšího vypalování",
+        "en": "Pyrography of a forest, dark tones from longer burning"
+      }
+    },
+    {
+      "slug": "portret-m",
+      "nazev": {
+        "cs": "Portrét M.",
+        "en": "Portrait of M."
+      },
+      "technika": "kresba",
+      "styl": "portret",
+      "album": "ruce-2024",
+      "rok": 2024,
+      "rozmer": "42 × 30 cm",
+      "cena": 0,
+      "stav": "neprodejne",
+      "vGalerii": true,
+      "vEshopu": false,
+      "obrazek": "portret-m",
+      "popis": {
+        "cs": "Uhel a rudka. Studie, kterou si nechávám.",
+        "en": "Charcoal and sanguine. A study I am keeping."
+      },
+      "alt": {
+        "cs": "Kresba portrétu uhlem a rudkou",
+        "en": "Charcoal and sanguine portrait drawing"
+      }
+    },
+    {
+      "slug": "zatisi-s-hrnky",
+      "nazev": {
+        "cs": "Zátiší s hrnky",
+        "en": "Still Life with Mugs"
+      },
+      "technika": "olej",
+      "styl": "zatisi",
+      "album": "chvalsky-zamek-2025",
+      "rok": 2025,
+      "rozmer": "50 × 40 cm",
+      "cena": 15000,
+      "stav": "prodano",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "zatisi-s-hrnky",
+      "popis": {
+        "cs": "Tři hrnky, které v ateliéru opravdu jsou.",
+        "en": "Three mugs that really are in the studio."
+      },
+      "alt": {
+        "cs": "Olejové zátiší se třemi hrnky na stole",
+        "en": "Oil still life with three mugs on a table"
+      }
+    },
+    {
+      "slug": "most",
+      "nazev": {
+        "cs": "Most",
+        "en": "Bridge"
+      },
+      "technika": "kombinovana",
+      "styl": "krajina",
+      "album": "pragovka-2026",
+      "rok": 2026,
+      "rozmer": "140 × 90 cm",
+      "cena": 54000,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "most",
+      "popis": {
+        "cs": "Kombinovaná technika: akryl, tuš a papír vrstvený na plátno.",
+        "en": "Mixed media: acrylic, ink and paper layered onto canvas."
+      },
+      "alt": {
+        "cs": "Kombinovaná technika: most z vrstveného papíru, akrylu a tuše",
+        "en": "Mixed media bridge in layered paper, acrylic and ink"
+      }
+    },
+    {
+      "slug": "noc-v-atelieru",
+      "nazev": {
+        "cs": "Noc v ateliéru",
+        "en": "Night in the Studio"
+      },
+      "technika": "olej",
+      "styl": "abstrakce",
+      "album": "atelier",
+      "rok": 2026,
+      "rozmer": "80 × 60 cm",
+      "cena": 24000,
+      "stav": "zamluveno",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "noc-v-atelieru",
+      "popis": {
+        "cs": "Co zůstane na plátně, když se zhasne a pracuje se jen po hmatu.",
+        "en": "What stays on the canvas when the lights go out and the work goes on by touch."
+      },
+      "alt": {
+        "cs": "Tmavý abstraktní olej, Noc v ateliéru",
+        "en": "Dark abstract oil painting, Night in the Studio"
+      }
+    },
+    {
+      "slug": "ruka-s-jablkem",
+      "nazev": {
+        "cs": "Ruka s jablkem",
+        "en": "Hand with an Apple"
+      },
+      "technika": "olej",
+      "styl": "figura",
+      "album": "ruce-2024",
+      "rok": 2024,
+      "rozmer": "60 × 45 cm",
+      "cena": 21000,
+      "stav": "prodano",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "ruka-s-jablkem",
+      "popis": {
+        "cs": "Ze série Ruce. Jablko je tam kvůli váze, ne kvůli symbolu.",
+        "en": "From the Hands series. The apple is there for its weight, not its symbolism."
+      },
+      "alt": {
+        "cs": "Olejomalba ruky držící jablko",
+        "en": "Oil painting of a hand holding an apple"
+      }
+    },
+    {
+      "slug": "pole-v-lednu",
+      "nazev": {
+        "cs": "Pole v lednu",
+        "en": "Field in January"
+      },
+      "technika": "akryl",
+      "styl": "krajina",
+      "album": "chvalsky-zamek-2025",
+      "rok": 2025,
+      "rozmer": "90 × 70 cm",
+      "cena": 26000,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "pole-v-lednu",
+      "popis": {
+        "cs": "Akryl na plátně, barvy sebrané z jednoho konkrétního rána.",
+        "en": "Acrylic on canvas, colours taken from one particular morning."
+      },
+      "alt": {
+        "cs": "Akrylová zimní krajina: zasněžené pole v lednu",
+        "en": "Acrylic winter landscape: a snowy field in January"
+      }
+    },
+    {
+      "slug": "studie-draperie",
+      "nazev": {
+        "cs": "Studie draperie",
+        "en": "Drapery Study"
+      },
+      "technika": "kresba",
+      "styl": "zatisi",
+      "album": "atelier",
+      "rok": 2026,
+      "rozmer": "50 × 35 cm",
+      "cena": 4800,
+      "stav": "v-prodeji",
+      "vGalerii": false,
+      "vEshopu": true,
+      "obrazek": "studie-draperie",
+      "popis": {
+        "cs": "Kresba uhlem. Do galerie se nedává, v e-shopu ano.",
+        "en": "Charcoal drawing. Not shown in the gallery, available in the shop."
+      },
+      "alt": {
+        "cs": "Kresba draperie uhlem",
+        "en": "Charcoal drawing of drapery"
+      }
+    },
+    {
+      "slug": "vernisaz-pragovka",
+      "nazev": {
+        "cs": "Vernisáž v Pragovce",
+        "en": "Opening at Pragovka"
+      },
+      "technika": "",
+      "styl": "",
+      "album": "pragovka-2026",
+      "rok": 2026,
+      "rozmer": "",
+      "cena": 0,
+      "stav": "neprodejne",
+      "vGalerii": true,
+      "vEshopu": false,
+      "obrazek": "vernisaz-pragovka",
+      "popis": {
+        "cs": "Fotka z vernisáže. Do galerie patří i to, jak výstava probíhala.",
+        "en": "A photo from the opening. How a show actually went belongs in the gallery too."
+      },
+      "alt": {
+        "cs": "Fotografie z vernisáže výstavy v Pragovce",
+        "en": "Photograph from the exhibition opening at Pragovka"
+      }
+    },
+    {
+      "slug": "instalace-chvalsky-zamek",
+      "nazev": {
+        "cs": "Instalace na Chvalském zámku",
+        "en": "Installation at Chvaly Castle"
+      },
+      "technika": "",
+      "styl": "",
+      "album": "chvalsky-zamek-2025",
+      "rok": 2025,
+      "rozmer": "",
+      "cena": 0,
+      "stav": "neprodejne",
+      "vGalerii": true,
+      "vEshopu": false,
+      "obrazek": "instalace-chvalsky-zamek",
+      "popis": {
+        "cs": "Pohled do sálu před otevřením.",
+        "en": "The hall before the doors opened."
+      },
+      "alt": {
+        "cs": "Fotografie instalace výstavy v sále Chvalského zámku",
+        "en": "Photograph of the exhibition installation at Chvaly Castle"
+      }
+    },
+    {
+      "slug": "kresba-rukou-i",
+      "nazev": {
+        "cs": "Kresba rukou I",
+        "en": "Hand Drawing I"
+      },
+      "technika": "kresba",
+      "styl": "figura",
+      "album": "ruce-2024",
+      "rok": 2024,
+      "rozmer": "30 × 21 cm",
+      "cena": 3200,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "kresba-rukou-i",
+      "popis": {
+        "cs": "Z přípravných kreseb k sérii Ruce.",
+        "en": "One of the preparatory drawings for the Hands series."
+      },
+      "alt": {
+        "cs": "Přípravná kresba ruky",
+        "en": "Preparatory drawing of a hand"
+      }
+    },
+    {
+      "slug": "velka-vlna",
+      "nazev": {
+        "cs": "Velká vlna",
+        "en": "The Big Wave"
+      },
+      "technika": "kombinovana",
+      "styl": "abstrakce",
+      "album": "atelier",
+      "rok": 2026,
+      "rozmer": "160 × 110 cm",
+      "cena": 68000,
+      "stav": "v-prodeji",
+      "vGalerii": true,
+      "vEshopu": true,
+      "obrazek": "velka-vlna",
+      "popis": {
+        "cs": "Největší plátno, které se do ateliéru vejde. Doprava po dohodě.",
+        "en": "The largest canvas that fits in the studio. Delivery by arrangement."
+      },
+      "alt": {
+        "cs": "Velká abstraktní kombinovaná technika připomínající vlnu",
+        "en": "Large abstract mixed-media work suggesting a wave"
+      }
+    }
+  ],
+  "udalosti": [
+    {
+      "id": "vystava-pragovka",
+      "typ": "vystava",
+      "nazev": {
+        "cs": "Pop art v Pragovce",
+        "en": "Pop Art at Pragovka"
+      },
+      "od": "2026-11-14",
+      "do": "2026-12-07",
+      "cas": "",
+      "misto": {
+        "cs": "Pragovka Art District, Kolbenova 923/34a, Praha 9",
+        "en": "Pragovka Art District, Kolbenova 923/34a, Prague 9"
+      },
+      "popis": {
+        "cs": "Patnáct obrazů z posledního roku, poprvé včetně obou Horizontů.",
+        "en": "Fifteen paintings from the past year, with both Horizons shown together for the first time."
+      },
+      "aktualita": true,
+      "obrazek": "most"
+    },
+    {
+      "id": "vernisaz-pragovka",
+      "typ": "vernisaz",
+      "nazev": {
+        "cs": "Vernisáž výstavy Pop art v Pragovce",
+        "en": "Opening: Pop Art at Pragovka"
+      },
+      "od": "2026-11-13",
+      "do": "2026-11-13",
+      "cas": "18:00",
+      "misto": {
+        "cs": "Pragovka Art District, Praha 9",
+        "en": "Pragovka Art District, Prague 9"
+      },
+      "popis": {
+        "cs": "Přijďte na zahájení. Víno bude.",
+        "en": "Come to the opening. There will be wine."
+      },
+      "aktualita": true,
+      "obrazek": "vernisaz-pragovka"
+    },
+    {
+      "id": "atelier-21-11",
+      "typ": "atelier",
+      "nazev": {
+        "cs": "Otevřený ateliér",
+        "en": "Open studio"
+      },
+      "od": "2026-11-21",
+      "do": "2026-11-21",
+      "cas": "10:00–17:00",
+      "misto": {
+        "cs": "Ateliér, Pragovka, Praha 9",
+        "en": "Studio, Pragovka, Prague 9"
+      },
+      "popis": {
+        "cs": "Budu v ateliéru a maluju. Stavte se, není potřeba se hlásit.",
+        "en": "I will be in the studio painting. Drop by, no need to book."
+      },
+      "aktualita": true,
+      "obrazek": "noc-v-atelieru"
+    },
+    {
+      "id": "atelier-05-12",
+      "typ": "atelier",
+      "nazev": {
+        "cs": "Otevřený ateliér",
+        "en": "Open studio"
+      },
+      "od": "2026-12-05",
+      "do": "2026-12-05",
+      "cas": "13:00–18:00",
+      "misto": {
+        "cs": "Ateliér, Pragovka, Praha 9",
+        "en": "Studio, Pragovka, Prague 9"
+      },
+      "popis": {
+        "cs": "Odpolední návštěva ateliéru, po domluvě i mimo tento termín.",
+        "en": "An afternoon in the studio; other times by arrangement."
+      },
+      "aktualita": false,
+      "obrazek": ""
+    },
+    {
+      "id": "kurz-prosinec",
+      "typ": "kurz",
+      "nazev": {
+        "cs": "Kurz: pyrografie pro začátečníky",
+        "en": "Course: pyrography for beginners"
+      },
+      "od": "2026-12-12",
+      "do": "2026-12-12",
+      "cas": "10:00–16:00",
+      "misto": {
+        "cs": "Ateliér, Pragovka, Praha 9",
+        "en": "Studio, Pragovka, Prague 9"
+      },
+      "popis": {
+        "cs": "Celodenní kurz, materiál v ceně. Kapacita šest lidí.",
+        "en": "A full-day course, materials included. Six places."
+      },
+      "aktualita": false,
+      "obrazek": "sova"
+    },
+    {
+      "id": "vystava-chvalsky",
+      "typ": "vystava",
+      "nazev": {
+        "cs": "Chvalský zámek",
+        "en": "Chvaly Castle"
+      },
+      "od": "2025-09-06",
+      "do": "2025-10-19",
+      "cas": "",
+      "misto": {
+        "cs": "Chvalský zámek, Praha 9",
+        "en": "Chvaly Castle, Prague 9"
+      },
+      "popis": {
+        "cs": "Samostatná výstava, zátiší a krajiny z let 2024 a 2025.",
+        "en": "A solo show of still lifes and landscapes from 2024 and 2025."
+      },
+      "aktualita": false,
+      "obrazek": "instalace-chvalsky-zamek"
+    },
+    {
+      "id": "vystava-ruce",
+      "typ": "vystava",
+      "nazev": {
+        "cs": "Ruce",
+        "en": "Hands"
+      },
+      "od": "2024-05-10",
+      "do": "2024-06-02",
+      "cas": "",
+      "misto": {
+        "cs": "Ateliér, Praha 9",
+        "en": "Studio, Prague 9"
+      },
+      "popis": {
+        "cs": "První série, která se celá držela jednoho motivu.",
+        "en": "The first series that stayed with a single motif all the way through."
+      },
+      "aktualita": false,
+      "obrazek": "dve-ruce"
+    }
+  ],
+  "kurzy": [
+    {
+      "id": "pyrografie-zacatecnici",
+      "nazev": {
+        "cs": "Pyrografie pro začátečníky",
+        "en": "Pyrography for beginners"
+      },
+      "popis": {
+        "cs": "Jeden den, jedna deska, jeden hrot. Odnesete si hotovou práci a vypálené prsty ne.",
+        "en": "One day, one panel, one tip. You take a finished piece home and no burnt fingers."
+      },
+      "delka": {
+        "cs": "6 hodin",
+        "en": "6 hours"
+      },
+      "kapacita": 6,
+      "cena": 2400,
+      "terminy": [
+        "2026-12-12",
+        "2027-01-16"
+      ]
+    },
+    {
+      "id": "malba-olejem",
+      "nazev": {
+        "cs": "Malba olejem od začátku",
+        "en": "Oil painting from scratch"
+      },
+      "popis": {
+        "cs": "Dva dny o tom, jak si olej srovnat v hlavě: podmalba, vrstvy, trpělivost.",
+        "en": "Two days on getting oil paint straight in your head: underpainting, layers, patience."
+      },
+      "delka": {
+        "cs": "2 × 5 hodin",
+        "en": "2 × 5 hours"
+      },
+      "kapacita": 5,
+      "cena": 4200,
+      "terminy": [
+        "2027-01-30",
+        "2027-02-27"
+      ]
+    },
+    {
+      "id": "individualne",
+      "nazev": {
+        "cs": "Individuálně v ateliéru",
+        "en": "One to one in the studio"
+      },
+      "popis": {
+        "cs": "Jen vy a jedna technika. Termín i téma po dohodě.",
+        "en": "Just you and one technique. Date and subject by arrangement."
+      },
+      "delka": {
+        "cs": "3 hodiny",
+        "en": "3 hours"
+      },
+      "kapacita": 1,
+      "cena": 1800,
+      "terminy": []
+    }
+  ],
+  "doprava": [
+    {
+      "id": "dobirka",
+      "nazev": {
+        "cs": "Dopravce na dobírku",
+        "en": "Courier, cash on delivery"
+      },
+      "cena": 390,
+      "popis": {
+        "cs": "Platíte při převzetí dopravci. U obrazů nad 120 cm se cena dopravy dopočítá po dohodě.",
+        "en": "You pay the courier on delivery. For canvases over 120 cm the shipping cost is agreed individually."
+      }
+    },
+    {
+      "id": "osobne",
+      "nazev": {
+        "cs": "Osobní převzetí v ateliéru",
+        "en": "Pick up at the studio"
+      },
+      "cena": 0,
+      "popis": {
+        "cs": "Vyzvednutí v Pragovce po domluvě, platba hotově nebo převodem na místě.",
+        "en": "Collection at Pragovka by arrangement; pay in cash or by transfer on the spot."
+      }
+    }
+  ],
+  "uvod": {
+    "foto": "atelier"
+  },
+  "bio": {
+    "portret": "atelier",
+    "vzdelani": [
+      {
+        "rok": "2014—2020",
+        "text": {
+          "cs": "AVU Praha, ateliér malby",
+          "en": "Academy of Fine Arts Prague, painting studio"
+        }
+      },
+      {
+        "rok": "2019",
+        "text": {
+          "cs": "Semestr na ASP Katowice",
+          "en": "Semester at ASP Katowice"
+        }
+      },
+      {
+        "rok": "od 2021",
+        "text": {
+          "cs": "Vlastní ateliér v Pragovce, Praha 9",
+          "en": "Own studio at Pragovka, Prague 9"
+        }
+      }
+    ]
+  }
+}

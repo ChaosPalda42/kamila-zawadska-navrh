@@ -1,0 +1,467 @@
+{
+  "_poznamka": "Slovník pro src/lib/preklad.mjs. Klíč → { cs, en }. Chybí-li 'en', modul vrátí 'cs'.",
+  "nav.domu": {
+    "cs": "Domů",
+    "en": "Home"
+  },
+  "nav.galerie": {
+    "cs": "Galerie",
+    "en": "Gallery"
+  },
+  "nav.eshop": {
+    "cs": "Obrazy k prodeji",
+    "en": "Works for sale"
+  },
+  "nav.kalendar": {
+    "cs": "Kalendář",
+    "en": "Calendar"
+  },
+  "nav.kurzy": {
+    "cs": "Kurzy",
+    "en": "Courses"
+  },
+  "nav.bio": {
+    "cs": "O mně",
+    "en": "About"
+  },
+  "nav.kontakt": {
+    "cs": "Kontakt",
+    "en": "Contact"
+  },
+  "nav.kosik": {
+    "cs": "Košík",
+    "en": "Cart"
+  },
+  "stav.v-prodeji": {
+    "cs": "K prodeji",
+    "en": "For sale"
+  },
+  "stav.zamluveno": {
+    "cs": "Zamluveno",
+    "en": "Reserved"
+  },
+  "stav.prodano": {
+    "cs": "Prodáno",
+    "en": "Sold"
+  },
+  "stav.neprodejne": {
+    "cs": "Neprodejné",
+    "en": "Not for sale"
+  },
+  "uvod.claim": {
+    "cs": "Maluju to, co se nedá vyfotit.",
+    "en": "I paint what a photograph cannot hold."
+  },
+  "uvod.podtitul": {
+    "cs": "Olej, akryl a pyrografie. Ateliér v Pragovce, Praha 9.",
+    "en": "Oil, acrylic and pyrography. Studio at Pragovka, Prague 9."
+  },
+  "uvod.aktualne": {
+    "cs": "Právě teď",
+    "en": "Right now"
+  },
+  "uvod.aktualni-tvorba": {
+    "cs": "Z poslední tvorby",
+    "en": "Recent work"
+  },
+  "uvod.do-galerie": {
+    "cs": "Celá galerie",
+    "en": "See the full gallery"
+  },
+  "uvod.do-eshopu": {
+    "cs": "Co je k prodeji",
+    "en": "What is for sale"
+  },
+  "galerie.titul": {
+    "cs": "Galerie",
+    "en": "Gallery"
+  },
+  "galerie.popis": {
+    "cs": "Retrospektiva: obrazy, kresby i fotky z výstav. Co je ještě k prodeji, má u sebe odznak a proklik do e-shopu.",
+    "en": "A retrospective: paintings, drawings and photographs from exhibitions. Anything still for sale carries a badge and a link to the shop."
+  },
+  "galerie.filtr.vse": {
+    "cs": "Vše",
+    "en": "All"
+  },
+  "galerie.filtr.technika": {
+    "cs": "Technika",
+    "en": "Technique"
+  },
+  "galerie.filtr.styl": {
+    "cs": "Styl",
+    "en": "Style"
+  },
+  "galerie.filtr.udalost": {
+    "cs": "Událost",
+    "en": "Event"
+  },
+  "galerie.filtr.zrusit": {
+    "cs": "Zrušit filtry",
+    "en": "Clear filters"
+  },
+  "galerie.pocet": {
+    "cs": "děl",
+    "en": "works"
+  },
+  "galerie.nic": {
+    "cs": "Pro tento filtr tu zatím nic není.",
+    "en": "Nothing matches this filter yet."
+  },
+  "galerie.dalsi": {
+    "cs": "Načíst další",
+    "en": "Load more"
+  },
+  "galerie.koupit": {
+    "cs": "Koupit v e-shopu",
+    "en": "Buy in the shop"
+  },
+  "galerie.na-miru": {
+    "cs": "Chci podobné na míru",
+    "en": "Commission something similar"
+  },
+  "galerie.zavrit": {
+    "cs": "Zavřít",
+    "en": "Close"
+  },
+  "galerie.predchozi": {
+    "cs": "Předchozí dílo",
+    "en": "Previous work"
+  },
+  "galerie.dalsi-dilo": {
+    "cs": "Další dílo",
+    "en": "Next work"
+  },
+  "eshop.titul": {
+    "cs": "Obrazy k prodeji",
+    "en": "Works for sale"
+  },
+  "eshop.popis": {
+    "cs": "Originály, jeden kus z každého. Prodané dílo z nabídky zmizí a zůstane v galerii.",
+    "en": "Originals, one of each. A sold work leaves the shop and stays in the gallery."
+  },
+  "eshop.do-kosiku": {
+    "cs": "Do košíku",
+    "en": "Add to cart"
+  },
+  "eshop.v-kosiku": {
+    "cs": "V košíku",
+    "en": "In cart"
+  },
+  "eshop.nedostupne": {
+    "cs": "Momentálně nedostupné",
+    "en": "Currently unavailable"
+  },
+  "eshop.detail": {
+    "cs": "Detail díla",
+    "en": "Work detail"
+  },
+  "eshop.prazdno": {
+    "cs": "Právě teď není nic k prodeji. Napište mi, dá se udělat na míru.",
+    "en": "Nothing is for sale right now. Write to me — a commission is always possible."
+  },
+  "kosik.titul": {
+    "cs": "Košík",
+    "en": "Cart"
+  },
+  "kosik.prazdny": {
+    "cs": "Košík je prázdný.",
+    "en": "Your cart is empty."
+  },
+  "kosik.odebrat": {
+    "cs": "Odebrat",
+    "en": "Remove"
+  },
+  "kosik.dila": {
+    "cs": "Díla",
+    "en": "Works"
+  },
+  "kosik.doprava": {
+    "cs": "Doprava",
+    "en": "Delivery"
+  },
+  "kosik.celkem": {
+    "cs": "Celkem",
+    "en": "Total"
+  },
+  "kosik.dokoncit": {
+    "cs": "Dokončit objednávku",
+    "en": "Complete the order"
+  },
+  "kosik.zpet": {
+    "cs": "Zpět do e-shopu",
+    "en": "Back to the shop"
+  },
+  "objednavka.titul": {
+    "cs": "Objednávka",
+    "en": "Order"
+  },
+  "objednavka.jmeno": {
+    "cs": "Jméno a příjmení",
+    "en": "Name"
+  },
+  "objednavka.email": {
+    "cs": "E-mail",
+    "en": "Email"
+  },
+  "objednavka.telefon": {
+    "cs": "Telefon",
+    "en": "Phone"
+  },
+  "objednavka.ulice": {
+    "cs": "Ulice a číslo",
+    "en": "Street and number"
+  },
+  "objednavka.mesto": {
+    "cs": "Město",
+    "en": "City"
+  },
+  "objednavka.psc": {
+    "cs": "PSČ",
+    "en": "Postcode"
+  },
+  "objednavka.zprava": {
+    "cs": "Vzkaz (nepovinné)",
+    "en": "Message (optional)"
+  },
+  "objednavka.odeslat": {
+    "cs": "Odeslat objednávku",
+    "en": "Send the order"
+  },
+  "objednavka.hotovo": {
+    "cs": "Objednávka odeslaná. Ozvu se do dvou dnů a potvrdíme dopravu.",
+    "en": "Order sent. I will be in touch within two days to confirm delivery."
+  },
+  "kalendar.titul": {
+    "cs": "Kalendář akcí",
+    "en": "Calendar"
+  },
+  "kalendar.popis": {
+    "cs": "Výstavy, vernisáže, kurzy a dny, kdy jsem v ateliéru.",
+    "en": "Exhibitions, openings, courses and the days I am in the studio."
+  },
+  "kalendar.pristi": {
+    "cs": "Co se chystá",
+    "en": "Coming up"
+  },
+  "kalendar.minule": {
+    "cs": "Co už bylo",
+    "en": "Past events"
+  },
+  "kalendar.predchozi-mesic": {
+    "cs": "Předchozí měsíc",
+    "en": "Previous month"
+  },
+  "kalendar.dalsi-mesic": {
+    "cs": "Další měsíc",
+    "en": "Next month"
+  },
+  "kalendar.dnes": {
+    "cs": "Dnes",
+    "en": "Today"
+  },
+  "kalendar.bez-akci": {
+    "cs": "V tomto měsíci nic není.",
+    "en": "Nothing this month."
+  },
+  "kalendar.typ.vystava": {
+    "cs": "Výstava",
+    "en": "Exhibition"
+  },
+  "kalendar.typ.vernisaz": {
+    "cs": "Vernisáž",
+    "en": "Opening"
+  },
+  "kalendar.typ.atelier": {
+    "cs": "Otevřený ateliér",
+    "en": "Open studio"
+  },
+  "kalendar.typ.kurz": {
+    "cs": "Kurz",
+    "en": "Course"
+  },
+  "kurzy.titul": {
+    "cs": "Kurzy",
+    "en": "Courses"
+  },
+  "kurzy.popis": {
+    "cs": "Malé skupiny v ateliéru. Nabídka se teprve dolaďuje, termíny ber jako orientační.",
+    "en": "Small groups in the studio. The programme is still taking shape, so treat the dates as indicative."
+  },
+  "kurzy.kapacita": {
+    "cs": "Kapacita",
+    "en": "Places"
+  },
+  "kurzy.delka": {
+    "cs": "Délka",
+    "en": "Length"
+  },
+  "kurzy.cena": {
+    "cs": "Cena",
+    "en": "Price"
+  },
+  "kurzy.terminy": {
+    "cs": "Termíny",
+    "en": "Dates"
+  },
+  "kurzy.terminy-chybi": {
+    "cs": "Termín po dohodě",
+    "en": "Date by arrangement"
+  },
+  "kurzy.mam-zajem": {
+    "cs": "Mám zájem",
+    "en": "I am interested"
+  },
+  "bio.titul": {
+    "cs": "O mně",
+    "en": "About"
+  },
+  "bio.text": {
+    "cs": "Maluju od dětství, posledních osm let soustavně. Vystudovala jsem malbu, diplomovou práci jsem dělala na krajině, která se rozpadá na barevné plochy — a od té doby se k tomu motivu pořád vracím. Vedle olejů a akrylů pálím kresby do dřeva; pyrografie mě naučila, že víc tónu znamená jen víc trpělivosti. Ateliér mám v Pragovce v Praze 9 a občas ho otevírám veřejnosti.",
+    "en": "I have painted since childhood and steadily for the last eight years. I studied painting and wrote my diploma on landscape dissolving into fields of colour — a motif I keep coming back to. Alongside oil and acrylic I burn drawings into wood; pyrography taught me that a deeper tone is only a matter of patience. My studio is at Pragovka in Prague 9 and I open it to visitors now and then."
+  },
+  "bio.vzdelani": {
+    "cs": "Vzdělání",
+    "en": "Education"
+  },
+  "bio.vystavy": {
+    "cs": "Výstavy",
+    "en": "Exhibitions"
+  },
+  "kontakt.titul": {
+    "cs": "Kontakt",
+    "en": "Contact"
+  },
+  "kontakt.popis": {
+    "cs": "Napište mi na cokoli: zájem o obraz, zakázka na míru, kurz, nebo jen návštěva ateliéru.",
+    "en": "Write to me about anything: a painting, a commission, a course, or just a studio visit."
+  },
+  "kontakt.jmeno": {
+    "cs": "Jméno",
+    "en": "Name"
+  },
+  "kontakt.email": {
+    "cs": "E-mail",
+    "en": "Email"
+  },
+  "kontakt.telefon": {
+    "cs": "Telefon (nepovinné)",
+    "en": "Phone (optional)"
+  },
+  "kontakt.zprava": {
+    "cs": "Zpráva",
+    "en": "Message"
+  },
+  "kontakt.odeslat": {
+    "cs": "Odeslat",
+    "en": "Send"
+  },
+  "kontakt.hotovo": {
+    "cs": "Děkuju, zpráva je odeslaná.",
+    "en": "Thank you, your message has been sent."
+  },
+  "kontakt.atelier": {
+    "cs": "Ateliér",
+    "en": "Studio"
+  },
+  "kontakt.mapa": {
+    "cs": "Ateliér na mapě",
+    "en": "Studio on the map"
+  },
+  "kontakt.navsteva": {
+    "cs": "Návštěva ateliéru jen po předchozí domluvě. Otevírací dobu nemám, ozvat se můžete kdykoli.",
+    "en": "Studio visits by arrangement only. There are no opening hours — write whenever you like."
+  },
+  "formular.chyba.jmeno": {
+    "cs": "Vyplňte prosím jméno.",
+    "en": "Please fill in your name."
+  },
+  "formular.chyba.email": {
+    "cs": "Zkontrolujte e-mail, tenhle nevypadá platně.",
+    "en": "Please check the email address."
+  },
+  "formular.chyba.telefon": {
+    "cs": "Telefon zadejte jako devět číslic, případně s předvolbou.",
+    "en": "Enter the phone number as nine digits, optionally with a country code."
+  },
+  "formular.chyba.zprava": {
+    "cs": "Napište prosím aspoň pár slov.",
+    "en": "Please write a few words."
+  },
+  "formular.chyba.ulice": {
+    "cs": "Vyplňte prosím ulici a číslo.",
+    "en": "Please fill in the street and number."
+  },
+  "formular.chyba.mesto": {
+    "cs": "Vyplňte prosím město.",
+    "en": "Please fill in the city."
+  },
+  "formular.chyba.psc": {
+    "cs": "PSČ zadejte jako pět číslic.",
+    "en": "Enter the postcode as five digits."
+  },
+  "formular.chyba.doprava": {
+    "cs": "Vyberte prosím způsob dopravy.",
+    "en": "Please choose a delivery method."
+  },
+  "formular.chyba.kosik": {
+    "cs": "Košík je prázdný.",
+    "en": "Your cart is empty."
+  },
+  "ukazka.hlavicka": {
+    "cs": "Klikatelná ukázka — fotky, texty i kontakty jsou zástupné a nic se nikam neodesílá.",
+    "en": "Clickable demo — photos, texts and contact details are placeholders and nothing is sent."
+  },
+  "ukazka.formular": {
+    "cs": "V ukázce se zpráva nikam neodesílá.",
+    "en": "In this demo the message is not sent anywhere."
+  },
+  "ukazka.administrace": {
+    "cs": "Ukázka administrace. Změny se ukládají jen ve vašem prohlížeči.",
+    "en": "Demo administration. Changes are stored in your browser only."
+  },
+  "patka.jazyk": {
+    "cs": "English",
+    "en": "Čeština"
+  },
+  "patka.nahoru": {
+    "cs": "Nahoru",
+    "en": "Back to top"
+  },
+  "patka.administrace": {
+    "cs": "Administrace",
+    "en": "Administration"
+  },
+  "uvod.foto-alt": {
+    "cs": "Ateliér v Pragovce: rozdělaná plátna a stůl s barvami",
+    "en": "Studio at Pragovka: canvases in progress and a table of paints"
+  },
+  "nav.menu": {
+    "cs": "Nabídka",
+    "en": "Menu"
+  },
+  "galerie.pocet.1": {
+    "cs": "dílo",
+    "en": "work"
+  },
+  "galerie.pocet.2": {
+    "cs": "díla",
+    "en": "works"
+  },
+  "galerie.pocet.5": {
+    "cs": "děl",
+    "en": "works"
+  },
+  "404.titul": {
+    "cs": "Tady nic nevisí.",
+    "en": "Nothing hangs here."
+  },
+  "404.text": {
+    "cs": "Stránka, kterou hledáte, tu není. Možná se přestěhovala do galerie — a možná jsem ji nikdy nenamalovala.",
+    "en": "The page you are looking for is not here. It may have moved to the gallery — or I may never have painted it."
+  },
+  "404.obrazek-alt": {
+    "cs": "Kresba prázdného obrazového rámu na hřebíku",
+    "en": "Drawing of an empty picture frame on a nail"
+  }
+}
