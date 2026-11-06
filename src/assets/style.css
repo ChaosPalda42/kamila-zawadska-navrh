@@ -33,6 +33,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Prvek s atributem hidden musí zmizet, i když mu nějaké pravidlo nastaví
+   display (tlačítka jsou inline-flex). Bez toho svítila v administraci
+   tlačítka, která skript schoval. */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -175,17 +180,54 @@ p:last-child { margin-bottom: 0; }
 /* Lišta aktualit: rotuje 2–3 nejnovější akce (přepis 03:54).
    Bez JS zůstane vidět první — proto je první položka viditelná ze stylu
    a skript jen přepíná `hidden`. */
-.aktuality { border-top: 1px solid var(--linka); padding-top: 1rem; }
+/* Klientka na ukázce řekla, že lišta „hrozně zapadá" a ovládací prvky jsou
+   moc malé. Má teď vlastní papír s rámečkem, tep u nadpisu, u akce typ i
+   větu „za 8 dní" — a místo teček o čtyřech pixelech pilulky s datem, které
+   mají přes 2,2 rem na prst. */
+.aktuality {
+  margin-top: 1.4rem; padding: 1rem;
+  border: 1px solid var(--linka); border-top: 2px solid var(--zvyraz);
+  background: #fcfbfa;
+}
+.aktuality > .verzalky { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.6rem; color: var(--inkoust); }
+.aktuality .tep {
+  width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  background: var(--zvyraz); flex: 0 0 auto;
+}
 .aktuality li { list-style: none; }
 .aktuality ul { margin: 0; padding: 0; }
-.aktuality a { display: block; text-decoration: none; font-size: 0.88rem; }
-.aktuality .kdy { display: block; color: var(--tichy); font-size: 0.76rem; }
-.aktuality .tecky { display: flex; gap: 0.3rem; margin-top: 0.7rem; }
-.aktuality .tecky button {
-  width: 0.4rem; height: 0.4rem; padding: 0; border: 0; border-radius: 50%;
-  background: var(--linka); cursor: pointer;
+.aktuality a {
+  display: grid; gap: 0.15rem; text-decoration: none; font-size: 0.9rem;
+  padding: 0.2rem 0; border-radius: 2px;
 }
-.aktuality .tecky button[aria-current="true"] { background: var(--inkoust); }
+.aktuality .nazev { font-family: var(--pismo); color: var(--inkoust); line-height: 1.35; }
+.aktuality .kdy { display: block; color: var(--tichy); font-size: 0.78rem; }
+.aktuality .za { font-size: 0.78rem; color: var(--zvyraz); font-family: var(--pismo); }
+.aktuality .za.probiha { color: #4a6b52; }
+.aktuality .za.bylo { color: var(--tichy); }
+.aktuality .tecky { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+.aktuality .tecky button {
+  min-width: 2.3rem; min-height: 2.3rem; padding: 0 0.5rem;
+  border: 1px solid var(--linka); border-radius: 2px;
+  background: var(--papir); color: var(--tichy);
+  font: 400 0.8rem/1 var(--pismo); cursor: pointer;
+}
+.aktuality .tecky button:hover { color: var(--inkoust); border-color: var(--inkoust); }
+.aktuality .tecky button[aria-current="true"] {
+  background: var(--inkoust); border-color: var(--inkoust); color: var(--papir);
+}
+
+/* Štítek typu akce. Stejná barva jako tečka u akce v kalendáři, ať se to
+   po webu nerozchází. */
+.chip {
+  display: inline-block; align-self: start;
+  padding: 0.1rem 0.45rem; border-radius: 1rem;
+  background: var(--odznak); color: var(--inkoust);
+  font: 500 0.66rem/1.6 var(--pismo); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.chip.vystava, .chip.vernisaz { background: #f1e6d8; color: #6b441f; }
+.chip.atelier { background: var(--odznak); color: var(--text); }
+.chip.kurz { background: #e3ebe5; color: #33503b; }
 
 .obsah { min-width: 0; }
 .obsah > section { margin-bottom: clamp(2.5rem, 6vw, 4.5rem); }
@@ -238,6 +280,9 @@ p:last-child { margin-bottom: 0; }
   padding: 0.35rem 0.5rem;
 }
 .odznak.prodano { background: var(--inkoust); color: var(--papir); }
+/* Reprodukce se při načtení prolíná, a průhledný obrázek se kreslí ve stejné
+   vrstvě jako odznak — bez z-indexu by se „PRODÁNO" schovalo za obraz. */
+.odznak { z-index: 2; }
 .odznak.zamluveno { background: var(--odznak); }
 
 .cena { font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -294,8 +339,27 @@ p:last-child { margin-bottom: 0; }
   padding: 0.55rem 0.65rem;
 }
 .pole textarea { min-height: 8rem; resize: vertical; }
+/* Zaškrtávátko není textové pole. Roztažené na celou šířku z něj byl
+   osamocený čtvereček uprostřed řádku a jeho rámeček vypadal jako linka
+   přes celou administraci. */
+.pole input[type="checkbox"], .pole input[type="radio"] {
+  width: auto; margin: 0; padding: 0;
+  inline-size: 1.15rem; block-size: 1.15rem;
+  accent-color: var(--zvyraz); flex: 0 0 auto;
+}
+.pole label.volba {
+  display: flex; align-items: center; gap: 0.6rem;
+  min-height: 2.2rem; margin: 0;
+  font-size: 0.95rem; letter-spacing: 0; text-transform: none;
+  color: var(--inkoust); cursor: pointer;
+}
+.pole label.volba:hover { color: var(--zvyraz); }
+.pole .volby { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; }
 .pole input:focus, .pole select:focus, .pole textarea:focus { border-color: var(--inkoust); }
 .pole[data-chyba] input, .pole[data-chyba] select, .pole[data-chyba] textarea { border-color: #a6301f; }
+.pole.spatne input, .pole.spatne select, .pole.spatne textarea { border-color: #a6301f; }
+.pole .popisek { display: block; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tichy); margin-bottom: 0.3rem; }
+.napoveda { display: block; font-size: 0.78rem; line-height: 1.5; color: var(--tichy); margin-top: 0.25rem; }
 .pole .chyba { display: block; color: #a6301f; font-size: 0.8rem; margin-top: 0.25rem; }
 .dvojice { display: grid; grid-template-columns: 1fr 8rem; gap: 1rem; }
 
@@ -337,6 +401,17 @@ table.kalendar .akce.kurz::before { background: #4a6b52; }
 .akce-seznam .kdy { font-family: var(--pismo); font-size: 0.84rem; color: var(--tichy); }
 .akce-seznam h3 { margin-bottom: 0.2em; }
 .akce-seznam .kde { font-size: 0.85rem; color: var(--tichy); }
+/* Na akci se dá kliknout, tak to musí být vidět dřív než po kliknutí. */
+.akce-seznam li[data-akce] { cursor: pointer; transition: background 0.25s ease, box-shadow 0.25s ease; }
+.akce-seznam li[data-akce]:hover { background: #fcfbfa; box-shadow: inset 2px 0 0 var(--zvyraz); }
+.akce-seznam li[data-akce]:hover h3 { color: var(--zvyraz); }
+.akce-seznam .vic {
+  margin-top: 0.5rem; padding: 0; border: 0; background: none;
+  color: var(--zvyraz); font: 500 0.8rem/1 var(--pismo); cursor: pointer;
+}
+.akce-seznam .vic:hover { text-decoration: underline; }
+table.kalendar .akce { border-radius: 2px; padding: 0.05rem 0.15rem; cursor: pointer; transition: background 0.2s ease; }
+table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 /* ---------- bio, kontakt, kurzy ---------- */
 
@@ -754,6 +829,7 @@ table.kalendar .akce.kurz::before { background: #4a6b52; }
 .filtry button { transition: color 0.3s ease, box-shadow 0.35s ease; }
 .pole input, .pole select, .pole textarea { transition: border-color 0.3s ease, box-shadow 0.3s ease; }
 .pole input:focus, .pole select:focus, .pole textarea:focus { box-shadow: 0 1px 0 0 var(--zvyraz); }
+.pole input[type="checkbox"]:focus, .pole input[type="radio"]:focus { box-shadow: none; }
 .pole .chyba { animation: vjezd 0.35s ease both; }
 
 /* ---- prohlížeč ---- */
@@ -827,8 +903,179 @@ table.kalendar .akce:hover::before { transform: scale(1.6); }
 
 .pohyb { scroll-behavior: smooth; }
 
+/* ---------- detail akce ---------- */
+
+/* Klik na akci stránku neopouští: panel se vyzvedne z dlaždice, na kterou se
+   kliklo (tu animaci počítá src/ui/akce.js — poměry zná jen prohlížeč), a
+   zvětší se přes stránku. Bez skriptu panel vůbec není a akce zůstanou
+   odkazy do kalendáře. */
+.detail-akce {
+  position: fixed; inset: 0; z-index: 40;
+  display: grid; place-items: center; padding: var(--vzduch);
+}
+.detail-akce[hidden] { display: none; }
+.detail-plachta { position: absolute; inset: 0; background: rgba(33, 41, 52, 0.45); cursor: pointer; }
+/* Plachta se jen prolne — posouvat se nemá, kryje celou obrazovku. */
+@keyframes plachta { from { opacity: 0; } to { opacity: 1; } }
+.pohyb .detail-plachta { animation: plachta 0.3s ease both; }
+.detail-panel {
+  position: relative; z-index: 1;
+  width: min(44rem, 100%); max-height: min(85vh, 50rem); overflow: auto;
+  background: var(--papir); border-top: 2px solid var(--zvyraz);
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  box-shadow: 0 1.5rem 3rem rgba(33, 41, 52, 0.22);
+}
+.detail-zavri {
+  position: absolute; top: 0.4rem; right: 0.4rem;
+  width: 2.4rem; height: 2.4rem; padding: 0;
+  border: 0; background: none; color: var(--tichy);
+  font: 300 1.5rem/1 var(--pismo); cursor: pointer;
+}
+.detail-zavri:hover { color: var(--inkoust); }
+.detail-hlava { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+.detail-stav { font: 500 0.8rem/1 var(--pismo); color: var(--zvyraz); }
+.detail-stav.probiha { color: #4a6b52; }
+.detail-stav.bylo { color: var(--tichy); }
+.detail-telo h2 { margin: 0 0 0.4rem; }
+.detail-kdy { font-family: var(--pismo); color: var(--inkoust); margin: 0 0 0.2rem; }
+.detail-kde { color: var(--tichy); margin: 0 0 0.9rem; font-size: 0.9rem; }
+.detail-nadpis { margin: 1.6rem 0 0.6rem; }
+.detail-dila { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; }
+.detail-dila a { display: block; text-decoration: none; }
+.detail-dila img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; height: auto; }
+.detail-dila .nazev { display: block; font-size: 0.78rem; color: var(--tichy); margin-top: 0.3rem; line-height: 1.4; }
+.detail-dila a:hover .nazev { color: var(--zvyraz); }
+.detail-ovladani { display: flex; justify-content: space-between; gap: 0.6rem; margin-top: 1.8rem; border-top: 1px solid var(--linka); padding-top: 1rem; }
+
+@media (max-width: 40rem) {
+  .detail-akce { padding: 0; align-items: end; }
+  .detail-panel { width: 100%; max-height: 92vh; }
+  .detail-dila { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- administrace ---------- */
+
+/* Ukázková vrátnice. Na ostrém webu tu bude přihlášení doopravdy; tady jde o
+   to, aby klientka viděla, že se administrace veřejně nevaluje. */
+.vratnice { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--papir); }
+.vratnice-panel { width: min(22rem, 90vw); }
+.vratnice-panel p { font-size: 0.9rem; }
+.vratnice.pryc { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+.admin-telo { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: clamp(1.2rem, 3vw, 2.4rem); align-items: start; }
+.admin-menu { display: grid; gap: 0.2rem; position: sticky; top: 1rem; }
+.admin-menu button {
+  text-align: left; padding: 0.6rem 0.7rem; min-height: 2.4rem;
+  border: 0; border-left: 2px solid var(--linka); background: none;
+  color: var(--text); font: 400 0.9rem/1.3 var(--pismo); cursor: pointer;
+}
+.admin-menu button:hover { color: var(--inkoust); background: #fcfbfa; }
+.admin-menu button[aria-selected="true"] { color: var(--inkoust); border-left-color: var(--zvyraz); background: var(--odznak); }
+.admin [data-pocty] { color: var(--tichy); }
+.formular.sirsi { max-width: 46rem; }
+.formular-hlava {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  font-family: var(--pismo); color: var(--inkoust);
+  border-bottom: 1px solid var(--linka); padding-bottom: 0.6rem; margin-bottom: 1.2rem;
+}
+.dvojice-rovnou { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }
+.pokrocile { border-top: 1px solid var(--linka); padding-top: 0.8rem; margin-bottom: 1.2rem; }
+.pokrocile > summary { cursor: pointer; font: 400 0.78rem/1.6 var(--pismo); text-transform: uppercase; letter-spacing: 0.1em; color: var(--tichy); }
+.pokrocile > summary:hover { color: var(--inkoust); }
+.pokrocile > .pole { margin-top: 0.8rem; }
+.ulozeno { color: #4a6b52; font-size: 0.85rem; margin-left: 0.6rem; }
+
+/* Fotky díla. Plocha na přetažení je velká schválně — klientka nahrává
+   obrazy z telefonu i z Finderu a hledat drobné tlačítko není práce
+   pro umělkyni. */
+.fotky { border: 0; margin: 0 0 1.4rem; padding: 0; }
+.fotky > legend { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tichy); padding: 0; margin-bottom: 0.4rem; }
+.pustit {
+  border: 1px dashed var(--linka); background: #fcfbfa;
+  padding: 1.4rem 1rem; text-align: center;
+}
+.pustit p { margin: 0 0 0.6rem; color: var(--tichy); font-size: 0.9rem; }
+.pustit p:last-child { margin: 0; }
+.pustit.nad { border-color: var(--zvyraz); background: var(--odznak); }
+.skryte-pole, input.skryte { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.fotky-seznam { list-style: none; margin: 0.8rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+.fotky-seznam li {
+  display: grid; grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  align-items: center; gap: 0.8rem;
+  border: 1px solid var(--linka); padding: 0.4rem;
+}
+.fotky-seznam li.hlavni { border-color: var(--zvyraz); }
+.fotky-seznam .nahled { display: block; width: 3.5rem; height: 3.5rem; overflow: hidden; background: var(--odznak); }
+.fotky-seznam .nahled img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fotky-seznam .bez-nahledu { display: block; width: 100%; height: 100%; }
+.fotky-seznam .o-fotce { min-width: 0; font-size: 0.85rem; }
+.fotky-seznam .o-fotce strong { display: block; font-weight: 400; color: var(--inkoust); overflow-wrap: anywhere; }
+.fotky-seznam .o-fotce .odznak {
+  position: static; display: inline-block; margin-top: 0.2rem;
+  background: var(--zvyraz); color: var(--papir);
+}
+.fotky-seznam .s-fotkou { display: flex; gap: 0.2rem; }
+.fotky-seznam .s-fotkou button {
+  min-width: 2.2rem; min-height: 2.2rem; padding: 0 0.4rem;
+  border: 1px solid var(--linka); background: var(--papir);
+  color: var(--tichy); font: 400 0.8rem/1 var(--pismo); cursor: pointer;
+}
+.fotky-seznam .s-fotkou button:hover { color: var(--inkoust); border-color: var(--inkoust); }
+
+/* Seznamy v administraci. Mazání se potvrzuje v řádku, ne v okně prohlížeče:
+   okno se dá odkliknout omylem a klientka by nevěděla, co zmizelo. */
+.ucet.seznam { margin-top: 1.6rem; }
+.ucet.seznam .napoveda { font-size: 0.74rem; margin-top: 0.1rem; }
+.ucet.seznam td { vertical-align: top; }
+.akce-radku { white-space: nowrap; }
+.akce-radku button {
+  min-height: 2.2rem; padding: 0 0.6rem;
+  border: 1px solid var(--linka); background: var(--papir);
+  color: var(--text); font: 400 0.82rem/1 var(--pismo); cursor: pointer;
+}
+.akce-radku button:hover { color: var(--inkoust); border-color: var(--inkoust); }
+.potvrzeni { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: #a6301f; }
+
+/* Texty webu. Klíč je nad políčky malým písmem — klientka se podle něj
+   orientovat nemusí, ale když nám bude něco hlásit, může ho opsat. */
+.hledani { max-width: 26rem; }
+[data-sekce-textu] { display: flex; flex-wrap: wrap; gap: 0.3rem; border-bottom: 1px solid var(--linka); padding-bottom: 0.8rem; margin-bottom: 1.2rem; }
+[data-sekce-textu] button {
+  min-height: 2.2rem; padding: 0 0.7rem;
+  border: 1px solid var(--linka); background: var(--papir);
+  color: var(--text); font: 400 0.85rem/1 var(--pismo); cursor: pointer;
+}
+[data-sekce-textu] button span { color: var(--tichy); font-size: 0.75rem; }
+[data-sekce-textu] button:hover:not([disabled]) { color: var(--inkoust); border-color: var(--inkoust); }
+[data-sekce-textu] button[aria-selected="true"] { background: var(--inkoust); border-color: var(--inkoust); color: var(--papir); }
+[data-sekce-textu] button[aria-selected="true"] span { color: var(--odznak); }
+[data-sekce-textu] button[disabled] { opacity: 0.4; cursor: not-allowed; }
+.text-radek { border-bottom: 1px solid var(--linka); padding-bottom: 0.8rem; margin-bottom: 1rem; }
+.text-radek .klic { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.4rem; }
+.text-radek code { font-size: 0.78rem; color: var(--tichy); }
+.text-radek label { display: block; }
+.text-radek label > span { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tichy); margin-bottom: 0.2rem; }
+.text-radek textarea {
+  width: 100%; min-height: 3.4rem; resize: vertical;
+  font: 400 0.9rem/1.5 var(--pismo); color: var(--inkoust);
+  border: 1px solid var(--linka); padding: 0.45rem 0.55rem; background: var(--papir);
+}
+.text-radek textarea:focus { border-color: var(--inkoust); }
+.znacka { font: 500 0.68rem/1.6 var(--pismo); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 0.35rem; }
+.znacka.chybi { background: #f6e7e4; color: #a6301f; }
+.znacka.zmeneno { background: #e3ebe5; color: #33503b; }
+
+@media (max-width: 60rem) {
+  .admin-telo { grid-template-columns: minmax(0, 1fr); }
+  .admin-menu { position: static; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .admin-menu button { border-left: 0; border-bottom: 2px solid var(--linka); }
+  .admin-menu button[aria-selected="true"] { border-bottom-color: var(--zvyraz); }
+  .dvojice-rovnou { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media print {
-  .bok, .prohlizec, .ukazka, .ukazka-pas, .filtry, .nacitani, .postup { display: none; }
+  .bok, .prohlizec, .ukazka, .ukazka-pas, .filtry, .nacitani, .postup,
+  .detail-akce, .vratnice { display: none; }
   .stranka { grid-template-columns: minmax(0, 1fr); }
 }
 

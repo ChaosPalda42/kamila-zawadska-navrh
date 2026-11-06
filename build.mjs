@@ -43,7 +43,8 @@ async function svazekKnihoven() {
     const telo = zdroj
       .replace(/^\s*import\s[^;]*;\s*$/gm, "")
       .replace(/^\s*export\s+(?=(?:async\s+)?(?:function|const|let|var|class)\s)/gm, "");
-    kusy.push(`KZ.${soubor.replace(/\.mjs$/, "")} = (function () {\n${telo}\nreturn { ${jmena.join(", ")} };\n})();`);
+    // Hranatá závorka, ne tečka: jméno souboru smí mít pomlčku (texty-sekce).
+    kusy.push(`KZ[${JSON.stringify(soubor.replace(/\.mjs$/, ""))}] = (function () {\n${telo}\nreturn { ${jmena.join(", ")} };\n})();`);
   }
   return `(function (global) {\n"use strict";\nvar KZ = global.KZ = global.KZ || {};\n${kusy.join("\n")}\n})(typeof window !== "undefined" ? window : globalThis);\n`;
 }
@@ -109,8 +110,9 @@ async function main() {
   const stranky = await readFile(path.join(KOREN, "src", "ui", "stranky.js"), "utf8");
   const web = await readFile(path.join(KOREN, "src", "ui", "web.js"), "utf8");
   const animace = await readFile(path.join(KOREN, "src", "ui", "animace.js"), "utf8");
+  const akce = await readFile(path.join(KOREN, "src", "ui", "akce.js"), "utf8");
   const admin = await readFile(path.join(KOREN, "src", "ui", "admin.js"), "utf8");
-  const skript = `${svazek}\n${stranky}\n${web}\n${animace}`;
+  const skript = `${svazek}\n${stranky}\n${akce}\n${web}\n${animace}`;
   nastavOtisk(createHash("sha256").update(css + skript).digest("hex").slice(0, 8));
 
   await rm(VEN, { recursive: true, force: true });

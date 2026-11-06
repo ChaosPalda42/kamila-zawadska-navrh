@@ -361,7 +361,9 @@ export function mrizkaHtml(rok, mesicCislo, udalosti, dnes, jazyk, texty) {
     const akce = den.udalosti.map((id) => {
       const u = podleId.get(id);
       if (!u) return "";
-      return `<a class="akce ${e(u.typ)}" href="#${e(u.id)}">${e(pole(u.nazev, jazyk))}</a>`;
+      // data-akce: klik otevře detail na místě (src/ui/akce.js). Bez skriptu
+      // zůstane odkaz na položku v seznamu pod kalendářem.
+      return `<a class="akce ${e(u.typ)}" href="#${e(u.id)}" data-akce="${e(u.id)}">${e(pole(u.nazev, jazyk))}</a>`;
     }).join("");
     const dnesni = den.datum === dnes ? ' class="dnesni"' : "";
     return `<td${dnesni}><span class="den">${den.den}</span>${akce}</td>`;
@@ -375,12 +377,17 @@ export function mrizkaHtml(rok, mesicCislo, udalosti, dnes, jazyk, texty) {
 
 function akceSeznam(udalosti, jazyk, texty) {
   if (!udalosti.length) return `<p>${e(t(texty, "kalendar.bez-akci", jazyk))}</p>`;
-  return `<ul class="akce-seznam">${udalosti.map((u) => `<li id="${e(u.id)}">
+  /* Celá karta je klikací (data-akce) a detail se z ní vyzvedne na místě.
+     Tlačítko „detail" je schované, dokud ho src/ui/akce.js neodemkne: bez
+     skriptu je totiž celý popis akce vidět rovnou tady a tlačítko by
+     nikam nevedlo. */
+  return `<ul class="akce-seznam">${udalosti.map((u) => `<li id="${e(u.id)}" data-akce="${e(u.id)}">
 <span class="kdy">${e(format(u, jazyk))}${u.cas ? `, ${e(u.cas)}` : ""}<br>${e(t(texty, "kalendar.typ." + u.typ, jazyk))}</span>
 <div>
 <h3>${e(pole(u.nazev, jazyk))}</h3>
 ${u.misto ? `<p class="kde">${e(pole(u.misto, jazyk))}</p>` : ""}
 <p>${e(pole(u.popis, jazyk))}</p>
+<button type="button" class="vic" data-vic data-akce="${e(u.id)}" hidden>${e(t(texty, "kalendar.detail.vic", jazyk))} →</button>
 </div>
 </li>`).join("")}</ul>`;
 }

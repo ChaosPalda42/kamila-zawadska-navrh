@@ -330,6 +330,7 @@
     if (window.KZkosikStranka) window.KZkosikStranka();
     if (window.KZformulare) window.KZformulare();
     if (window.KZkalendarStranka) window.KZkalendarStranka();
+    if (window.KZakce) window.KZakce();
   }
 
   if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", start);

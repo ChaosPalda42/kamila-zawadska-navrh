@@ -5,128 +5,336 @@
    jako rozbalovátko; prodané dílo z e-shopu zmizí samo pravidlem, příznak
    se nepřepisuje.
 
-   V ukázce se všechno ukládá jen do prohlížeče (localStorage). Na ostrém
-   webu tahle stránka vůbec nevznikne — sedí za přihlášením a půjde na
-   server. */
+   Administrace je rozdělená na oddíly (obrazy, kalendář, kurzy, texty,
+   kontakty) a stojí za vrátnicí: na ostrém webu se sem bez přihlášení
+   nikdo nedostane. V ukázce je vrátnice jen ukázková a stránka vůbec
+   nevznikne při OSTRY=1 — do veřejného webu administrace nepatří.
+
+   Popisky administrace jsou tady, ne v data/texty.json: jsou to texty
+   dílny, ne texty webu, a v editoru textů by jen překážely.
+
+   V ukázce se všechno ukládá do prohlížeče (localStorage) a nahrané fotky
+   žijí jen do zavření karty. Na ostrém webu půjde obojí na server. */
 
 import { layout, e, ukazka } from "./layout.mjs";
 import { t, pole, cesta } from "../lib/preklad.mjs";
 import { STAVY } from "../lib/dila.mjs";
 
-function zalozka(id, titulek, prvni) {
+const POPISKY = {
+  cs: {
+    vratnice: "Administrace je na ostrém webu schovaná za přihlášením. V ukázce stačí kliknout — nic se nikam neodesílá.",
+    jmeno: "Přihlašovací jméno", heslo: "Heslo", prihlasit: "Přihlásit se",
+    oddily: "Oddíly administrace",
+    obrazy: "Obrazy", kalendar: "Kalendář a akce", kurzy: "Kurzy",
+    texty: "Texty webu", kontakty: "Kontakty",
+    novy: "Nový obraz", novaAkce: "Nová akce", novyKurz: "Nový kurz",
+    upravujete: "Upravujete",
+    ulozit: "Uložit", zrusit: "Zrušit úpravy", smazat: "Smazat", upravit: "Upravit",
+    nazevCs: "Název česky", nazevEn: "Název anglicky",
+    popisCs: "Popis česky", popisEn: "Popis anglicky",
+    rok: "Rok", rozmer: "Rozměr (např. 60 × 40 cm)", cena: "Cena v korunách",
+    stav: "Stav", technika: "Technika", styl: "Styl", album: "Patří k akci",
+    kde: "Kde se obraz objeví", vGalerii: "V galerii", vEshopu: "V e-shopu k prodeji",
+    fotky: "Fotky obrazu",
+    pretahni: "Přetáhněte sem fotky, nebo je vyberte z počítače",
+    vybrat: "Vybrat fotky", hlavni: "Hlavní", dejHlavni: "Nastavit jako hlavní",
+    nahoru: "Posunout dřív", dolu: "Posunout později",
+    fotkyUkazka: "V ukázce fotky zůstávají jen do zavření karty — na ostrém webu se nahrají na server.",
+    pokrocile: "Pokročilé — adresa na webu",
+    slug: "Slug (adresa)",
+    slugProc: "Slug je ta část adresy, která dílo pojmenuje: /dilo/rano-nad-vltavou/. Vyplní se sám z názvu a měnit ho je potřeba jen výjimečně — po změně vede starý odkaz do prázdna.",
+    typ: "Typ akce", od: "Od (začátek)", do: "Do (konec)",
+    doProc: "Nechte prázdné, pokud akce trvá jeden den.",
+    cas: "Čas (např. 18:00)", misto: "Kde se to koná",
+    aktualita: "Ukázat v liště „Právě teď“",
+    kapacita: "Kapacita (kolik lidí)",
+    hledat: "Hledat v textech", hledatPopis: "Hledejte česky i anglicky, diakritika nevadí.",
+    klic: "Klíč", cesky: "Česky", anglicky: "Anglicky",
+    chybi: "chybí překlad", zmeneno: "neuloženo",
+    bezVysledku: "Nic takového tu není.",
+    kontaktyPopis: "Kontakty jsou v ukázce zástupné. Tady je klientka přepíše na svoje.",
+    email: "E-mail", telefon: "Telefon", instagram: "Instagram", facebook: "Facebook",
+    atelierNazev: "Ateliér — název", atelierAdresa: "Ateliér — adresa",
+    opravduSmazat: "Opravdu smazat?", ano: "Ano, smazat", ne: "Nechat",
+    prazdno: "Zatím tu nic není.",
+    "stavAkce.chysta": "chystá se", "stavAkce.probiha": "právě probíhá", "stavAkce.bylo": "už bylo",
+    vratitVse: "Vrátit ukázková data",
+  },
+  en: {
+    vratnice: "On the live site the admin sits behind a login. In the demo one click is enough — nothing is sent anywhere.",
+    jmeno: "User name", heslo: "Password", prihlasit: "Sign in",
+    oddily: "Admin sections",
+    obrazy: "Works", kalendar: "Calendar and events", kurzy: "Courses",
+    texty: "Website texts", kontakty: "Contacts",
+    novy: "New work", novaAkce: "New event", novyKurz: "New course",
+    upravujete: "Editing",
+    ulozit: "Save", zrusit: "Cancel", smazat: "Delete", upravit: "Edit",
+    nazevCs: "Title in Czech", nazevEn: "Title in English",
+    popisCs: "Description in Czech", popisEn: "Description in English",
+    rok: "Year", rozmer: "Size (e.g. 60 × 40 cm)", cena: "Price in CZK",
+    stav: "Status", technika: "Technique", styl: "Style", album: "Belongs to event",
+    kde: "Where the work appears", vGalerii: "In the gallery", vEshopu: "For sale in the shop",
+    fotky: "Photos of the work",
+    pretahni: "Drop photos here, or pick them from your computer",
+    vybrat: "Choose photos", hlavni: "Main", dejHlavni: "Make it the main photo",
+    nahoru: "Move earlier", dolu: "Move later",
+    fotkyUkazka: "In the demo photos last until the tab closes — on the live site they are uploaded to the server.",
+    pokrocile: "Advanced — address on the web",
+    slug: "Slug (address)",
+    slugProc: "The slug is the part of the address that names the work: /en/work/morning-over-the-vltava/. It is filled in from the title and rarely needs changing — an old link breaks once it changes.",
+    typ: "Event type", od: "From", do: "To",
+    doProc: "Leave empty for a one-day event.",
+    cas: "Time (e.g. 18:00)", misto: "Where it takes place",
+    aktualita: "Show in the “Right now” bar",
+    kapacita: "Capacity (how many people)",
+    hledat: "Search the texts", hledatPopis: "Search in Czech or English, accents do not matter.",
+    klic: "Key", cesky: "Czech", anglicky: "English",
+    chybi: "translation missing", zmeneno: "unsaved",
+    bezVysledku: "Nothing like that here.",
+    kontaktyPopis: "Contact details are placeholders in the demo. This is where they get replaced.",
+    email: "E-mail", telefon: "Phone", instagram: "Instagram", facebook: "Facebook",
+    atelierNazev: "Studio — name", atelierAdresa: "Studio — address",
+    opravduSmazat: "Really delete?", ano: "Yes, delete", ne: "Keep",
+    prazdno: "Nothing here yet.",
+    "stavAkce.chysta": "upcoming", "stavAkce.probiha": "happening now", "stavAkce.bylo": "past",
+    vratitVse: "Restore demo data",
+  },
+};
+
+function p(jazyk, klic) { return (POPISKY[jazyk] || POPISKY.cs)[klic] || klic; }
+
+function policko(klic, titulek, typ = "text", volby = {}) {
+  const atributy = [`id="a-${e(klic)}"`, `name="${e(klic)}"`, `type="${e(typ)}"`];
+  if (typ === "number") atributy.push('min="0"', 'step="1"');
+  if (volby.placeholder) atributy.push(`placeholder="${e(volby.placeholder)}"`);
+  const napoveda = volby.napoveda
+    ? `<span class="napoveda" id="n-${e(klic)}">${e(volby.napoveda)}</span>` : "";
+  if (napoveda) atributy.push(`aria-describedby="n-${e(klic)}"`);
+  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
+<input ${atributy.join(" ")}>${napoveda}<span class="chyba" data-chyba hidden></span></div>`;
+}
+
+function textovePole(klic, titulek) {
+  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
+<textarea id="a-${e(klic)}" name="${e(klic)}" rows="3"></textarea><span class="chyba" data-chyba hidden></span></div>`;
+}
+
+function vyber(klic, titulek, moznosti) {
+  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
+<select id="a-${e(klic)}" name="${e(klic)}">${moznosti}</select><span class="chyba" data-chyba hidden></span></div>`;
+}
+
+function zaskrtavatko(klic, titulek, zaskrtnuto = false) {
+  return `<label class="volba"><input type="checkbox" name="${e(klic)}"${zaskrtnuto ? " checked" : ""}> <span>${e(titulek)}</span></label>`;
+}
+
+function oddil(id, titulek, prvni) {
   return `<button type="button" role="tab" data-zalozka="${e(id)}" aria-selected="${prvni ? "true" : "false"}">${e(titulek)}</button>`;
 }
 
 export function administraceStranka(o) {
   const { site, texty, jazyk } = o;
+  const L = (klic) => p(jazyk, klic);
   const stavy = STAVY.map((s) => `<option value="${e(s)}">${e(t(texty, "stav." + s, jazyk))}</option>`).join("");
   const techniky = site.techniky.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
   const styly = site.styly.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
   const albumy = site.albumy.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
+  const typy = ["vystava", "vernisaz", "atelier", "kurz"]
+    .map((x) => `<option value="${x}">${e(t(texty, "kalendar.typ." + x, jazyk))}</option>`).join("");
+
+  const vratnice = `
+<div class="vratnice" data-vratnice>
+<form class="vratnice-panel formular" data-vratnice-form novalidate>
+<p class="verzalky">${e(t(texty, "patka.administrace", jazyk))}</p>
+<p>${e(L("vratnice"))}</p>
+${policko("prihlaseni-jmeno", L("jmeno"))}
+${policko("prihlaseni-heslo", L("heslo"), "password")}
+<p><button class="tlacitko" type="submit">${e(L("prihlasit"))}</button></p>
+</form>
+</div>`;
+
+  const obrazy = `
+<section data-panel="dila">
+<h2>${e(L("obrazy"))}</h2>
+<form class="formular sirsi" data-form-dilo novalidate>
+<p class="formular-hlava"><span data-rezim-dilo>${e(L("novy"))}</span>
+<button class="tlacitko lehke" type="button" data-zrus-dilo hidden>${e(L("zrusit"))}</button></p>
+<div class="dvojice-rovnou">
+${policko("nazev", L("nazevCs"))}
+${policko("nazevEn", L("nazevEn"))}
+</div>
+
+<fieldset class="fotky" data-fotky>
+<legend>${e(L("fotky"))}</legend>
+<div class="pustit" data-pustit>
+<p>${e(L("pretahni"))}</p>
+<p><label class="tlacitko lehke" for="a-fotky">${e(L("vybrat"))}</label>
+<input id="a-fotky" class="skryte" type="file" accept="image/jpeg,image/png,image/webp" multiple data-vstup-fotky></p>
+</div>
+<ul class="fotky-seznam" data-seznam-fotek></ul>
+<p class="chyba" data-chyba-fotky hidden></p>
+<p class="napoveda">${e(L("fotkyUkazka"))}</p>
+</fieldset>
+
+<div class="dvojice-rovnou">
+${policko("rok", L("rok"), "number")}
+${policko("rozmer", L("rozmer"))}
+</div>
+<div class="dvojice-rovnou">
+${vyber("stav", L("stav"), stavy)}
+${policko("cena", L("cena"), "number")}
+</div>
+<div class="dvojice-rovnou">
+${vyber("technika", L("technika"), `<option value=""></option>${techniky}`)}
+${vyber("styl", L("styl"), `<option value=""></option>${styly}`)}
+</div>
+${vyber("album", L("album"), `<option value=""></option>${albumy}`)}
+<div class="dvojice-rovnou">
+${textovePole("popis", L("popisCs"))}
+${textovePole("popisEn", L("popisEn"))}
+</div>
+<div class="pole" data-pole="kde"><span class="popisek">${e(L("kde"))}</span>
+<div class="volby">
+${zaskrtavatko("vGalerii", L("vGalerii"), true)}
+${zaskrtavatko("vEshopu", L("vEshopu"))}
+</div>
+<span class="chyba" data-chyba hidden></span></div>
+<details class="pokrocile">
+<summary>${e(L("pokrocile"))}</summary>
+${policko("slug", L("slug"), "text", { napoveda: L("slugProc") })}
+</details>
+<p><button class="tlacitko" type="submit">${e(L("ulozit"))}</button></p>
+</form>
+<table class="ucet seznam"><tbody data-seznam-dila></tbody></table>
+</section>`;
+
+  const kalendar = `
+<section data-panel="udalosti" hidden>
+<h2>${e(L("kalendar"))}</h2>
+<form class="formular sirsi" data-form-udalost novalidate>
+<p class="formular-hlava"><span data-rezim-udalost>${e(L("novaAkce"))}</span>
+<button class="tlacitko lehke" type="button" data-zrus-udalost hidden>${e(L("zrusit"))}</button></p>
+<div class="dvojice-rovnou">
+${policko("nazev", L("nazevCs"))}
+${policko("nazevEn", L("nazevEn"))}
+</div>
+<div class="dvojice-rovnou">
+${vyber("typ", L("typ"), typy)}
+${vyber("album", L("albumAkce"), `<option value=""></option>${albumy}`)}
+</div>
+<div class="dvojice-rovnou">
+${policko("od", L("od"), "date")}
+${policko("do", L("do"), "date", { napoveda: L("doProc") })}
+</div>
+<div class="dvojice-rovnou">
+${policko("cas", L("cas"), "time")}
+${policko("misto", L("misto"))}
+</div>
+<div class="dvojice-rovnou">
+${textovePole("popis", L("popisCs"))}
+${textovePole("popisEn", L("popisEn"))}
+</div>
+<div class="pole" data-pole="aktualita"><div class="volby">${zaskrtavatko("aktualita", L("aktualita"))}</div></div>
+<details class="pokrocile">
+<summary>${e(L("pokrocile"))}</summary>
+${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
+</details>
+<p><button class="tlacitko" type="submit">${e(L("ulozit"))}</button></p>
+</form>
+<table class="ucet seznam"><tbody data-seznam-udalosti></tbody></table>
+</section>`;
+
+  const kurzy = `
+<section data-panel="kurzy" hidden>
+<h2>${e(L("kurzy"))}</h2>
+<form class="formular sirsi" data-form-kurz novalidate>
+<p class="formular-hlava"><span data-rezim-kurz>${e(L("novyKurz"))}</span>
+<button class="tlacitko lehke" type="button" data-zrus-kurz hidden>${e(L("zrusit"))}</button></p>
+<div class="dvojice-rovnou">
+${policko("nazev", L("nazevCs"))}
+${policko("nazevEn", L("nazevEn"))}
+</div>
+<div class="dvojice-rovnou">
+${policko("kapacita", L("kapacita"), "number")}
+${policko("cena", L("cena"), "number")}
+</div>
+${textovePole("popis", L("popisCs"))}
+<details class="pokrocile">
+<summary>${e(L("pokrocile"))}</summary>
+${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
+</details>
+<p><button class="tlacitko" type="submit">${e(L("ulozit"))}</button></p>
+</form>
+<table class="ucet seznam"><tbody data-seznam-kurzy></tbody></table>
+</section>`;
+
+  const textyPanel = `
+<section data-panel="texty" hidden>
+<h2>${e(L("texty"))}</h2>
+<div class="pole hledani">
+<label for="a-hledat">${e(L("hledat"))}</label>
+<input id="a-hledat" type="search" data-hledat aria-describedby="n-hledat">
+<span class="napoveda" id="n-hledat">${e(L("hledatPopis"))}</span>
+</div>
+<div class="filtry" role="tablist" data-sekce-textu></div>
+<div data-seznam-texty></div>
+<p data-texty-prazdno hidden>${e(L("bezVysledku"))}</p>
+</section>`;
+
+  const kontakty = `
+<section data-panel="kontakty" hidden>
+<h2>${e(L("kontakty"))}</h2>
+<p>${e(L("kontaktyPopis"))}</p>
+<form class="formular sirsi" data-form-kontakty novalidate>
+<div class="dvojice-rovnou">
+${policko("email", L("email"), "email")}
+${policko("telefon", L("telefon"), "tel")}
+</div>
+<div class="dvojice-rovnou">
+${policko("instagram", L("instagram"), "url")}
+${policko("facebook", L("facebook"), "url")}
+</div>
+<div class="dvojice-rovnou">
+${policko("atelierNazev", L("atelierNazev"))}
+${policko("atelierAdresa", L("atelierAdresa"))}
+</div>
+<p><button class="tlacitko" type="submit">${e(L("ulozit"))}</button>
+<span class="ulozeno" data-ulozeno hidden></span></p>
+</form>
+</section>`;
 
   const telo = `
+${vratnice}
+<div class="admin" data-admin hidden>
 <section>
 <h1>${e(t(texty, "patka.administrace", jazyk))}</h1>
 ${ukazka(texty, "ukazka.administrace", jazyk)}
 <p class="verzalky" data-pocty></p>
-<div class="filtry" role="tablist">
-<div class="filtry-rada">
-${zalozka("dila", t(texty, "galerie.titul", jazyk), true)}
-${zalozka("udalosti", t(texty, "kalendar.titul", jazyk), false)}
-${zalozka("kurzy", t(texty, "kurzy.titul", jazyk), false)}
-${zalozka("texty", t(texty, "kontakt.zprava", jazyk), false)}
-</div>
-</div>
 </section>
-
-<section data-panel="dila">
-<h2>${e(t(texty, "galerie.titul", jazyk))}</h2>
-<form class="formular" data-form-dilo novalidate>
-<div class="dvojice">
-${polickoText("slug", "Slug")}
-${polickoCislo("rok", "Rok")}
+<div class="admin-telo">
+<nav class="admin-menu" role="tablist" aria-label="${e(L("oddily"))}">
+${oddil("dila", L("obrazy"), true)}
+${oddil("udalosti", L("kalendar"), false)}
+${oddil("kurzy", L("kurzy"), false)}
+${oddil("texty", L("texty"), false)}
+${oddil("kontakty", L("kontakty"), false)}
+</nav>
+<div class="admin-panely">
+${obrazy}
+${kalendar}
+${kurzy}
+${textyPanel}
+${kontakty}
 </div>
-${polickoText("nazev", t(texty, "objednavka.jmeno", jazyk))}
-<div class="dvojice">
-${polickoText("rozmer", "Rozměr")}
-${polickoCislo("cena", t(texty, "kurzy.cena", jazyk))}
 </div>
-<div class="pole" data-pole="stav"><label for="a-stav">${e(t(texty, "stav.v-prodeji", jazyk))}</label>
-<select id="a-stav" name="stav">${stavy}</select><span class="chyba" data-chyba hidden></span></div>
-<div class="pole" data-pole="technika"><label for="a-technika">${e(t(texty, "galerie.filtr.technika", jazyk))}</label>
-<select id="a-technika" name="technika"><option value=""></option>${techniky}</select></div>
-<div class="pole" data-pole="styl"><label for="a-styl">${e(t(texty, "galerie.filtr.styl", jazyk))}</label>
-<select id="a-styl" name="styl"><option value=""></option>${styly}</select></div>
-<div class="pole" data-pole="album"><label for="a-album">${e(t(texty, "galerie.filtr.udalost", jazyk))}</label>
-<select id="a-album" name="album"><option value=""></option>${albumy}</select></div>
-<div class="pole" data-pole="kde">
-<label><input type="checkbox" name="vGalerii" checked> ${e(t(texty, "galerie.titul", jazyk))}</label>
-<label><input type="checkbox" name="vEshopu"> ${e(t(texty, "eshop.titul", jazyk))}</label>
-<span class="chyba" data-chyba hidden></span>
-</div>
-<p><button class="tlacitko" type="submit">${e(t(texty, "kosik.dokoncit", jazyk))}</button>
-<button class="tlacitko lehke" type="reset">${e(t(texty, "galerie.filtr.zrusit", jazyk))}</button></p>
-</form>
-<table class="ucet"><tbody data-seznam-dila></tbody></table>
-</section>
-
-<section data-panel="udalosti" hidden>
-<h2>${e(t(texty, "kalendar.titul", jazyk))}</h2>
-<form class="formular" data-form-udalost novalidate>
-${polickoText("id", "Slug")}
-${polickoText("nazev", t(texty, "objednavka.jmeno", jazyk))}
-<div class="pole" data-pole="typ"><label for="a-typ">${e(t(texty, "kalendar.typ.vystava", jazyk))}</label>
-<select id="a-typ" name="typ">
-${["vystava", "vernisaz", "atelier", "kurz"].map((x) => `<option value="${x}">${e(t(texty, "kalendar.typ." + x, jazyk))}</option>`).join("")}
-</select><span class="chyba" data-chyba hidden></span></div>
-<div class="dvojice">
-${polickoDatum("od", t(texty, "kalendar.pristi", jazyk))}
-${polickoDatum("do", t(texty, "kalendar.minule", jazyk))}
-</div>
-<div class="pole" data-pole="aktualita"><label><input type="checkbox" name="aktualita"> ${e(t(texty, "uvod.aktualne", jazyk))}</label></div>
-<p><button class="tlacitko" type="submit">${e(t(texty, "kosik.dokoncit", jazyk))}</button></p>
-</form>
-<table class="ucet"><tbody data-seznam-udalosti></tbody></table>
-</section>
-
-<section data-panel="kurzy" hidden>
-<h2>${e(t(texty, "kurzy.titul", jazyk))}</h2>
-<form class="formular" data-form-kurz novalidate>
-${polickoText("id", "Slug")}
-${polickoText("nazev", t(texty, "objednavka.jmeno", jazyk))}
-<div class="dvojice">
-${polickoCislo("kapacita", t(texty, "kurzy.kapacita", jazyk))}
-${polickoCislo("cena", t(texty, "kurzy.cena", jazyk))}
-</div>
-<p><button class="tlacitko" type="submit">${e(t(texty, "kosik.dokoncit", jazyk))}</button></p>
-</form>
-<table class="ucet"><tbody data-seznam-kurzy></tbody></table>
-</section>
-
-<section data-panel="texty" hidden>
-<h2>${e(t(texty, "kontakt.zprava", jazyk))}</h2>
-<table class="ucet"><tbody data-seznam-texty></tbody></table>
-</section>
-
-<script type="application/json" data-site>${JSON.stringify(site).replace(/</g, "\\u003c")}</script>
-<script type="application/json" data-texty>${JSON.stringify(texty).replace(/</g, "\\u003c")}</script>
 <section>
 <p><a href="${cesta("domu", jazyk)}">← ${e(t(texty, "nav.domu", jazyk))}</a>
-<button class="tlacitko lehke" type="button" data-reset-stav>${e(t(texty, "galerie.filtr.zrusit", jazyk))}</button></p>
+<button class="tlacitko lehke" type="button" data-reset-stav>${e(L("vratitVse"))}</button></p>
 </section>
+</div>
+<script type="application/json" data-site>${JSON.stringify(site).replace(/</g, "\\u003c")}</script>
+<script type="application/json" data-texty>${JSON.stringify(texty).replace(/</g, "\\u003c")}</script>
+<script type="application/json" data-popisky>${JSON.stringify(POPISKY[jazyk] || POPISKY.cs).replace(/</g, "\\u003c")}</script>
 `;
   return layout({ ...o, admin: true, aktivni: "", adresa: cesta("administrace", jazyk), titul: t(texty, "patka.administrace", jazyk), popis: "", telo });
-}
-
-function polickoText(klic, titulek) {
-  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
-<input id="a-${e(klic)}" name="${e(klic)}" type="text"><span class="chyba" data-chyba hidden></span></div>`;
-}
-function polickoCislo(klic, titulek) {
-  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
-<input id="a-${e(klic)}" name="${e(klic)}" type="number" min="0" step="1"><span class="chyba" data-chyba hidden></span></div>`;
-}
-function polickoDatum(klic, titulek) {
-  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
-<input id="a-${e(klic)}" name="${e(klic)}" type="date"><span class="chyba" data-chyba hidden></span></div>`;
 }

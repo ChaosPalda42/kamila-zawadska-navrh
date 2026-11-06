@@ -598,6 +598,7 @@
     {
       "id": "vystava-pragovka",
       "typ": "vystava",
+      "album": "pragovka-2026",
       "nazev": {
         "cs": "Pop art v Pragovce",
         "en": "Pop Art at Pragovka"
@@ -619,6 +620,7 @@
     {
       "id": "vernisaz-pragovka",
       "typ": "vernisaz",
+      "album": "pragovka-2026",
       "nazev": {
         "cs": "Vernisáž výstavy Pop art v Pragovce",
         "en": "Opening: Pop Art at Pragovka"
@@ -640,6 +642,7 @@
     {
       "id": "atelier-21-11",
       "typ": "atelier",
+      "album": "atelier",
       "nazev": {
         "cs": "Otevřený ateliér",
         "en": "Open studio"
@@ -661,6 +664,7 @@
     {
       "id": "atelier-05-12",
       "typ": "atelier",
+      "album": "atelier",
       "nazev": {
         "cs": "Otevřený ateliér",
         "en": "Open studio"
@@ -703,6 +707,7 @@
     {
       "id": "vystava-chvalsky",
       "typ": "vystava",
+      "album": "chvalsky-zamek-2025",
       "nazev": {
         "cs": "Chvalský zámek",
         "en": "Chvaly Castle"
@@ -724,6 +729,7 @@
     {
       "id": "vystava-ruce",
       "typ": "vystava",
+      "album": "ruce-2024",
       "nazev": {
         "cs": "Ruce",
         "en": "Hands"

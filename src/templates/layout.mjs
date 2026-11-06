@@ -4,8 +4,9 @@
    Na mobilu se sbalí pod tlačítko — sloupec 15 rem by na telefonu sežral
    polovinu obrazovky. */
 
-import { t, pole, cesta, prepni, druhyJazyk, JAZYKY } from "../lib/preklad.mjs";
+import { t, pole, cesta, cestaDila, prepni, druhyJazyk, JAZYKY } from "../lib/preklad.mjs";
 import { format, aktuality as vyberAktuality } from "../lib/kalendar.mjs";
+import { stav as stavAkce, dnuDo, dilaAkce, poradi } from "../lib/udalost.mjs";
 import { obrazek } from "./obrazky.mjs";
 
 /* Otisk sestavení v adresách stylů a skriptů: po nasazení nikdo nekouká
@@ -54,23 +55,101 @@ function menu(aktivni, jazyk, texty, pocty) {
 
 /* Lišta aktualit. Bez JavaScriptu zůstanou vidět všechny tři pod sebou —
    rotaci dělá src/ui/web.js a teprve ten zbytek skryje. Kdyby se skript
-   nestáhl, člověk pořád vidí, co se chystá. */
+   nestáhl, člověk pořád vidí, co se chystá.
+
+   Klientka chtěla lištu výraznější a ovládání větší: každá položka nese typ
+   akce, datum i větu o tom, kolik dnů zbývá, a přepínače jsou plné pilulky
+   s datem, ne tečky o osmi pixelech. Klik otevře detail na místě (data-akce,
+   src/ui/akce.js) — bez skriptu vede odkaz do kalendáře jako dřív. */
+
+/** „Za 3 dny", „Zítra", „Právě probíhá". Čísla jsou na akci to první, co padne do oka. */
+function kdyVetou(u, dnes, jazyk, texty) {
+  const kde = stavAkce(u, dnes);
+  if (kde === "probiha") return t(texty, "kalendar.probiha", jazyk);
+  if (kde === "bylo") return t(texty, "kalendar.bylo", jazyk);
+  const kolik = dnuDo(u, dnes);
+  if (kolik === null || kolik < 0) return t(texty, "kalendar.chysta", jazyk);
+  if (kolik === 0) return t(texty, "kalendar.dnes", jazyk);
+  if (kolik === 1) return t(texty, "kalendar.zitra", jazyk);
+  // Čeština má u dnů tři tvary; 2–4 "dny", od pěti "dní".
+  const klic = kolik <= 4 ? "kalendar.za-dny" : "kalendar.za-dni";
+  return t(texty, klic, jazyk).replace("%s", String(kolik));
+}
+
 function aktuality(udalosti, dnes, jazyk, texty) {
   const vybrane = vyberAktuality(udalosti, dnes, 3);
   if (!vybrane.length) return "";
   const radky = vybrane.map((u, i) => `<li data-aktualita="${i}">
-<a href="${cesta("kalendar", jazyk)}#${e(u.id)}">
-<span class="kdy">${e(format(u, jazyk))}</span>
+<a href="${cesta("kalendar", jazyk)}#${e(u.id)}" data-akce="${e(u.id)}">
+<span class="chip ${e(u.typ || "")}">${e(t(texty, "kalendar.typ." + u.typ, jazyk))}</span>
 <span class="nazev">${e(pole(u.nazev, jazyk))}</span>
+<span class="kdy">${e(format(u, jazyk))}</span>
+<span class="za ${e(stavAkce(u, dnes))}">${e(kdyVetou(u, dnes, jazyk, texty))}</span>
 </a></li>`);
-  const tecky = vybrane.map((u, i) =>
+  const prepinace = vybrane.map((u, i) =>
     `<button type="button" data-tecka="${i}" aria-current="${i === 0 ? "true" : "false"}">
+<span aria-hidden="true">${e(format(u, jazyk).split(" ")[0])}</span>
 <span class="skryte">${e(pole(u.nazev, jazyk))}</span></button>`);
   return `<nav class="aktuality" aria-label="${e(t(texty, "uvod.aktualne", jazyk))}" data-aktuality>
-<p class="verzalky">${e(t(texty, "uvod.aktualne", jazyk))}</p>
+<p class="verzalky"><span class="tep" aria-hidden="true"></span>${e(t(texty, "uvod.aktualne", jazyk))}</p>
 <ul>${radky.join("")}</ul>
-<div class="tecky" role="group">${tecky.join("")}</div>
+<div class="tecky" role="group" aria-label="${e(t(texty, "uvod.aktualne", jazyk))}">${prepinace.join("")}</div>
 </nav>`;
+}
+
+/* Detail akce. Panel je v obalu stránky, protože na akci se dá kliknout
+   odkudkoli — lišta aktualit stojí v menu na každé stránce. Co se v panelu
+   vypíše, posílá šablona jako JSON: obrázky děl mají srcsety, které zná jen
+   build, a prohlížeč by si je vymýšlet neměl. */
+function detailAkce(site, texty, jazyk, dnes) {
+  const udalosti = poradi(site.udalosti, dnes).map((id) => {
+    const u = site.udalosti.find((x) => x.id === id);
+    return {
+      id: u.id,
+      typ: u.typ,
+      typNazev: t(texty, "kalendar.typ." + u.typ, jazyk),
+      nazev: pole(u.nazev, jazyk),
+      od: u.od,
+      do: u.do || "",
+      cas: u.cas || "",
+      kdy: format(u, jazyk),
+      misto: pole(u.misto, jazyk),
+      popis: pole(u.popis, jazyk),
+      // Díla visí u alba, ne u akce: jedno album (pragovka-2026) nese výstavu
+      // i vernisáž. C-012 porovnává dilo.album s id akce, tak mu podstrčíme album.
+      dila: dilaAkce(site.dila, { ...u, id: u.album || u.id }).slice(0, 6).map((d) => ({
+        nazev: pole(d.nazev, jazyk),
+        odkaz: cestaDila(d.slug, jazyk),
+        html: obrazek(d.obrazek, pole(d.alt, jazyk) || pole(d.nazev, jazyk), { sloupcu: 3 }),
+      })),
+    };
+  });
+  const popisky = [
+    `data-kde="${e(t(texty, "kalendar.detail.kde", jazyk))}"`,
+    `data-dila="${e(t(texty, "kalendar.detail.dila", jazyk))}"`,
+    `data-dnes="${e(t(texty, "kalendar.dnes", jazyk))}"`,
+    `data-zitra="${e(t(texty, "kalendar.zitra", jazyk))}"`,
+    `data-stav-probiha="${e(t(texty, "kalendar.probiha", jazyk))}"`,
+    `data-stav-bylo="${e(t(texty, "kalendar.bylo", jazyk))}"`,
+    `data-stav-chysta="${e(t(texty, "kalendar.chysta", jazyk))}"`,
+    `data-za="${e(JSON.stringify([
+      t(texty, "kalendar.za-den", jazyk),
+      t(texty, "kalendar.za-dny", jazyk),
+      t(texty, "kalendar.za-dni", jazyk),
+    ]))}"`,
+  ].join(" ");
+  return `<div class="detail-akce" data-detail-akce ${popisky} hidden>
+<div class="detail-plachta" data-detail-plachta></div>
+<div class="detail-panel" role="dialog" aria-modal="true" data-detail-panel>
+<div class="detail-telo" data-detail-telo></div>
+<div class="detail-ovladani">
+<button type="button" class="tlacitko lehke" data-detail-predchozi>← ${e(t(texty, "kalendar.detail.predchozi", jazyk))}</button>
+<button type="button" class="tlacitko lehke" data-detail-dalsi>${e(t(texty, "kalendar.detail.dalsi", jazyk))} →</button>
+</div>
+<button type="button" class="detail-zavri" data-detail-zavri aria-label="${e(t(texty, "kalendar.detail.zavrit", jazyk))}">×</button>
+</div>
+<script type="application/json" data-udalosti-detail>${JSON.stringify(udalosti).replace(/</g, "\\u003c")}</script>
+</div>`;
 }
 
 function patka(site, texty, jazyk, adresa) {
@@ -165,6 +244,7 @@ ${telo}
 </main>
 ${patka(site, texty, jazyk, adresa)}
 </div>
+${detailAkce(site, texty, jazyk, dnes)}
 ${chybyProProhlizec(texty, jazyk)}
 <script src="/web.js${otisk}" defer></script>
 ${o.admin ? `<script src="/admin.js${otisk}" defer></script>` : ""}

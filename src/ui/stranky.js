@@ -218,6 +218,7 @@
             var a = doc.createElement("a");
             a.className = "akce " + u.typ;
             a.href = "#" + u.id;
+            a.setAttribute("data-akce", u.id);
             a.textContent = u.nazev;
             td.appendChild(a);
           });

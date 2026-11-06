@@ -7,3 +7,7 @@ out/
 _balicek/
 .DS_Store
 podklady/
+
+# Dílna: zdrojové fotky a log generování se nezveřejňují
+.factory-*.log
+src/obrazky-zdroj/

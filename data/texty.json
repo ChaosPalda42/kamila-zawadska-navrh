@@ -280,6 +280,58 @@
     "cs": "Kurz",
     "en": "Course"
   },
+  "kalendar.probiha": {
+    "cs": "Právě probíhá",
+    "en": "Happening now"
+  },
+  "kalendar.bylo": {
+    "cs": "Už bylo",
+    "en": "Past"
+  },
+  "kalendar.chysta": {
+    "cs": "Chystá se",
+    "en": "Upcoming"
+  },
+  "kalendar.zitra": {
+    "cs": "Zítra",
+    "en": "Tomorrow"
+  },
+  "kalendar.za-den": {
+    "cs": "za %s den",
+    "en": "in %s day"
+  },
+  "kalendar.za-dny": {
+    "cs": "za %s dny",
+    "en": "in %s days"
+  },
+  "kalendar.za-dni": {
+    "cs": "za %s dní",
+    "en": "in %s days"
+  },
+  "kalendar.detail.kde": {
+    "cs": "Kde",
+    "en": "Where"
+  },
+  "kalendar.detail.dila": {
+    "cs": "Obrazy z téhle akce",
+    "en": "Works from this event"
+  },
+  "kalendar.detail.vic": {
+    "cs": "Detail",
+    "en": "Details"
+  },
+  "kalendar.detail.zavrit": {
+    "cs": "Zavřít detail",
+    "en": "Close the detail"
+  },
+  "kalendar.detail.predchozi": {
+    "cs": "Předchozí",
+    "en": "Previous"
+  },
+  "kalendar.detail.dalsi": {
+    "cs": "Další",
+    "en": "Next"
+  },
   "kurzy.titul": {
     "cs": "Kurzy",
     "en": "Courses"
