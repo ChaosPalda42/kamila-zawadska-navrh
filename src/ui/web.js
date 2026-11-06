@@ -55,19 +55,41 @@
     var tecky = vse("[data-tecka]", lista);
     if (polozky.length < 2) return;
     var kde = 0;
-    function ukaz(i) {
+
+    /* Starý list neodejde rázem: zvedne se přes horní hranu a teprve cestou
+       zmizí. Po tu chvíli visí nad hromádkou napevno (absolutně), aby pod
+       ním mohl nový list v klidu ležet a lišta nepodskočila. */
+    function odlistuj(list) {
+      if (!list || list === polozky[kde]) return;
+      if (!doc.documentElement.classList.contains("pohyb")) return;
+      list.hidden = false;
+      list.setAttribute("data-odchazi", "");
+      function uklid() {
+        list.removeEventListener("animationend", uklid);
+        list.removeAttribute("data-odchazi");
+        list.hidden = list !== polozky[kde];
+      }
+      list.addEventListener("animationend", uklid);
+      // Kdyby se animace neozvala (jiná karta prohlížeče, přerušení),
+      // list po sobě uklidí i tak — nesmí zůstat viset přes hromádku.
+      window.setTimeout(uklid, 1600);
+    }
+
+    function ukaz(i, plynule) {
+      var minule = kde;
       kde = (i + polozky.length) % polozky.length;
       polozky.forEach(function (p, j) { p.hidden = j !== kde; });
+      if (plynule && minule !== kde) odlistuj(polozky[minule]);
       tecky.forEach(function (t, j) { t.setAttribute("aria-current", j === kde ? "true" : "false"); });
     }
     tecky.forEach(function (t, j) {
-      t.addEventListener("click", function () { ukaz(j); zastav(); });
+      t.addEventListener("click", function () { ukaz(j, true); zastav(); });
     });
-    ukaz(0);
+    ukaz(0, false);
     var hodiny = null;
     function zastav() { if (hodiny) { clearInterval(hodiny); hodiny = null; } }
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      hodiny = setInterval(function () { ukaz(kde + 1); }, 6000);
+      hodiny = setInterval(function () { ukaz(kde + 1, true); }, 6000);
       lista.addEventListener("mouseenter", zastav);
       lista.addEventListener("focusin", zastav);
     }

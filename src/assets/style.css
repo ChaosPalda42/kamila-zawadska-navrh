@@ -835,13 +835,30 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 /* Položka se po přepnutí přisune zprava. Nehýbe se nic jiného, takže lišta
    nepřeskakuje. */
-/* List se překlopí přes horní hranu, jako když se na stolním kalendáři
-   přetočí stránka. Bez povoleného pohybu se prostě vymění. */
-.pohyb .aktuality [data-aktualita]:not([hidden]) { animation: prevrat 0.55s cubic-bezier(0.22, 0.7, 0.2, 1) both; transform-origin: top center; }
+/* Přetočení listu na stolním kalendáři. Starý list se zvedne přes horní
+   hranu a teprve cestou vybledne; nový pod ním už celou dobu leží, takže
+   se nic neobjeví zčistajasna. Pomalu schválně — rychlé překlopení oko
+   přečte jako zásek, ne jako pohyb. Bez povoleného pohybu se jen vymění. */
+.pohyb .aktuality [data-aktualita]:not([hidden]):not([data-odchazi]) {
+  animation: prevrat 1.1s cubic-bezier(0.33, 0.75, 0.3, 1) both;
+  transform-origin: top center;
+}
 @keyframes prevrat {
-  from { transform: rotateX(-84deg); opacity: 0; }
-  60% { opacity: 1; }
+  from { transform: rotateX(-12deg); opacity: 0.45; }
   to { transform: rotateX(0deg); opacity: 1; }
+}
+.pohyb .aktuality [data-aktualita][data-odchazi] {
+  position: absolute; left: 1rem; right: 1rem; top: 1rem;
+  transform-origin: top center; pointer-events: none; z-index: 3;
+  background: #fcfbfa;
+  animation: odlist 1.1s cubic-bezier(0.38, 0.12, 0.32, 1) both;
+}
+@keyframes odlist {
+  from { transform: rotateX(0deg); opacity: 1; }
+  /* Blednout začne až u kolmice: za ní už by bylo vidět rub listu
+     se zrcadlově obráceným textem. */
+  48% { opacity: 1; }
+  to { transform: rotateX(-112deg); opacity: 0; }
 }
 .aktuality .tecky button { transition: background 0.3s ease, transform 0.3s ease; }
 .aktuality .tecky button:hover { transform: scale(1.4); }

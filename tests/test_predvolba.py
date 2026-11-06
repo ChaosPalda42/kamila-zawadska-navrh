@@ -99,6 +99,60 @@ def test_html_prazdna_predvolba_nic_nedela():
     assert preved_html(html, "") == html
 
 
+# --- HTML schované v JSON ---------------------------------------------------
+
+JSON_SKRIPT = (
+    '<script type="application/json" data-dila>'
+    '[{"slug":"a",'
+    '"obrazek":"<img src=\\"/obrazky/a-960.jpg\\" '
+    'srcset=\\"/obrazky/a-480.jpg 480w, /obrazky/a-960.jpg 960w\\" alt=\\"A\\">",'
+    '"odkaz":{"kam":"/galerie/a/","text":"Detail"}}]'
+    "</script>"
+)
+
+
+def test_json_skript_prepise_atributy_s_escapovanymi_uvozovkami():
+    """Lupa v galerii dostává hotové HTML uvnitř JSON, kde jsou uvozovky
+    psané jako \\" — bez tohohle zůstanou cesty od kořene a pod podsložkou
+    skončí na 404."""
+    vysledek = preved_html(JSON_SKRIPT, "/ukazka")
+    assert 'src=\\"/ukazka/obrazky/a-960.jpg\\"' in vysledek
+    assert 'srcset=\\"/ukazka/obrazky/a-480.jpg 480w, /ukazka/obrazky/a-960.jpg 960w\\"' in vysledek
+    assert 'alt=\\"A\\"' in vysledek
+
+
+def test_json_skript_prepise_adresu_v_hodnote():
+    vysledek = preved_html(JSON_SKRIPT, "/ukazka")
+    assert '"kam":"/ukazka/galerie/a/"' in vysledek
+
+
+def test_json_skript_neprepise_co_nema():
+    html = (
+        '<script type="application/json" data-neco>'
+        '[{"popis":"venku","web":"https://x.cz/a","kotva":"#dole",'
+        '"relativni":"obrazky/a.jpg","bez-schematu":"//cdn.x.cz/a.js",'
+        '"posta":"mailto:a@b.cz"}]'
+        "</script>"
+    )
+    assert preved_html(html, "/ukazka") == html
+
+
+def test_mimo_json_skript_se_retezce_nemeni():
+    """Obyčejný <script> je kód, ne data: do řetězců v něm se nesahá."""
+    html = '<script>var x = {"kam":"/galerie/a/"};</script>'
+    assert preved_html(html, "/ukazka") == html
+
+
+def test_json_skript_druhy_beh_nic_nezmeni():
+    jednou = preved_html(JSON_SKRIPT, "/ukazka")
+    assert preved_html(jednou, "/ukazka") == jednou
+
+
+def test_json_skript_se_pocita_do_adres(web):
+    koren = web({"galerie/index.html": JSON_SKRIPT})
+    assert preved(koren, "/ukazka") == {"souboru": 1, "adres": 4}
+
+
 # --- CSS --------------------------------------------------------------------
 
 def test_css_url_vsechny_zapisy():
