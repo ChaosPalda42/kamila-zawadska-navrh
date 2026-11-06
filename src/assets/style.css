@@ -184,22 +184,36 @@ p:last-child { margin-bottom: 0; }
    moc malé. Má teď vlastní papír s rámečkem, tep u nadpisu, u akce typ i
    větu „za 8 dní" — a místo teček o čtyřech pixelech pilulky s datem, které
    mají přes 2,2 rem na prst. */
-.aktuality {
-  margin-top: 1.4rem; padding: 1rem;
-  border: 1px solid var(--linka); border-top: 2px solid var(--zvyraz);
-  background: #fcfbfa;
-}
-.aktuality > .verzalky { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.6rem; color: var(--inkoust); }
+.aktuality { margin-top: 1.4rem; }
+.aktuality > .verzalky { display: flex; align-items: center; gap: 0.45rem; margin: 0 0 0.7rem; color: var(--inkoust); }
 .aktuality .tep {
   width: 0.5rem; height: 0.5rem; border-radius: 50%;
   background: var(--zvyraz); flex: 0 0 auto;
 }
+/* Kroužky hřbetu. Sedí na horní hraně listu a překrývají ji, aby to
+   vypadalo, že jimi listy opravdu procházejí. */
+.aktuality .krouzky { display: flex; justify-content: center; gap: 2.4rem; height: 0.85rem; margin-bottom: -0.42rem; position: relative; z-index: 2; }
+.aktuality .krouzky span {
+  width: 0.5rem; height: 0.85rem; border-radius: 999px;
+  border: 1px solid #b9b2a8; background: linear-gradient(180deg, #fff 0%, #d9d2c8 55%, #fff 100%);
+}
 .aktuality li { list-style: none; }
 .aktuality ul { margin: 0; padding: 0; }
+/* Hromádka listů pod tím, co je zrovna navrchu. */
+.aktuality .listy {
+  position: relative; perspective: 900px;
+  border: 1px solid var(--linka); border-top: 2px solid var(--zvyraz);
+  background: #fcfbfa; padding: 1rem;
+  box-shadow: 0 1px 0 var(--papir), 0 2px 0 #e7e1d8, 0 4px 0 var(--papir), 0 5px 0 #efe9e0, 0 8px 14px rgba(40, 34, 28, 0.07);
+}
 .aktuality a {
   display: grid; gap: 0.15rem; text-decoration: none; font-size: 0.9rem;
   padding: 0.2rem 0; border-radius: 2px;
 }
+/* Datum jako na stolním kalendáři: velké číslo dne, pod ním měsíc. */
+.aktuality .datum { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.15rem; }
+.aktuality .datum .den { font: 400 2.5rem/0.9 var(--pismo); color: var(--inkoust); }
+.aktuality .datum .mesic { font: 400 0.72rem/1 var(--pismo); letter-spacing: 0.14em; text-transform: uppercase; color: var(--tichy); }
 .aktuality .nazev { font-family: var(--pismo); color: var(--inkoust); line-height: 1.35; }
 .aktuality .kdy { display: block; color: var(--tichy); font-size: 0.78rem; }
 .aktuality .za { font-size: 0.78rem; color: var(--zvyraz); font-family: var(--pismo); }
@@ -821,7 +835,14 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 /* Položka se po přepnutí přisune zprava. Nehýbe se nic jiného, takže lišta
    nepřeskakuje. */
-.pohyb .aktuality [data-aktualita]:not([hidden]) { animation: zprava 0.6s cubic-bezier(0.22, 0.7, 0.2, 1) both; }
+/* List se překlopí přes horní hranu, jako když se na stolním kalendáři
+   přetočí stránka. Bez povoleného pohybu se prostě vymění. */
+.pohyb .aktuality [data-aktualita]:not([hidden]) { animation: prevrat 0.55s cubic-bezier(0.22, 0.7, 0.2, 1) both; transform-origin: top center; }
+@keyframes prevrat {
+  from { transform: rotateX(-84deg); opacity: 0; }
+  60% { opacity: 1; }
+  to { transform: rotateX(0deg); opacity: 1; }
+}
 .aktuality .tecky button { transition: background 0.3s ease, transform 0.3s ease; }
 .aktuality .tecky button:hover { transform: scale(1.4); }
 .aktuality .tecky button[aria-current="true"] { transform: scale(1.3); }

@@ -8,6 +8,7 @@ import { t, pole, cesta, cestaDila, prepni, druhyJazyk, JAZYKY } from "../lib/pr
 import { format, aktuality as vyberAktuality } from "../lib/kalendar.mjs";
 import { stav as stavAkce, dnuDo, dilaAkce, poradi } from "../lib/udalost.mjs";
 import { obrazek } from "./obrazky.mjs";
+import { mesicJmeno } from "./mesice.mjs";
 
 /* Otisk sestavení v adresách stylů a skriptů: po nasazení nikdo nekouká
    na starou verzi z mezipaměti prohlížeče. */
@@ -79,20 +80,28 @@ function kdyVetou(u, dnes, jazyk, texty) {
 function aktuality(udalosti, dnes, jazyk, texty) {
   const vybrane = vyberAktuality(udalosti, dnes, 3);
   if (!vybrane.length) return "";
-  const radky = vybrane.map((u, i) => `<li data-aktualita="${i}">
+  const radky = vybrane.map((u, i) => {
+    const [, mesicCislo, den] = String(u.od || "").split("-");
+    return `<li data-aktualita="${i}">
 <a href="${cesta("kalendar", jazyk)}#${e(u.id)}" data-akce="${e(u.id)}">
+<span class="datum" aria-hidden="true"><span class="den">${e(String(Number(den) || ""))}</span><span class="mesic">${e(mesicJmeno(Number(mesicCislo), jazyk))}</span></span>
 <span class="chip ${e(u.typ || "")}">${e(t(texty, "kalendar.typ." + u.typ, jazyk))}</span>
 <span class="nazev">${e(pole(u.nazev, jazyk))}</span>
 <span class="kdy">${e(format(u, jazyk))}</span>
 <span class="za ${e(stavAkce(u, dnes))}">${e(kdyVetou(u, dnes, jazyk, texty))}</span>
-</a></li>`);
+</a></li>`;
+  });
   const prepinace = vybrane.map((u, i) =>
     `<button type="button" data-tecka="${i}" aria-current="${i === 0 ? "true" : "false"}">
 <span aria-hidden="true">${e(format(u, jazyk).split(" ")[0])}</span>
 <span class="skryte">${e(pole(u.nazev, jazyk))}</span></button>`);
+  /* Stolní kalendář: kroužky, list s datem a pod ním naznačená hromádka
+     dalších listů. Listy se po pár vteřinách přetáčejí samy (web.js),
+     čísla dní pod nimi jsou ruční přetočení. */
   return `<nav class="aktuality" aria-label="${e(t(texty, "uvod.aktualne", jazyk))}" data-aktuality>
 <p class="verzalky"><span class="tep" aria-hidden="true"></span>${e(t(texty, "uvod.aktualne", jazyk))}</p>
-<ul>${radky.join("")}</ul>
+<div class="krouzky" aria-hidden="true"><span></span><span></span><span></span></div>
+<ul class="listy">${radky.join("")}</ul>
 <div class="tecky" role="group" aria-label="${e(t(texty, "uvod.aktualne", jazyk))}">${prepinace.join("")}</div>
 </nav>`;
 }
@@ -102,28 +111,35 @@ function aktuality(udalosti, dnes, jazyk, texty) {
    vypíše, posílá šablona jako JSON: obrázky děl mají srcsety, které zná jen
    build, a prohlížeč by si je vymýšlet neměl. */
 function detailAkce(site, texty, jazyk, dnes) {
-  const udalosti = poradi(site.udalosti, dnes).map((id) => {
+  const akce = poradi(site.udalosti, dnes).map((id) => {
     const u = site.udalosti.find((x) => x.id === id);
-    return {
-      id: u.id,
-      typ: u.typ,
-      typNazev: t(texty, "kalendar.typ." + u.typ, jazyk),
-      nazev: pole(u.nazev, jazyk),
-      od: u.od,
-      do: u.do || "",
-      cas: u.cas || "",
-      kdy: format(u, jazyk),
-      misto: pole(u.misto, jazyk),
-      popis: pole(u.popis, jazyk),
-      // Díla visí u alba, ne u akce: jedno album (pragovka-2026) nese výstavu
-      // i vernisáž. C-012 porovnává dilo.album s id akce, tak mu podstrčíme album.
-      dila: dilaAkce(site.dila, { ...u, id: u.album || u.id }).slice(0, 6).map((d) => ({
-        nazev: pole(d.nazev, jazyk),
-        odkaz: cestaDila(d.slug, jazyk),
-        html: obrazek(d.obrazek, pole(d.alt, jazyk) || pole(d.nazev, jazyk), { sloupcu: 3 }),
-      })),
-    };
+    // Díla visí u alba, ne u akce: jedno album (pragovka-2026) nese výstavu
+    // i vernisáž. C-012 porovnává dilo.album s id akce, tak mu podstrčíme album.
+    return { u, dila: dilaAkce(site.dila, { ...u, id: u.album || u.id }).slice(0, 6) };
   });
+  const udalosti = akce.map(({ u }) => ({
+    id: u.id,
+    typ: u.typ,
+    typNazev: t(texty, "kalendar.typ." + u.typ, jazyk),
+    nazev: pole(u.nazev, jazyk),
+    od: u.od,
+    do: u.do || "",
+    cas: u.cas || "",
+    kdy: format(u, jazyk),
+    misto: pole(u.misto, jazyk),
+    popis: pole(u.popis, jazyk),
+    kurz: u.kurz || "",
+  }));
+  /* Díla jdou do <template>, ne do toho JSON vedle. Cesty k obrázkům a
+     odkazům se na GitHub Pages přepisují o podsložku (tools/predvolba.py),
+     a ten přepis vidí atributy v HTML — ne řetězce uvnitř JSON. V JSON by
+     obrázky zůstaly na "/obrazky/…" a nenačetly se. */
+  const sablonyDil = akce.filter(({ dila }) => dila.length).map(({ u, dila }) => {
+    const polozky = dila.map((d) => `<li><a href="${cestaDila(d.slug, jazyk)}">${
+      obrazek(d.obrazek, pole(d.alt, jazyk) || pole(d.nazev, jazyk), { sloupcu: 3 })
+    }<span class="nazev">${e(pole(d.nazev, jazyk))}</span></a></li>`).join("");
+    return `<template data-dila-akce="${e(u.id)}"><ul class="detail-dila">${polozky}</ul></template>`;
+  }).join("");
   const popisky = [
     `data-kde="${e(t(texty, "kalendar.detail.kde", jazyk))}"`,
     `data-dila="${e(t(texty, "kalendar.detail.dila", jazyk))}"`,
@@ -142,12 +158,17 @@ function detailAkce(site, texty, jazyk, dnes) {
 <div class="detail-plachta" data-detail-plachta></div>
 <div class="detail-panel" role="dialog" aria-modal="true" data-detail-panel>
 <div class="detail-telo" data-detail-telo></div>
+<!-- Odkaz na kurzy je hotový v HTML, ne skládaný ze JSON: jen tak mu
+     předvolba pro GitHub Pages doplní podsložku. Kotvu na konkrétní kurz
+     přidá akce.js. -->
+<p class="detail-kurz"><a class="tlacitko" data-detail-kurzy href="${cesta("kurzy", jazyk)}" hidden>${e(t(texty, "kalendar.detail.kurz", jazyk))} →</a></p>
 <div class="detail-ovladani">
 <button type="button" class="tlacitko lehke" data-detail-predchozi>← ${e(t(texty, "kalendar.detail.predchozi", jazyk))}</button>
 <button type="button" class="tlacitko lehke" data-detail-dalsi>${e(t(texty, "kalendar.detail.dalsi", jazyk))} →</button>
 </div>
 <button type="button" class="detail-zavri" data-detail-zavri aria-label="${e(t(texty, "kalendar.detail.zavrit", jazyk))}">×</button>
 </div>
+${sablonyDil}
 <script type="application/json" data-udalosti-detail>${JSON.stringify(udalosti).replace(/</g, "\\u003c")}</script>
 </div>`;
 }

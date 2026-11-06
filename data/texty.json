@@ -316,6 +316,10 @@
     "cs": "Obrazy z téhle akce",
     "en": "Works from this event"
   },
+  "kalendar.detail.kurz": {
+    "cs": "Zobrazit kurz a přihlásit se",
+    "en": "View the course and sign up"
+  },
   "kalendar.detail.vic": {
     "cs": "Detail",
     "en": "Details"

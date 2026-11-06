@@ -9,14 +9,10 @@ import {
 } from "../lib/dila.mjs";
 import { mesic as mrizkaMesice, chystaSe, bylo, format } from "../lib/kalendar.mjs";
 import { DUVODY, prazdny as prazdnyFormular } from "../lib/formular.mjs";
+import { nazevMesice } from "./mesice.mjs";
 
 const DNY_CS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const DNY_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const MESICE_CS = ["leden", "únor", "březen", "duben", "květen", "červen",
-  "červenec", "srpen", "září", "říjen", "listopad", "prosinec"];
-const MESICE_EN = ["January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"];
-
 function nazevDila(dilo, jazyk) { return pole(dilo.nazev, jazyk) || dilo.slug; }
 function altDila(dilo, jazyk) { return pole(dilo.alt, jazyk) || nazevDila(dilo, jazyk); }
 
@@ -343,12 +339,6 @@ function autoVyplnit(klic) {
   return { jmeno: "name", email: "email", telefon: "tel", ulice: "street-address", mesto: "address-level2", psc: "postal-code" }[klic] || "off";
 }
 /* ---------- kalendář ---------- */
-
-function nazevMesice(rok, mesicCislo, jazyk) {
-  const jmena = jazyk === "en" ? MESICE_EN : MESICE_CS;
-  const jmeno = jmena[mesicCislo - 1] || "";
-  return jazyk === "en" ? `${jmeno} ${rok}` : `${jmeno} ${rok}`;
-}
 
 /* Mřížka měsíce. Den bez akce je prázdná buňka, ne nula — kalendář se čte
    očima a nula by v něm dělala šum. Dny mimo měsíc jsou buňky bez rámu. */

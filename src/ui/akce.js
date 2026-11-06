@@ -29,6 +29,8 @@
 
     var panel = v("[data-detail-panel]", prvek);
     var telo = v("[data-detail-telo]", prvek);
+    var naKurzy = v("[data-detail-kurzy]", prvek);
+    var kurzyZaklad = naKurzy ? naKurzy.getAttribute("href") : "";
     var tamZpet = v("[data-detail-predchozi]", prvek);
     var tamVpred = v("[data-detail-dalsi]", prvek);
     var otevreno = null;
@@ -85,21 +87,20 @@
       }
       if (u.popis) telo.appendChild(prvekZe("p", "", u.popis));
 
-      // Díla, která na té akci visela. Obrázky přicházejí hotové ze šablony —
-      // srcsety zná jen build, prohlížeč by si je vymýšlet neměl.
-      if (u.dila && u.dila.length) {
+      // Díla, která na té akci visela, čekají hotová v <template> vedle
+      // detailu: srcsety zná jen build a cesty musí projít předvolbou pro
+      // GitHub Pages, což umí jen atributy v HTML, ne řetězce v JSON.
+      var sablona = v('template[data-dila-akce="' + id.replace(/"/g, '\\"') + '"]', prvek);
+      if (sablona && sablona.content) {
         telo.appendChild(prvekZe("p", "verzalky detail-nadpis", s("dila")));
-        var mrizka = prvekZe("ul", "detail-dila");
-        u.dila.forEach(function (d) {
-          var li = doc.createElement("li");
-          var a = doc.createElement("a");
-          a.href = d.odkaz;
-          a.innerHTML = d.html;
-          a.appendChild(prvekZe("span", "nazev", d.nazev));
-          li.appendChild(a);
-          mrizka.appendChild(li);
-        });
-        telo.appendChild(mrizka);
+        telo.appendChild(sablona.content.cloneNode(true));
+      }
+
+      /* U kurzu musí být po ruce odkaz, kde se na něj dá přihlásit —
+         jinak si člověk přečte, že kurz je, a dál neví co. */
+      if (naKurzy) {
+        naKurzy.hidden = u.typ !== "kurz";
+        naKurzy.href = kurzyZaklad + (u.kurz ? "#" + encodeURIComponent(u.kurz) : "");
       }
 
       var okolo = KZ.udalost.sousedi(udalosti, dnes(), id);

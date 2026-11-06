@@ -702,7 +702,8 @@
         "en": "A full-day course, materials included. Six places."
       },
       "aktualita": false,
-      "obrazek": "sova"
+      "obrazek": "sova",
+      "kurz": "pyrografie-zacatecnici"
     },
     {
       "id": "vystava-chvalsky",
