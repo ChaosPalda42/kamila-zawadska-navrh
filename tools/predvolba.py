@@ -204,8 +204,13 @@ def _preved_html_s_poctem(html: str, predvolba: str) -> tuple[str, int]:
 
     def json_skript_callback(m: re.Match) -> str:
         nonlocal pocet
-        script_start = m.group(0)[:m.start(1)]
-        script_end = m.group(0)[m.end(1):]
+        # Pozice ze zápasu jsou pozice v CELÉM dokumentu, kdežto krájí se
+        # nalezený úsek — proto se od nich odečítá jeho začátek. Bez toho
+        # se blok dál od začátku souboru rozsekne, ztratí </script> a jeho
+        # obsah se vysype na stránku jako text.
+        zacatek = m.start()
+        script_start = m.group(0)[:m.start(1) - zacatek]
+        script_end = m.group(0)[m.end(1) - zacatek:]
         content = m.group(1)
         
         # Process content of JSON script

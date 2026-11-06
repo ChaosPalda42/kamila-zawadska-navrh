@@ -153,6 +153,60 @@ def test_json_skript_se_pocita_do_adres(web):
     assert preved(koren, "/ukazka") == {"souboru": 1, "adres": 4}
 
 
+JSON_SKRIPT_ADRESA = (
+    '<script type="application/json" data-dila>'
+    '[{"slug":"a",'
+    '"poptavka":"/kontakt/?duvod=na-miru&dilo=a",'
+    '"vystava":"/obrazy-k-prodeji/#a",'
+    '"obrazek":"<a href=\\"/galerie/a/?od=lupa\\">A</a>"}]'
+    "</script>"
+)
+
+
+def test_json_skript_prepise_adresu_s_dotazem_a_kotvou():
+    """U každého díla v lupě visí odkaz „poptat na míru" (/kontakt/?duvod=…)
+    a odkaz do prodejní stránky (/obrazy-k-prodeji/#slug). Adresa nekončí
+    lomítkem ani příponou — dotaz a kotva k ní patří a musí přepsání přežít."""
+    vysledek = preved_html(JSON_SKRIPT_ADRESA, "/ukazka")
+    assert '"poptavka":"/ukazka/kontakt/?duvod=na-miru&dilo=a"' in vysledek
+    assert '"vystava":"/ukazka/obrazy-k-prodeji/#a"' in vysledek
+    assert 'href=\\"/ukazka/galerie/a/?od=lupa\\"' in vysledek
+
+
+def test_json_skript_s_dotazem_druhy_beh_nic_nezmeni():
+    jednou = preved_html(JSON_SKRIPT_ADRESA, "/ukazka")
+    assert preved_html(jednou, "/ukazka") == jednou
+
+
+def test_json_skript_s_dotazem_se_pocita_do_adres(web):
+    koren = web({"galerie/index.html": JSON_SKRIPT_ADRESA})
+    assert preved(koren, "/ukazka") == {"souboru": 1, "adres": 3}
+
+
+def test_json_skript_mimo_zacatek_dokumentu():
+    """JSON skript nikdy nestojí na začátku souboru — má nad sebou celou
+    stránku. Když se blok krájí pozicí v celém dokumentu místo pozice v
+    nalezeném úseku, značka se rozseká a obsah se vysype na stránku jako
+    text. Proto se tu kontroluje celý výsledek, ne jen přepsaná adresa."""
+    pred = "<!doctype html><html><body><p>Galerie</p>"
+    skript = '<script type="application/json" data-dila>[{"kam":"/galerie/a/"}]</script>'
+    za = "</body></html>"
+    cekam = pred + skript.replace('"/galerie/a/"', '"/ukazka/galerie/a/"') + za
+    assert preved_html(pred + skript + za, "/ukazka") == cekam
+
+
+def test_json_skript_dva_bloky_na_strance():
+    """Stránka galerie má těch bloků víc (díla, akce). Druhý v řadě se
+    nesmí rozsypat jen proto, že leží dál od začátku souboru."""
+    blok = '<script type="application/json" data-%s>[{"kam":"/galerie/%s/"}]</script>'
+    html = "<p>x</p>" + (blok % ("dila", "a")) + "<p>y</p>" + (blok % ("akce", "b"))
+    vysledek = preved_html(html, "/ukazka")
+    assert vysledek.count("</script>") == 2
+    assert '"/ukazka/galerie/a/"' in vysledek
+    assert '"/ukazka/galerie/b/"' in vysledek
+    assert "<p>y</p>" in vysledek
+
+
 # --- CSS --------------------------------------------------------------------
 
 def test_css_url_vsechny_zapisy():
