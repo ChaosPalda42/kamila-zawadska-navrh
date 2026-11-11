@@ -676,14 +676,6 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 .hero-text p { color: var(--text); }
 .hero-text p:last-child { margin-top: 1.6rem; }
 .hero-obraz { margin: 0; position: relative; }
-/* Okrový rám je o kousek vedle — drží fotku na papíru, aniž by na ni sahal. */
-.hero-obraz::before {
-  content: "";
-  position: absolute; inset: 1.1rem -1.1rem -1.1rem 1.1rem;
-  border: 1px solid var(--zvyraz);
-  opacity: 0.4;
-  z-index: 0;
-}
 .hero-obraz .ram {
   display: block; position: relative; z-index: 1;
   aspect-ratio: 4 / 5; overflow: hidden; background: var(--platno);
@@ -693,21 +685,15 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 @media (max-width: 60rem) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: 1.8rem; }
-  .hero-obraz::before { inset: 0.7rem -0.7rem -0.7rem 0.7rem; }
 }
 
-/* Fotka se při příjezdu nepatrně odzoomuje a rám k ní dojede. */
+/* Fotka se při příjezdu nepatrně odzoomuje. */
 .pohyb .hero-obraz .ram img, .pohyb .hero-obraz .ram svg {
   animation: odzoom 1.8s cubic-bezier(0.22, 0.7, 0.2, 1) both;
 }
-.pohyb .hero-obraz::before { animation: ramecek 1s cubic-bezier(0.22, 0.7, 0.2, 1) 0.35s both; }
 @keyframes odzoom {
   from { transform: scale(1.06); }
   to { transform: none; }
-}
-@keyframes ramecek {
-  from { opacity: 0; transform: translate(-0.6rem, -0.6rem); }
-  to { opacity: 0.4; transform: none; }
 }
 /* Claim naskakuje po slovech; rozdělení dělá animace.js, v HTML je věta celá. */
 .slovo { display: inline-block; overflow: hidden; vertical-align: top; }
