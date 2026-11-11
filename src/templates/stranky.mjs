@@ -195,11 +195,16 @@ export function galerieStranka(o) {
 <div class="uvodka"><p>${e(t(texty, "galerie.popis", jazyk))}</p></div>
 </section>
 <section>
-<div class="filtry" data-filtry>
+<div class="filtry filtry-sbaleno" data-filtry>
+<button class="filtry-prepinac" type="button" data-filtry-prepinac aria-expanded="false" aria-controls="filtry-vyjezd">${e(t(texty, "galerie.filtr.prepinac", jazyk))}</button>
+<div class="filtry-vyjezd" id="filtry-vyjezd">
+<div class="filtry-rady">
 ${filtrovaciRada("technika", t(texty, "galerie.filtr.technika", jazyk), site.techniky, pocty(works, "technika"), texty, jazyk)}
 ${filtrovaciRada("styl", t(texty, "galerie.filtr.styl", jazyk), site.styly, pocty(works, "styl"), texty, jazyk)}
 ${filtrovaciRada("akce", t(texty, "galerie.filtr.udalost", jazyk), typyAkci, poctyRady(works, "akce"), texty, jazyk)}
 ${filtrovaciRada("kurz", t(texty, "galerie.filtr.kurzy", jazyk), site.kurzy || [], poctyRady(works, "kurz"), texty, jazyk)}
+</div>
+</div>
 <p class="vysledek" data-vysledek data-tvary="${e(JSON.stringify(tvaryPoctu(texty, jazyk)))}">${works.length} ${e(pocetDel(works.length, texty, jazyk))}</p>
 </div>
 <ul class="mrizka ctverec" data-mrizka>${works.map((d, i) => dlazdice(d, { texty, jazyk, sloupcu: 3, prednost: i < 3 })).join("")}</ul>

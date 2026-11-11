@@ -352,6 +352,9 @@ p:last-child { margin-bottom: 0; }
 .filtry button[disabled] { color: var(--tichy); opacity: 0.5; cursor: default; }
 .filtry button[disabled]:hover { color: var(--tichy); }
 .filtry .vysledek { font-size: 0.8rem; color: var(--tichy); }
+/* Na širokém okně jsou řady filtrů vidět pořád; tlačítko se objeví až na mobilu.
+   Vybírá se potomkem (`>`), aby přebilo obecné `.filtry button`. */
+.filtry > .filtry-prepinac { display: none; }
 
 /* ---------- detail díla ---------- */
 
@@ -557,6 +560,23 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
     font: 400 0.8rem/1 var(--pismo); text-transform: uppercase; letter-spacing: 0.1em; padding: 0.6rem 0.8rem;
   }
   .bok-sbaleno .menu, .bok-sbaleno .bok-cast, .bok-sbaleno .aktuality { display: none; }
+  /* Čtyři řady filtrů by na mobilu zabraly půl stránky, tak vyjíždějí z tlačítka
+     (vypadá jako přepínač nabídky, aby se to ovládalo pořád stejně). Počet
+     nalezených děl zůstává vidět i při sbalených filtrech. Vyjezd je mřížka
+     o jedné řadě: ta se mění z 1fr na 0fr, což se dá animovat; starší prohlížeč
+     jen přepne bez pohybu. */
+  .filtry > .filtry-prepinac {
+    display: inline-block; border: 1px solid var(--linka); background: none; cursor: pointer;
+    font: 400 0.8rem/1 var(--pismo); text-transform: uppercase; letter-spacing: 0.1em; padding: 0.6rem 0.8rem;
+    color: var(--tichy);
+  }
+  .filtry > .filtry-prepinac[aria-expanded="true"] { color: var(--inkoust); }
+  .filtry-vyjezd { display: grid; grid-template-rows: 1fr; }
+  .filtry-vyjezd > .filtry-rady { overflow: hidden; }
+  /* Mezera pod tlačítkem patří dovnitř klipované části, jinak by po sbalení
+     zůstala viset jako prázdný pruh. */
+  .filtry-vyjezd .filtry-rada:first-child { padding-top: 0.7rem; }
+  .filtry-sbaleno .filtry-vyjezd { grid-template-rows: 0fr; }
   .mrizka, .mrizka.siroka { grid-template-columns: minmax(0, 1fr); }
   .dilo, .bio, .kontakt { grid-template-columns: minmax(0, 1fr); }
   .akce-seznam li { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
@@ -923,6 +943,9 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 .tlacitko[disabled]::before { display: none; }
 
 .filtry button { transition: color 0.3s ease, box-shadow 0.35s ease; }
+/* Filtry na mobilu vyjedou, ne vyskočí. Jen když je pohyb povolený: kdo si
+   vyžádal klid, dostane filtry rovnou. */
+.pohyb .filtry-vyjezd { transition: grid-template-rows 0.35s cubic-bezier(0.22, 0.7, 0.2, 1); }
 .pole input, .pole select, .pole textarea { transition: border-color 0.3s ease, box-shadow 0.3s ease; }
 .pole input:focus, .pole select:focus, .pole textarea:focus { box-shadow: 0 1px 0 0 var(--zvyraz); }
 .pole input[type="checkbox"]:focus, .pole input[type="radio"]:focus { box-shadow: none; }

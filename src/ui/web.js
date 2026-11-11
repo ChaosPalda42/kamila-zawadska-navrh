@@ -140,6 +140,21 @@
     var panel = v("[data-filtry]");
     var grid = v("[data-mrizka]");
     if (!panel || !grid) return;
+
+    /* On a phone the four rows would eat half the page, so they roll out of a
+       button. They come collapsed in the HTML: without the script the buttons
+       filter nothing anyway, so nothing is lost. On a wide window the rows are
+       open and the button is hidden by style. */
+    var toggle = v("[data-filtry-prepinac]", panel);
+    if (toggle) {
+      if (window.matchMedia("(min-width: 60.01rem)").matches) panel.classList.remove("filtry-sbaleno");
+      toggle.setAttribute("aria-expanded", panel.classList.contains("filtry-sbaleno") ? "false" : "true");
+      toggle.addEventListener("click", function () {
+        var sbaleno = panel.classList.toggle("filtry-sbaleno");
+        toggle.setAttribute("aria-expanded", sbaleno ? "false" : "true");
+      });
+    }
+
     var vybrano = { technika: "vse", styl: "vse", album: "vse" };
     var result = v("[data-vysledek]", panel);
     var nothing = v("[data-nic]");

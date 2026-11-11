@@ -100,6 +100,10 @@
     "cs": "Kurzy",
     "en": "Courses"
   },
+  "galerie.filtr.prepinac": {
+    "cs": "Filtry",
+    "en": "Filters"
+  },
   "galerie.filtr.zrusit": {
     "cs": "Zrušit filtry",
     "en": "Clear filters"
