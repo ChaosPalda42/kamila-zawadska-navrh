@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" width="520" height="420" role="presentation">
+<!-- Vodoznak pro odvážnější variantu vzhledu: kolečko dřeva s letokruhy
+     a pod ním tři desky složené na sebe, kreslené jen čarami.
+
+     Ze zápisu schůzky: „prvky dřeva v pozadí jako velmi světlý hnědý
+     vodoznak, aby web otepli a rozbil čistě bílou barvu". Proto je kresba
+     čárová a hodně průhledná — nikdy nesmí konkurovat obrazům ani textu.
+     Hloubka (to „3D") se dělá horní a boční plochou desky, ne stínem.
+
+     POZOR: v XML komentáři nesmí být dvojitý spojovník, rozbije to parser
+     i ImageMagick. Náhled se dělá v prohlížeči, ne přes „magick". -->
+<g fill="none" stroke="#4a2600" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.085">
+
+<!-- kolečko dřeva: letokruhy nejsou soustředné, proto každý má svůj střed -->
+<g>
+<circle cx="372" cy="128" r="112"/>
+<circle cx="374" cy="131" r="92"/>
+<circle cx="377" cy="134" r="71"/>
+<circle cx="381" cy="137" r="52"/>
+<circle cx="384" cy="139" r="34"/>
+<circle cx="387" cy="141" r="17"/>
+<circle cx="388" cy="142" r="5"/>
+<!-- praskliny od středu ke kraji, jak dřevo sesychá -->
+<path d="M389 137 C 404 108, 419 74, 424 36"/>
+<path d="M382 147 C 352 170, 318 196, 288 208"/>
+</g>
+
+<!-- tři desky na sobě; každá má přední, horní a boční plochu -->
+<g transform="translate(36 236) rotate(-3)">
+<path d="M0 0 H258 V72 H0 Z"/>
+<path d="M0 0 L15 -12 H273 L258 0"/>
+<path d="M258 0 L273 -12 V60 L258 72"/>
+<path d="M12 22 C 84 15, 170 29, 246 20"/>
+<path d="M12 42 C 92 36, 168 48, 246 40"/>
+<path d="M12 58 C 70 54, 150 62, 246 56"/>
+<ellipse cx="196" cy="33" rx="13" ry="8"/>
+<ellipse cx="196" cy="33" rx="5" ry="3"/>
+</g>
+
+<g transform="translate(58 306) rotate(2)">
+<path d="M0 0 H236 V62 H0 Z"/>
+<path d="M0 0 L13 -11 H249 L236 0"/>
+<path d="M236 0 L249 -11 V51 L236 62"/>
+<path d="M11 19 C 76 13, 154 26, 224 17"/>
+<path d="M11 40 C 88 35, 150 46, 224 38"/>
+<ellipse cx="62" cy="30" rx="11" ry="7"/>
+<ellipse cx="62" cy="30" rx="4" ry="2.5"/>
+</g>
+
+<g transform="translate(26 366) rotate(-1)">
+<path d="M0 0 H214 V44 H0 Z"/>
+<path d="M0 0 L12 -10 H226 L214 0"/>
+<path d="M214 0 L226 -10 V34 L214 44"/>
+<path d="M10 16 C 70 11, 142 23, 203 15"/>
+<path d="M10 32 C 82 28, 140 36, 203 30"/>
+</g>
+
+</g>
+</svg>

@@ -108,6 +108,7 @@ async function main() {
 
   const css = await readFile(path.join(ROOT, "src", "assets", "style.css"), "utf8");
   const ikona = await readFile(path.join(ROOT, "src", "assets", "ikona.svg"), "utf8");
+  const vodoznak = await readFile(path.join(ROOT, "src", "assets", "vodoznak.svg"), "utf8");
   const svazek = await svazekKnihoven();
   const pages = await readFile(path.join(ROOT, "src", "ui", "stranky.js"), "utf8");
   const web = await readFile(path.join(ROOT, "src", "ui", "web.js"), "utf8");
@@ -115,12 +116,15 @@ async function main() {
   const event = await readFile(path.join(ROOT, "src", "ui", "akce.js"), "utf8");
   const admin = await readFile(path.join(ROOT, "src", "ui", "admin.js"), "utf8");
   const script = `${svazek}\n${pages}\n${event}\n${web}\n${animace}`;
-  nastavOtisk(createHash("sha256").update(css + script).digest("hex").slice(0, 8));
+  nastavOtisk(createHash("sha256").update(css + script + vodoznak).digest("hex").slice(0, 8));
 
   await rm(VEN, { recursive: true, force: true });
   await mkdir(VEN, { recursive: true });
   await entry("styl.css", css);
   await entry("ikona.svg", ikona);
+  // The drawing in the background of the second look. The style sheet asks for
+  // it by an absolute path, which `tools/predvolba.py` rewrites for a subfolder.
+  await entry("vodoznak.svg", vodoznak);
   await entry("web.js", script);
   if (!live) await entry("admin.js", admin);
 

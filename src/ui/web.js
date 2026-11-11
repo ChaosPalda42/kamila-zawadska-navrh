@@ -66,6 +66,39 @@
     location.replace(target.href);
   }
 
+  /* ---------- přepínač vzhledu (jen v ukázce) ---------- */
+
+  /* Two looks on one site: the clean white one and the warm one with the wood
+     watermark. The attribute on <html> is all that tells them apart, and the
+     choice is remembered, so the client can click through the whole site in
+     either. The head of the page sets the attribute before the first paint
+     (`src/templates/layout.mjs`); here the buttons get their behaviour. The
+     live site has no switch, so this function finds nothing and returns. */
+  var LOOK = "kz-vzhled";
+
+  function lookSwitch() {
+    var panel = v("[data-prepinac-vzhledu]");
+    if (!panel) return;
+    var buttons = all("button[data-vzhled]", panel);
+    function apply(look) {
+      if (look === "drevo") doc.documentElement.setAttribute("data-vzhled", look);
+      else doc.documentElement.removeAttribute("data-vzhled");
+      buttons.forEach(function (b) {
+        b.setAttribute("aria-pressed", b.getAttribute("data-vzhled") === look ? "true" : "false");
+      });
+    }
+    var remembered = null;
+    try { remembered = localStorage.getItem(LOOK); } catch (e) { /* private window */ }
+    apply(remembered === "drevo" ? "drevo" : "cista");
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var look = b.getAttribute("data-vzhled");
+        apply(look);
+        try { localStorage.setItem(LOOK, look); } catch (e) { /* private window */ }
+      });
+    });
+  }
+
   /* ---------- menu na mobilu ---------- */
 
   function menu() {
@@ -399,6 +432,7 @@
 
   function start() {
     languageSwitch();
+    lookSwitch();
     menu();
     news();
     filtry();
