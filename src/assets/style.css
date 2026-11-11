@@ -71,19 +71,22 @@
   --plachta: rgba(249, 242, 231, 0.985);
 }
 
-/* Kresba dřeva (kolečko s letokruhy a složené desky) leží v pozadí stránky
-   vpravo nahoře, tedy za obsahem a nikdy přes obraz. Vlákna přes celou
-   plochu dělají dva proužkové přechody, aby papír nebyl hladký — proto se
-   na ně nemusí stahovat žádný další soubor. Kresba je tak světlá, že
-   kontrast textu měřený na barvě papíru platí i nad ní. */
+/* Kresba dřeva leží v pozadí stránky ve dvou rozích: vpravo nahoře složka,
+   kolečko s letokruhy, desky a bedýnka, vlevo dole rámy na plátno, štětce
+   a pravítko. Dva rohy proto, aby na dlouhé stránce (galerie, kurzy) zbylo
+   dřevo i pod prvním odrolováním. Obojí je za obsahem a nikdy přes obraz.
+   Vlákna přes celou plochu dělají dva proužkové přechody, aby papír nebyl
+   hladký — proto se na ně nemusí stahovat žádný další soubor. Kresba je tak
+   světlá, že kontrast textu měřený na barvě papíru platí i nad ní. */
 :root[data-vzhled="drevo"] body {
   background-image:
     url("/vodoznak.svg"),
+    url("/vodoznak-dole.svg"),
     repeating-linear-gradient(91deg, rgba(74, 38, 0, 0.019) 0 1px, rgba(74, 38, 0, 0) 1px 11px),
     repeating-linear-gradient(88.5deg, rgba(74, 38, 0, 0.015) 0 2px, rgba(74, 38, 0, 0) 2px 31px);
-  background-repeat: no-repeat, repeat, repeat;
-  background-position: right -6rem top -4rem, 0 0, 0 0;
-  background-size: min(32rem, 88%) auto, auto, auto;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-position: right -6rem top -4rem, left -5rem bottom -3rem, 0 0, 0 0;
+  background-size: min(32rem, 88%) auto, min(26rem, 72%) auto, auto, auto;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -624,8 +627,8 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
   /* Na telefonu je kresba v pozadí menší a víc zatažená za roh — v plné
      velikosti by ležela přes logotyp a nabídku. */
   :root[data-vzhled="drevo"] body {
-    background-position: right -1rem top 0, 0 0, 0 0;
-    background-size: 12rem auto, auto, auto;
+    background-position: right -1rem top 0, left -2rem bottom -1rem, 0 0, 0 0;
+    background-size: 12rem auto, 10rem auto, auto, auto;
   }
   .menu-prepinac {
     display: inline-block; border: 1px solid var(--linka); background: none; cursor: pointer;

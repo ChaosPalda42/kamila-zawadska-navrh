@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 400" width="480" height="400" role="presentation">
+<!-- Vodoznak pro odvážnější variantu vzhledu, dolní roh: dva dřevěné rámy
+     na plátno opřené vedle sebe, dva štětce a pravítko. Horní roh kreslí
+     vodoznak.svg; dohromady drží kresba i na dlouhé stránce, kde by jedna
+     skupina předmětů po odrolování zmizela.
+
+     Stejná pravidla jako v prvním souboru: jen čáry, hodně průhledné,
+     hloubka horní a boční plochou, a v XML komentáři žádný dvojitý
+     spojovník. -->
+<g fill="none" stroke="#4a2600" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.075">
+
+<!-- větší rám: vnitřní otvor a rohy na pokos -->
+<g transform="translate(24 60) rotate(-3)">
+<path d="M0 0 H196 V252 H0 Z"/>
+<path d="M0 0 L13 -10 H209 L196 0"/>
+<path d="M196 0 L209 -10 V242 L196 252"/>
+<path d="M20 22 H176 V230 H20 Z"/>
+<path d="M0 0 L20 22"/>
+<path d="M196 0 L176 22"/>
+<path d="M0 252 L20 230"/>
+<path d="M196 252 L176 230"/>
+</g>
+
+<!-- menší rám opřený vedle -->
+<g transform="translate(206 128) rotate(4)">
+<path d="M0 0 H142 V182 H0 Z"/>
+<path d="M0 0 L11 -9 H153 L142 0"/>
+<path d="M142 0 L153 -9 V173 L142 182"/>
+<path d="M17 18 H125 V164 H17 Z"/>
+<path d="M0 0 L17 18"/>
+<path d="M142 0 L125 18"/>
+<path d="M0 182 L17 164"/>
+<path d="M142 182 L125 164"/>
+</g>
+
+<!-- dva štětce: násada, objímka s kroužky a štětiny -->
+<g transform="translate(296 18) rotate(22)">
+<path d="M0 4 L100 0 L100 13 L0 17 Z"/>
+<path d="M100 0 H124 V13 H100 Z"/>
+<path d="M107 1 V12"/>
+<path d="M115 1 V12"/>
+<path d="M124 1 L148 -3 L158 6 L148 15 L124 12 Z"/>
+<path d="M130 4 L150 5"/>
+<path d="M130 9 L148 10"/>
+</g>
+
+<g transform="translate(318 62) rotate(31)">
+<path d="M0 3 L84 0 L84 11 L0 14 Z"/>
+<path d="M84 0 H104 V11 H84 Z"/>
+<path d="M90 1 V10"/>
+<path d="M104 1 L124 -2 L132 5 L124 13 L104 10 Z"/>
+<path d="M110 4 L126 5"/>
+</g>
+
+<!-- dřevěné pravítko se stupnicí -->
+<g transform="translate(30 340) rotate(-4)">
+<path d="M0 0 H330 V18 H0 Z"/>
+<path d="M0 0 L10 -8 H340 L330 0"/>
+<path d="M330 0 L340 -8 V10 L330 18"/>
+<path d="M22 0 V9"/>
+<path d="M44 0 V6"/>
+<path d="M66 0 V6"/>
+<path d="M88 0 V6"/>
+<path d="M110 0 V9"/>
+<path d="M132 0 V6"/>
+<path d="M154 0 V6"/>
+<path d="M176 0 V6"/>
+<path d="M198 0 V9"/>
+<path d="M220 0 V6"/>
+<path d="M242 0 V6"/>
+<path d="M264 0 V6"/>
+<path d="M286 0 V9"/>
+<path d="M308 0 V6"/>
+</g>
+
+</g>
+</svg>
