@@ -255,6 +255,28 @@
     "sirka": 768,
     "vyska": 1024
   },
+  "portret-u-stojanu": {
+    "varianty": [
+      {
+        "soubor": "portret-u-stojanu-480.jpg",
+        "sirka": 480,
+        "vyska": 640
+      },
+      {
+        "soubor": "portret-u-stojanu-960.jpg",
+        "sirka": 960,
+        "vyska": 1280
+      },
+      {
+        "soubor": "portret-u-stojanu-1600.jpg",
+        "sirka": 1500,
+        "vyska": 2000
+      }
+    ],
+    "srcset": "obrazky/portret-u-stojanu-480.jpg 480w, obrazky/portret-u-stojanu-960.jpg 960w, obrazky/portret-u-stojanu-1600.jpg 1500w",
+    "sirka": 1500,
+    "vyska": 2000
+  },
   "rano-nad-vltavou": {
     "varianty": [
       {

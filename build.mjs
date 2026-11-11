@@ -107,6 +107,7 @@ async function main() {
   const dnes = process.env.KZ_DNES || new Date().toISOString().slice(0, 10);
 
   const css = await readFile(path.join(ROOT, "src", "assets", "style.css"), "utf8");
+  const ikona = await readFile(path.join(ROOT, "src", "assets", "ikona.svg"), "utf8");
   const svazek = await svazekKnihoven();
   const pages = await readFile(path.join(ROOT, "src", "ui", "stranky.js"), "utf8");
   const web = await readFile(path.join(ROOT, "src", "ui", "web.js"), "utf8");
@@ -119,6 +120,7 @@ async function main() {
   await rm(VEN, { recursive: true, force: true });
   await mkdir(VEN, { recursive: true });
   await entry("styl.css", css);
+  await entry("ikona.svg", ikona);
   await entry("web.js", script);
   if (!live) await entry("admin.js", admin);
 
