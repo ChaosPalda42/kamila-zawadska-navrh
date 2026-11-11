@@ -231,27 +231,6 @@ const MARKS = {
   facebook: `<svg class="znacka" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2"/><path d="M15.7 8.2h-1.3c-1.1 0-1.8.7-1.8 1.9v10.7"/><path d="M10.4 12.7h4.8"/></svg>`,
 };
 
-/* The second look the client asked to see beside the clean white one: warm
-   paper with a wood watermark in the background. It is not a second site nor
-   a second stylesheet -- one attribute on <html> swaps a handful of colours
-   and turns the drawing on, so both can be compared on the same pages. The
-   switch belongs to the demo; the live site has one look and no switch, and
-   once the client has chosen, that look becomes the default here. */
-const LOOKS = ["cista", "drevo"];
-
-function lookSwitch(texty, jazyk) {
-  if (ostry) return "";
-  const buttons = LOOKS.map((look, i) =>
-    `<button type="button" data-vzhled="${look}" aria-pressed="${i === 0 ? "true" : "false"}">${
-      e(t(texty, "ukazka.vzhled." + look, jazyk))}</button>`).join("");
-  return `<span class="vzhledy" data-prepinac-vzhledu>${e(t(texty, "ukazka.vzhled", jazyk))} ${buttons}</span>`;
-}
-
-/* The chosen look has to be on <html> before the first paint, or every page
-   would flash white first. That is what these few lines in the head do; the
-   buttons themselves are wired up in src/ui/web.js. */
-const LOOK_HEAD = `<script>try{var v=localStorage.getItem("kz-vzhled");if(v==="drevo")document.documentElement.setAttribute("data-vzhled",v);}catch(e){}</script>`;
-
 /** The links to the painter's two profiles, each with its mark. */
 export function odkazySite(site) {
   return `<a href="${e(site.web.instagram)}" rel="noopener">${MARKS.instagram}Instagram</a>
@@ -269,8 +248,7 @@ export function layout(o) {
   const { site, texty, jazyk, adresa, aktivni, titul, popis, telo, dnes } = o;
   const siteName = site.web.jmeno;
   const pageTitle = titul ? `${titul} — ${siteName}` : siteName;
-  const pas = ostry ? "" : `<div class="ukazka-pas"><span>${
-    e(t(texty, "ukazka.hlavicka", jazyk))}</span>${lookSwitch(texty, jazyk)}</div>`;
+  const pas = ostry ? "" : `<p class="ukazka-pas">${e(t(texty, "ukazka.hlavicka", jazyk))}</p>`;
   return `<!doctype html>
 <html lang="${jazyk}">
 <head>
@@ -287,7 +265,6 @@ export function layout(o) {
 <link rel="icon" href="/ikona.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styl.css${otisk}">
 ${hreflangy(adresa)}
-${ostry ? "" : LOOK_HEAD}
 </head>
 <body id="nahoru"${aktivni === "domu" ? " data-domu" : ""}>
 <a class="preskoc" href="#obsah">${e(t(texty, "nav.domu", jazyk))} → ${e(titul || siteName)}</a>

@@ -16,9 +16,11 @@
    Barvy jsou od klientky. Na schůzce řekla, že šedý text splývá s pozadím a
    že web má působit hřejivě, v přírodních materiálech (dřevo, kámen) —
    a poslala k tomu svůj dokument, kde je veškerý text #663300. Odtud má
-   stránka svou barvu písma; šedá zmizela úplně. Podklad zůstává bílý, to je
-   ta čistá varianta, na které jsme se dohodli (odvážnější varianta
-   s dřevěným vodoznakem v pozadí je samostatné zadání).
+   stránka svou barvu písma; šedá zmizela úplně. Podklad zůstává bílý:
+   odvážnější varianta s teplým papírem a dřevěným vodoznakem v pozadí
+   byla naprogramovaná a klientka si z obou 11. 11. 2026 vybrala tuhle
+   čistou. Kdyby se k té druhé někdy vracelo, je celá v commitech
+   a462634 a d2da25f.
 
    Kontrast proti bílé: běžný text 10,3:1, nadpisy 13,4:1, popisky 4,9:1 —
    všechno nad 4,5:1, které chce WCAG AA. */
@@ -30,13 +32,6 @@
   --linka: #e3d9cd;        /* teplá linka místo studené šedé */
   --zvyraz: #8a5a2b;       /* okr, jediný akcent — odkazy a aktivní filtr */
   --odznak: #f5f0e9;
-  /* Plochy, které nejsou úplně papír: prázdné plátno u díla bez fotky
-     (--platno), podbarvení řádku pod myší a jemných panelů (--jemny) a
-     plachta prohlížeče na celou obrazovku (--plachta). Druhá varianta
-     vzhledu je přebarvuje spolu s papírem, aby nezůstaly bílé ostrůvky. */
-  --platno: #fbfbfb;
-  --jemny: #fcfbfa;
-  --plachta: rgba(255, 255, 255, 0.985);
   /* Štítky u děl zůstávají, jak byly: „prodáno" a „zamluveno" skoro černě,
      „neprodejné" světleji. Klientka si u nich výslovně přála současnou
      barevnost, takže je hnědé přebarvení textu míjí. */
@@ -49,44 +44,6 @@
   --sloupec: 15rem;        /* šířka levého menu */
   --vzduch: clamp(1.5rem, 4vw, 3.5rem);
   --max: 76rem;
-}
-
-/* ---------- druhá varianta vzhledu: dřevo v pozadí ---------- */
-
-/* Zadání ze schůzky chtělo dvě varianty: tuhle čistě bílou a odvážnější
-   s „jemnými dřevěnými prvky nebo hnědým vodoznakem v pozadí". Druhá
-   varianta nemá vlastní šablony ani vlastní soubor se styly — je to jen jiná
-   sada barev a kresba v pozadí, přepnutá atributem na <html>. Tak se dají
-   obě srovnat na jednom webu; až si klientka vybere, zůstane v kódu jedna.
-
-   Papír je o několik odstínů teplejší a kontrast tím klesl jen nepatrně:
-   běžný text 9,3:1, nadpisy 12,0:1, popisky 5,3:1 — a popisky na --odznak
-   4,7:1. Všechno pořád nad 4,5:1, které chce WCAG AA. */
-:root[data-vzhled="drevo"] {
-  --papir: #f9f2e7;
-  --platno: #f6efe4;
-  --jemny: #f3ebde;
-  --odznak: #f0e5d4;
-  --linka: #dccfbb;
-  --plachta: rgba(249, 242, 231, 0.985);
-}
-
-/* Kresba dřeva leží v pozadí stránky ve dvou rozích: vpravo nahoře složka,
-   kolečko s letokruhy, desky a bedýnka, vlevo dole rámy na plátno, štětce
-   a pravítko. Dva rohy proto, aby na dlouhé stránce (galerie, kurzy) zbylo
-   dřevo i pod prvním odrolováním. Obojí je za obsahem a nikdy přes obraz.
-   Vlákna přes celou plochu dělají dva proužkové přechody, aby papír nebyl
-   hladký — proto se na ně nemusí stahovat žádný další soubor. Kresba je tak
-   světlá, že kontrast textu měřený na barvě papíru platí i nad ní. */
-:root[data-vzhled="drevo"] body {
-  background-image:
-    url("/vodoznak.svg"),
-    url("/vodoznak-dole.svg"),
-    repeating-linear-gradient(91deg, rgba(74, 38, 0, 0.019) 0 1px, rgba(74, 38, 0, 0) 1px 11px),
-    repeating-linear-gradient(88.5deg, rgba(74, 38, 0, 0.015) 0 2px, rgba(74, 38, 0, 0) 2px 31px);
-  background-repeat: no-repeat, no-repeat, repeat, repeat;
-  background-position: right -6rem top -4rem, left -5rem bottom -3rem, 0 0, 0 0;
-  background-size: min(32rem, 88%) auto, min(26rem, 72%) auto, auto, auto;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -286,7 +243,7 @@ p:last-child { margin-bottom: 0; }
 .aktuality .listy {
   position: relative; perspective: 900px;
   border: 1px solid var(--linka); border-top: 2px solid var(--zvyraz);
-  background: var(--jemny); padding: 1rem;
+  background: #fcfbfa; padding: 1rem;
   box-shadow: 0 1px 0 var(--papir), 0 2px 0 #e7e1d8, 0 4px 0 var(--papir), 0 5px 0 #efe9e0, 0 8px 14px rgba(40, 34, 28, 0.07);
 }
 .aktuality a {
@@ -350,7 +307,7 @@ p:last-child { margin-bottom: 0; }
 .dlazdice .ram {
   display: block;
   position: relative;
-  background: var(--platno);
+  background: #fbfbfb;
   aspect-ratio: 4 / 5;
   overflow: hidden;
 }
@@ -361,7 +318,7 @@ p:last-child { margin-bottom: 0; }
    kouká jako na první věc: uříznutý okraj plátna je chyba, ne výtvarné
    rozhodnutí. Dlaždice drží čtvercové místo, obraz v něm leží celý. */
 .dlazdice .ram img, .dlazdice .ram svg { width: 100%; height: 100%; object-fit: contain; }
-.dlazdice .ram { background: var(--platno); }
+.dlazdice .ram { background: #fbfbfb; }
 .dlazdice a:hover .ram img { opacity: 0.92; }
 .dlazdice .popis { display: block; padding-top: 0.6rem; font-size: 0.82rem; }
 .dlazdice .popis a.nazev { text-decoration: none; }
@@ -410,7 +367,7 @@ p:last-child { margin-bottom: 0; }
 /* ---------- detail díla ---------- */
 
 .dilo { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--vzduch); }
-.dilo .platno { background: var(--platno); }
+.dilo .platno { background: #fbfbfb; }
 .dilo dl { margin: 1.2rem 0 0; font-size: 0.9rem; }
 .dilo dt { color: var(--tichy); font-family: var(--pismo); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.9rem; }
 .dilo dd { margin: 0.15rem 0 0; }
@@ -525,7 +482,7 @@ table.kalendar .akce.kurz::before { background: #4a6b52; }
 .akce-seznam .kde { font-size: 0.85rem; color: var(--tichy); }
 /* Na akci se dá kliknout, tak to musí být vidět dřív než po kliknutí. */
 .akce-seznam li[data-akce] { cursor: pointer; transition: background 0.25s ease, box-shadow 0.25s ease; }
-.akce-seznam li[data-akce]:hover { background: var(--jemny); box-shadow: inset 2px 0 0 var(--zvyraz); }
+.akce-seznam li[data-akce]:hover { background: #fcfbfa; box-shadow: inset 2px 0 0 var(--zvyraz); }
 .akce-seznam li[data-akce]:hover h3 { color: var(--zvyraz); }
 .akce-seznam .vic {
   margin-top: 0.5rem; padding: 0; border: 0; background: none;
@@ -538,7 +495,7 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 /* ---------- bio, kontakt, kurzy ---------- */
 
 .bio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--vzduch); align-items: start; }
-.bio .portret { background: var(--platno); }
+.bio .portret { background: #fbfbfb; }
 .bio .text { max-width: 36rem; }
 .bio ul { padding-left: 1.1rem; }
 .bio li { margin-bottom: 0.3em; }
@@ -558,7 +515,7 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 .prohlizec {
   position: fixed; inset: 0; z-index: 40;
-  background: var(--plachta);
+  background: rgba(255, 255, 255, 0.985);
   display: grid; grid-template-rows: auto 1fr auto;
   padding: clamp(0.8rem, 2vw, 1.6rem);
 }
@@ -593,24 +550,6 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
   padding: 0.45rem 1rem;
 }
 
-/* Přepínač vzhledu patří k ukázce, ne k webu: v ostrém režimu se nevykreslí
-   vůbec. Sedí v pásu nahoře, aby bylo poznat, že je to nástroj k ukázce a ne
-   součást stránky. */
-.ukazka-pas {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: 0.25rem 0.9rem;
-}
-.vzhledy { display: inline-flex; align-items: center; gap: 0.3rem; }
-.vzhledy button {
-  border: 1px solid rgba(255, 255, 255, 0.4); background: none; color: inherit;
-  font: 400 0.72rem/1 var(--pismo); letter-spacing: 0.04em;
-  padding: 0.3rem 0.6rem; border-radius: 999px; cursor: pointer;
-}
-.vzhledy button:hover { border-color: var(--papir); }
-.vzhledy button[aria-pressed="true"] {
-  background: var(--papir); color: var(--inkoust); border-color: var(--papir);
-}
-
 .patka { grid-column: 1 / -1; border-top: 1px solid var(--linka); margin-top: var(--vzduch); padding-top: 1.2rem; display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; font-family: var(--pismo); font-size: 0.78rem; color: var(--tichy); }
 .patka a { text-decoration: none; }
 .patka a:hover { color: var(--zvyraz); }
@@ -624,12 +563,6 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
   .bok { position: static; max-height: none; overflow: visible; border-right: 0; padding-right: 0; border-bottom: 1px solid var(--linka); padding-bottom: 1rem; }
   .jazyky { gap: 0.5rem; margin-bottom: 0; }
   .logo { margin-bottom: 1rem; }
-  /* Na telefonu je kresba v pozadí menší a víc zatažená za roh — v plné
-     velikosti by ležela přes logotyp a nabídku. */
-  :root[data-vzhled="drevo"] body {
-    background-position: right -1rem top 0, left -2rem bottom -1rem, 0 0, 0 0;
-    background-size: 12rem auto, 10rem auto, auto, auto;
-  }
   .menu-prepinac {
     display: inline-block; border: 1px solid var(--linka); background: none; cursor: pointer;
     font: 400 0.8rem/1 var(--pismo); text-transform: uppercase; letter-spacing: 0.1em; padding: 0.6rem 0.8rem;
@@ -678,7 +611,7 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 .hero-obraz { margin: 0; position: relative; }
 .hero-obraz .ram {
   display: block; position: relative; z-index: 1;
-  aspect-ratio: 4 / 5; overflow: hidden; background: var(--platno);
+  aspect-ratio: 4 / 5; overflow: hidden; background: #fbfbfb;
 }
 /* Tady je výřez v pořádku: je to fotka autorky v ateliéru, ne reprodukce obrazu. */
 .hero-obraz .ram img, .hero-obraz .ram svg { width: 100%; height: 100%; object-fit: cover; }
@@ -969,7 +902,7 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 .pohyb .aktuality [data-aktualita][data-odchazi] {
   position: absolute; left: 1rem; right: 1rem; top: 1rem;
   transform-origin: top center; pointer-events: none; z-index: 3;
-  background: var(--jemny);
+  background: #fcfbfa;
   animation: odlist 1.1s cubic-bezier(0.38, 0.12, 0.32, 1) both;
 }
 @keyframes odlist {
@@ -1149,7 +1082,7 @@ table.kalendar .akce:hover::before { transform: scale(1.6); }
   border: 0; border-left: 2px solid var(--linka); background: none;
   color: var(--text); font: 400 0.9rem/1.3 var(--pismo); cursor: pointer;
 }
-.admin-menu button:hover { color: var(--inkoust); background: var(--jemny); }
+.admin-menu button:hover { color: var(--inkoust); background: #fcfbfa; }
 .admin-menu button[aria-selected="true"] { color: var(--inkoust); border-left-color: var(--zvyraz); background: var(--odznak); }
 .admin [data-pocty] { color: var(--tichy); }
 .formular.sirsi { max-width: 46rem; }
@@ -1171,7 +1104,7 @@ table.kalendar .akce:hover::before { transform: scale(1.6); }
 .fotky { border: 0; margin: 0 0 1.4rem; padding: 0; }
 .fotky > legend { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tichy); padding: 0; margin-bottom: 0.4rem; }
 .pustit {
-  border: 1px dashed var(--linka); background: var(--jemny);
+  border: 1px dashed var(--linka); background: #fcfbfa;
   padding: 1.4rem 1rem; text-align: center;
 }
 .pustit p { margin: 0 0 0.6rem; color: var(--tichy); font-size: 0.9rem; }

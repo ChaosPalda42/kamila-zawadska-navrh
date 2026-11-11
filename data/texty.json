@@ -480,18 +480,6 @@
     "cs": "Klikatelná ukázka — fotky, texty i kontakty jsou zástupné a nic se nikam neodesílá.",
     "en": "Clickable demo — photos, texts and contact details are placeholders and nothing is sent."
   },
-  "ukazka.vzhled": {
-    "cs": "Vzhled:",
-    "en": "Look:"
-  },
-  "ukazka.vzhled.cista": {
-    "cs": "čistě bílý",
-    "en": "clean white"
-  },
-  "ukazka.vzhled.drevo": {
-    "cs": "s dřevem",
-    "en": "with wood"
-  },
   "ukazka.formular": {
     "cs": "V ukázce se zpráva nikam neodesílá.",
     "en": "In this demo the message is not sent anywhere."
