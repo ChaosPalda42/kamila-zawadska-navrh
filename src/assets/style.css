@@ -589,7 +589,7 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
   display: block; position: relative; z-index: 1;
   aspect-ratio: 4 / 5; overflow: hidden; background: #fbfbfb;
 }
-/* Tady je výřez v pořádku: je to fotka ateliéru, ne reprodukce obrazu. */
+/* Tady je výřez v pořádku: je to fotka autorky v ateliéru, ne reprodukce obrazu. */
 .hero-obraz .ram img, .hero-obraz .ram svg { width: 100%; height: 100%; object-fit: cover; }
 
 @media (max-width: 60rem) {
