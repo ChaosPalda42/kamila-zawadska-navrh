@@ -1,4 +1,4 @@
-"""Spouštění ESM modulů z src/lib v Node a předávání výsledků přes JSON."""
+"""Running the ESM modules from `src/lib` in Node and handing results over as JSON."""
 from __future__ import annotations
 
 import json
@@ -11,8 +11,8 @@ MARKER = "<<<JSON>>>"
 
 
 def run_js(module: str, body: str, *, args: dict | None = None) -> object:
-    """Naimportuje `src/lib/<module>` jako `m`, vykoná `body` a vrátí hodnotu
-    předanou poslednímu volání `out(...)`. `args` je dostupné jako `A`."""
+    """Imports `src/lib/<module>` as `m`, runs `body` and returns the value
+    handed to the last call of `out(...)`. `args` is available as `A`."""
     mod_path = (ROOT / "src" / "lib" / module).as_posix()
     script = textwrap.dedent(
         """

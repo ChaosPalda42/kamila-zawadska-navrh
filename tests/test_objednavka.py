@@ -1,21 +1,24 @@
-"""Akceptační test C-005 — src/lib/objednavka.mjs (objednávka, doprava).
+"""Acceptance test C-005 -- `src/lib/objednavka.mjs` (the order, delivery).
 
-Telefony, e-maily a PSČ jsou psané tak, jak je lidi do formulářů opravdu dávají —
-s mezerami, předvolbou, pomlčkou i nezlomitelnou mezerou z kopírování. Učesané
-tvary tu úmyslně nejsou: C-116 v CRM byl zelený na deseti čistých vektorech
-a na skutečných vstupech měl dvě díry.
+The phone numbers, e-mail addresses and postcodes are written the way people
+really put them into forms -- with spaces, a dialling code, a dash and a
+non-breaking space from copying. Tidied-up forms are deliberately absent:
+C-116 in the CRM was green over ten clean vectors and had two holes on real
+input.
 """
 from __future__ import annotations
+
+import pathlib
 
 import pytest
 
 from tests.jsmod import run_js
 
-DILA = [
+WORKS = [
     {"slug": "most", "nazev": {"cs": "Most", "en": "Bridge"}, "rozmer": "140 × 90 cm", "cena": 54000, "stav": "v-prodeji"},
     {"slug": "sova", "nazev": {"cs": "Sova", "en": "Owl"}, "rozmer": "40 × 30 cm", "cena": 8900, "stav": "v-prodeji"},
 ]
-DOPRAVA = [
+SHIPPING = [
     {"id": "dobirka", "nazev": {"cs": "Dopravce na dobírku", "en": "Courier"}, "cena": 390},
     {"id": "osobne", "nazev": {"cs": "Osobní převzetí", "en": "Pick up"}, "cena": 0},
 ]
@@ -29,7 +32,7 @@ PLNE = {
 @pytest.fixture()
 def js():
     def call(body, **args):
-        return run_js("objednavka.mjs", body, args={"d": DILA, "z": DOPRAVA, "p": PLNE, **args})
+        return run_js("objednavka.mjs", body, args={"d": WORKS, "z": SHIPPING, "p": PLNE, **args})
     return call
 
 
@@ -46,14 +49,14 @@ def test_email_prijme_co_lidi_opravdu_pisou(js, vstup):
 
 
 @pytest.mark.parametrize("vstup", [
-    "kamila@example",            # bez domény druhé úrovně
+    "kamila@example",            # no second-level domain
     "kamila(at)example.com",
     "@example.com",
     "kamila@@example.com",
     "kamila @example.com",
     "kamila@example .com",
-    "kamila@example.c",          # jednoznaková TLD
-    "kamila@example.123",        # TLD z číslic
+    "kamila@example.c",          # a one-character TLD
+    "kamila@example.123",        # a TLD of digits
     "",
     "   ",
 ])
@@ -72,7 +75,7 @@ def test_email_nereaguje_na_jine_typy(js):
     "721 365 343",
     "+420721365343",
     "+420 721 365 343",
-    "+420 721 365 343",   # nezlomitelné mezery z kopírování z webu
+    "+420 721 365 343",   # non-breaking spaces from copying off a web page
     "00420721365343",
     "721-365-343",
     "(+420) 721 365 343",
@@ -82,8 +85,8 @@ def test_telefon_prijme_skutecne_zapisy(js, vstup):
 
 
 @pytest.mark.parametrize("vstup", [
-    "72136534",         # osm číslic
-    "7213653430",       # deset číslic bez předvolby
+    "72136534",         # eight digits
+    "7213653430",       # ten digits with no dialling code
     "721 365 34a",
     "nemam",
     "",
@@ -185,3 +188,38 @@ def test_rekapitulace_bez_dopravy_a_s_neznamym_dilem(js):
         const r = m.rekapitulace(k, A.d, A.z, "cs");
         out([r.polozky.length, r.doprava, r.celkem]);
     """) == [1, None, 8900]
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "src/lib/objednavka.mjs"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "src/lib/objednavka.mjs"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

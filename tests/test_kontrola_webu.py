@@ -1,11 +1,14 @@
-"""Akceptační test C-009 — tools/kontrola_webu.py (brána nad hotovým webem).
+"""Acceptance test C-009 -- `tools/kontrola_webu.py` (a gate over the finished site).
 
-Proč tahle brána existuje: u Green Air Tech se hláška „zpráva se nikam
-neodesílá" dostala na 15 veřejných stránek ve třech jazycích, protože seděla
-v jedné komponentě formuláře. Žádná z 691 bran to nechytila — nikdo neměřil
-VIDITELNÝ text vykresleného webu. Proto se tu měří text, ne šablony.
+Why this gate exists: at Green Air Tech the notice "the message is not sent
+anywhere" reached 15 public pages in three languages, because it sat in one
+form component. Not one of the 691 gates caught it -- nobody measured the
+VISIBLE text of the rendered site. Hence text is what is measured here, not
+templates.
 """
 from __future__ import annotations
+
+import pathlib
 
 import json
 import subprocess
@@ -18,25 +21,25 @@ from tools.kontrola_webu import (
     alt_texty, ceny, jazykove_dvojice, kontrola, main, najdi, odkazy, viditelny_text,
 )
 
-KOREN = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
-def stranka(telo: str, hlava: str = "") -> str:
-    return f"<!doctype html><html lang=\"cs\"><head><title>T</title>{hlava}</head><body>{telo}</body></html>"
+def stranka(body: str, head: str = "") -> str:
+    return f"<!doctype html><html lang=\"cs\"><head><title>T</title>{head}</head><body>{body}</body></html>"
 
 
 @pytest.fixture()
 def web(tmp_path):
-    def postav(soubory: dict[str, str]) -> Path:
-        for cesta, obsah in soubory.items():
-            p = tmp_path / cesta
+    def postav(files: dict[str, str]) -> Path:
+        for file_path, content in files.items():
+            p = tmp_path / file_path
             p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(obsah, encoding="utf-8")
+            p.write_text(content, encoding="utf-8")
         return tmp_path
     return postav
 
 
-# --- viditelný text ---------------------------------------------------------
+# --- the visible text --------------------------------------------------------
 
 def test_viditelny_text_zahodi_skripty_styly_a_komentare():
     html = stranka(
@@ -75,56 +78,56 @@ def test_viditelny_text_nebere_ostatni_atributy():
     assert "ukázka" not in text
 
 
-# --- hláška o ukázce v ostrém webu -----------------------------------------
+# --- a demo notice on the live site ------------------------------------------
 
 def test_najdi_chytne_hlasku_bez_ohledu_na_diakritiku_a_velikost(web):
-    koren = web({
+    root_dir = web({
         "index.html": stranka("<p>Klikatelná UKÁZKA, nic se neodesílá.</p>"),
         "kontakt/index.html": stranka("<p>V ukazce se zprava nikam neodesila.</p>"),
         "cisty/index.html": stranka("<p>Obrazy k prodeji</p>"),
     })
-    nalezy = najdi(koren, ["ukázka"])
-    assert [n["soubor"] for n in nalezy] == ["index.html", "kontakt/index.html"]
-    assert all("vyrez" in n and len(n["vyrez"]) <= 80 for n in nalezy)
+    findings = najdi(root_dir, ["ukázka"])
+    assert [n["soubor"] for n in findings] == ["index.html", "kontakt/index.html"]
+    assert all("vyrez" in n and len(n["vyrez"]) <= 80 for n in findings)
 
 
 def test_najdi_chytne_hlasku_schovanou_v_alt_textu(web):
-    koren = web({"index.html": stranka('<img src="a.jpg" alt="Ukázkový obrázek, smyšlené dílo">')})
-    assert len(najdi(koren, ["smyšlen"])) == 1
+    root_dir = web({"index.html": stranka('<img src="a.jpg" alt="Ukázkový obrázek, smyšlené dílo">')})
+    assert len(najdi(root_dir, ["smyšlen"])) == 1
 
 
 def test_najdi_vraci_poradi_podle_souboru(web):
-    koren = web({
+    root_dir = web({
         "b/index.html": stranka("<p>ukázka</p>"),
         "a/index.html": stranka("<p>ukázka</p>"),
     })
-    assert [n["soubor"] for n in najdi(koren, ["ukázka"])] == ["a/index.html", "b/index.html"]
+    assert [n["soubor"] for n in najdi(root_dir, ["ukázka"])] == ["a/index.html", "b/index.html"]
 
 
 def test_najdi_nic_nenajde_na_cistem_webu(web):
-    koren = web({"index.html": stranka("<p>Obrazy k prodeji</p>")})
-    assert najdi(koren, ["ukázka", "demo"]) == []
+    root_dir = web({"index.html": stranka("<p>Obrazy k prodeji</p>")})
+    assert najdi(root_dir, ["ukázka", "demo"]) == []
 
 
-# --- alt texty --------------------------------------------------------------
+# --- alt texts ---------------------------------------------------------------
 
 def test_alt_texty(web):
-    koren = web({"index.html": stranka(
+    root_dir = web({"index.html": stranka(
         '<img src="dobry.jpg" alt="Popis">'
         '<img src="bez.jpg">'
         '<img src="prazdny.jpg" alt="">'
         '<img src="mezery.jpg" alt="   ">'
         '<span aria-hidden="true"><img src="ozdoba.svg" alt=""></span>'
     )})
-    nalezy = alt_texty(koren)
-    assert sorted(n["src"] for n in nalezy) == ["bez.jpg", "mezery.jpg", "prazdny.jpg"]
-    assert all(n["soubor"] == "index.html" for n in nalezy)
+    findings = alt_texty(root_dir)
+    assert sorted(n["src"] for n in findings) == ["bez.jpg", "mezery.jpg", "prazdny.jpg"]
+    assert all(n["soubor"] == "index.html" for n in findings)
 
 
-# --- vnitřní odkazy ---------------------------------------------------------
+# --- internal links ----------------------------------------------------------
 
 def test_odkazy_najdou_slepe_vnitrni_cesty(web):
-    koren = web({
+    root_dir = web({
         "index.html": stranka(
             '<a href="/galerie/">ok</a>'
             '<a href="/neni/">slepý</a>'
@@ -136,26 +139,26 @@ def test_odkazy_najdou_slepe_vnitrni_cesty(web):
         ),
         "galerie/index.html": stranka("<p>Galerie</p>"),
     })
-    assert [n["href"] for n in odkazy(koren)] == ["/neni/"]
+    assert [n["href"] for n in odkazy(root_dir)] == ["/neni/"]
 
 
 def test_odkazy_prijmou_relativni_cestu(web):
-    koren = web({
+    root_dir = web({
         "galerie/index.html": stranka('<a href="sova/">ok</a><a href="neni/">slepý</a>'),
         "galerie/sova/index.html": stranka("<p>Sova</p>"),
     })
-    assert [n["href"] for n in odkazy(koren)] == ["neni/"]
+    assert [n["href"] for n in odkazy(root_dir)] == ["neni/"]
 
 
 def test_odkazy_meri_absolutni_cestu_od_korene_webu(web):
-    """Absolutní odkaz z podstránky vede od korene webu, ne od té podstránky.
+    """An absolute link from a subpage runs from the site's root, not from that page.
 
-    Celý web odkazuje přes '/galerie/' a '/en/kontakt/'. Kdyby se taková
-    cesta skládala vedle souboru, který ji nese, brána by na každé
-    podstránce nahlásila slepý odkaz, a 894 falešných nálezů by schovalo
-    ten jeden skutečný.
+    The whole site links through `/galerie/` and `/en/kontakt/`. Were such a
+    path put together next to the file that carries it, the gate would report
+    a dead link on every subpage, and 894 false findings would hide the one
+    real one.
     """
-    koren = web({
+    root_dir = web({
         "administrace/index.html": stranka(
             '<a href="/galerie/">ok</a>'
             '<a href="/galerie/sova/">ok hloub</a>'
@@ -167,10 +170,10 @@ def test_odkazy_meri_absolutni_cestu_od_korene_webu(web):
             '<a href="/en/galerie/">ok</a><a href="/en/neni/">slepý</a>'
         ),
     })
-    assert sorted(n["href"] for n in odkazy(koren)) == ["/en/neni/", "/neni/"]
+    assert sorted(n["href"] for n in odkazy(root_dir)) == ["/en/neni/", "/neni/"]
 
 
-# --- jazykové dvojice -------------------------------------------------------
+# --- language pairs ----------------------------------------------------------
 
 HREFLANG_OBA = (
     '<link rel="alternate" hreflang="cs" href="/galerie/">'
@@ -179,42 +182,42 @@ HREFLANG_OBA = (
 
 
 def test_jazykove_dvojice_hlasi_chybejici_protejsek(web):
-    koren = web({
+    root_dir = web({
         "galerie/index.html": stranka("<p>Galerie</p>", HREFLANG_OBA),
         "en/galerie/index.html": stranka("<p>Gallery</p>", HREFLANG_OBA),
         "kurzy/index.html": stranka("<p>Kurzy</p>", HREFLANG_OBA),
     })
-    nalezy = jazykove_dvojice(koren)
-    assert {"soubor": "kurzy/index.html", "chybi": "protejsek"} in nalezy
+    findings = jazykove_dvojice(root_dir)
+    assert {"soubor": "kurzy/index.html", "chybi": "protejsek"} in findings
 
 
 def test_jazykove_dvojice_hlasi_chybejici_hreflang(web):
-    koren = web({
+    root_dir = web({
         "galerie/index.html": stranka("<p>Galerie</p>"),
         "en/galerie/index.html": stranka("<p>Gallery</p>", HREFLANG_OBA),
     })
-    nalezy = jazykove_dvojice(koren)
-    assert {"soubor": "galerie/index.html", "chybi": "hreflang"} in nalezy
-    assert not any(n["soubor"] == "en/galerie/index.html" for n in nalezy)
+    findings = jazykove_dvojice(root_dir)
+    assert {"soubor": "galerie/index.html", "chybi": "hreflang"} in findings
+    assert not any(n["soubor"] == "en/galerie/index.html" for n in findings)
 
 
 def test_jazykove_dvojice_na_sparovanem_webu_nic(web):
-    koren = web({
+    root_dir = web({
         "index.html": stranka("<p>Domů</p>", HREFLANG_OBA),
         "en/index.html": stranka("<p>Home</p>", HREFLANG_OBA),
     })
-    assert jazykove_dvojice(koren) == []
+    assert jazykove_dvojice(root_dir) == []
 
 
-# --- ceny v e-shopu ---------------------------------------------------------
+# --- prices in the shop ------------------------------------------------------
 
 def test_ceny(web):
-    koren = web({
+    root_dir = web({
         "obrazy-k-prodeji/index.html": stranka("<p>Most 54 000 Kč</p>"),
         "en/works-for-sale/index.html": stranka("<p>Bridge 54 000 CZK</p>"),
         "galerie/index.html": stranka("<p>Bez ceny, to je v pořádku</p>"),
     })
-    assert ceny(koren) == []
+    assert ceny(root_dir) == []
     koren2 = web({"obrazy-k-prodeji/index.html": stranka("<p>Most</p>")})
     assert ceny(koren2) == [{"soubor": "obrazy-k-prodeji/index.html", "chybi": "cena"}]
 
@@ -222,44 +225,44 @@ def test_ceny(web):
 # --- celek ------------------------------------------------------------------
 
 def test_kontrola_v_rezimu_ukazky_hlasky_neresi(web):
-    koren = web({
+    root_dir = web({
         "index.html": stranka("<p>Klikatelná ukázka.</p>", HREFLANG_OBA),
         "en/index.html": stranka("<p>Clickable demo.</p>", HREFLANG_OBA),
     })
-    vysledek = kontrola(koren, ostry=False)
-    assert vysledek["soubory"] == 2
-    assert vysledek["ukazka"] == []
-    assert vysledek["nalezu"] == 0
+    result = kontrola(root_dir, ostry=False)
+    assert result["soubory"] == 2
+    assert result["ukazka"] == []
+    assert result["nalezu"] == 0
 
 
 def test_kontrola_v_ostrem_rezimu_hlasku_najde(web):
-    koren = web({
+    root_dir = web({
         "index.html": stranka("<p>Klikatelná ukázka.</p>", HREFLANG_OBA),
         "en/index.html": stranka("<p>Home</p>", HREFLANG_OBA),
     })
-    vysledek = kontrola(koren, ostry=True)
-    assert len(vysledek["ukazka"]) == 1
-    assert vysledek["ukazka"][0]["soubor"] == "index.html"
-    assert vysledek["nalezu"] >= 1
+    result = kontrola(root_dir, ostry=True)
+    assert len(result["ukazka"]) == 1
+    assert result["ukazka"][0]["soubor"] == "index.html"
+    assert result["nalezu"] >= 1
 
 
 def test_kontrola_scita_vsech_pet_kategorii(web):
-    koren = web({"index.html": stranka('<img src="x.jpg"><a href="/nikam/">x</a>')})
-    vysledek = kontrola(koren, ostry=True)
-    assert set(vysledek) == {"soubory", "ukazka", "alt", "odkazy", "dvojice", "ceny", "nalezu"}
-    assert vysledek["nalezu"] == sum(
-        len(vysledek[k]) for k in ("ukazka", "alt", "odkazy", "dvojice", "ceny")
+    root_dir = web({"index.html": stranka('<img src="x.jpg"><a href="/nikam/">x</a>')})
+    result = kontrola(root_dir, ostry=True)
+    assert set(result) == {"soubory", "ukazka", "alt", "odkazy", "dvojice", "ceny", "nalezu"}
+    assert result["nalezu"] == sum(
+        len(result[k]) for k in ("ukazka", "alt", "odkazy", "dvojice", "ceny")
     )
 
 
 def test_vychozi_vzorky_pokryvaji_hlasky_z_ukazky(web):
-    koren = web({
+    root_dir = web({
         "a/index.html": stranka("<p>Obsah je smyšlený.</p>"),
         "b/index.html": stranka("<p>V ukázce se zpráva nikam neodesílá.</p>"),
         "c/index.html": stranka("<p>Demo administrace.</p>"),
         "d/index.html": stranka("<p>Obrazy k prodeji, originály.</p>"),
     })
-    nalezene = {n["soubor"] for n in kontrola(koren, ostry=True)["ukazka"]}
+    nalezene = {n["soubor"] for n in kontrola(root_dir, ostry=True)["ukazka"]}
     assert nalezene == {"a/index.html", "b/index.html", "c/index.html"}
 
 
@@ -275,18 +278,53 @@ def test_main_vraci_kody(web, capsys):
 
 
 def test_main_umi_json(web, capsys):
-    koren = web({"index.html": stranka('<img src="x.jpg">')})
-    main([str(koren), "--json"])
-    vysledek = json.loads(capsys.readouterr().out)
-    assert vysledek["nalezu"] >= 1
-    assert "soubory" in vysledek
+    root_dir = web({"index.html": stranka('<img src="x.jpg">')})
+    main([str(root_dir), "--json"])
+    result = json.loads(capsys.readouterr().out)
+    assert result["nalezu"] >= 1
+    assert "soubory" in result
 
 
 def test_main_jde_spustit_jako_modul(web):
-    koren = web({"index.html": stranka("<p>Klikatelná ukázka</p>")})
-    hotovo = subprocess.run(
-        [sys.executable, "-m", "tools.kontrola_webu", str(koren), "--ostry", "--json"],
-        capture_output=True, text=True, cwd=KOREN, timeout=60,
+    root_dir = web({"index.html": stranka("<p>Klikatelná ukázka</p>")})
+    done = subprocess.run(
+        [sys.executable, "-m", "tools.kontrola_webu", str(root_dir), "--ostry", "--json"],
+        capture_output=True, text=True, cwd=ROOT, timeout=60,
     )
-    assert hotovo.returncode == 1, hotovo.stderr[:500]
-    assert json.loads(hotovo.stdout)["ukazka"], hotovo.stdout[:500]
+    assert done.returncode == 1, done.stderr[:500]
+    assert json.loads(done.stdout)["ukazka"], done.stdout[:500]
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "tools/kontrola_webu.py"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "tools/kontrola_webu.py"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

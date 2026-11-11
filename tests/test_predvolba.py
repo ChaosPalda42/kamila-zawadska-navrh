@@ -1,11 +1,14 @@
-"""Akceptační test C-011 — tools/predvolba.py (web přesazený do podadresáře).
+"""Acceptance test C-011 -- `tools/predvolba.py` (the site moved into a subfolder).
 
-Proč to existuje: ukázka visí na https://chaospalda42.github.io/<repo>/, ale
-web odkazuje od korene ('/galerie/', '/styl.css'). Zdroj má zůstat čistý pro
-ostrou doménu, takže se přesazuje až hotový výstup. Co se smí přepsat, je
-vyjmenované: adresa v atributu. Text stránky ani cizí atributy ne.
+Why it exists: the demo hangs at https://chaospalda42.github.io/<repo>/, but
+the site links from the root (`/galerie/`, `/styl.css`). The source is to stay
+clean for the live domain, so it is the finished output that gets moved. What
+may be rewritten is spelled out: an address in an attribute. Not the page's
+text and not foreign attributes.
 """
 from __future__ import annotations
+
+import pathlib
 
 import subprocess
 import sys
@@ -15,10 +18,10 @@ import pytest
 
 from tools.predvolba import main, preved, preved_css, preved_html, uprav_predvolbu
 
-KOREN = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
-# --- normalizace předvolby --------------------------------------------------
+# --- normalizing the prefix --------------------------------------------------
 
 @pytest.mark.parametrize(
     "zadano,ceka",
@@ -48,14 +51,14 @@ def test_html_prepise_adresy_v_atributech():
         '<video poster="/obrazky/sova.webp"></video>'
         '<button data-kosik-cesta="/kosik/">Košík</button>'
     )
-    vysledek = preved_html(html, "/ukazka")
-    assert 'href="/ukazka/galerie/"' in vysledek
-    assert 'href="/ukazka/styl.css?v=1"' in vysledek
-    assert 'src="/ukazka/web.js"' in vysledek
-    assert 'action="/ukazka/kosik/"' in vysledek
-    assert 'formaction="/ukazka/kosik/#dole"' in vysledek
-    assert 'poster="/ukazka/obrazky/sova.webp"' in vysledek
-    assert 'data-kosik-cesta="/ukazka/kosik/"' in vysledek
+    result = preved_html(html, "/ukazka")
+    assert 'href="/ukazka/galerie/"' in result
+    assert 'href="/ukazka/styl.css?v=1"' in result
+    assert 'src="/ukazka/web.js"' in result
+    assert 'action="/ukazka/kosik/"' in result
+    assert 'formaction="/ukazka/kosik/#dole"' in result
+    assert 'poster="/ukazka/obrazky/sova.webp"' in result
+    assert 'data-kosik-cesta="/ukazka/kosik/"' in result
 
 
 def test_html_neprepise_co_nema():
@@ -76,16 +79,16 @@ def test_html_neprepise_co_nema():
 
 def test_html_srcset_vsichni_kandidati():
     html = '<img srcset="/obrazky/a-400.webp 400w, /obrazky/a-800.webp 800w" src="/obrazky/a.webp" alt="A">'
-    vysledek = preved_html(html, "/ukazka")
-    assert 'srcset="/ukazka/obrazky/a-400.webp 400w, /ukazka/obrazky/a-800.webp 800w"' in vysledek
-    assert 'src="/ukazka/obrazky/a.webp"' in vysledek
+    result = preved_html(html, "/ukazka")
+    assert 'srcset="/ukazka/obrazky/a-400.webp 400w, /ukazka/obrazky/a-800.webp 800w"' in result
+    assert 'src="/ukazka/obrazky/a.webp"' in result
 
 
 def test_html_jednoduche_uvozovky_a_velka_pismena():
     html = "<a HREF='/galerie/'>G</a><IMG SRC='/obrazky/a.webp' alt='A'>"
-    vysledek = preved_html(html, "/ukazka")
-    assert "/ukazka/galerie/" in vysledek
-    assert "/ukazka/obrazky/a.webp" in vysledek
+    result = preved_html(html, "/ukazka")
+    assert "/ukazka/galerie/" in result
+    assert "/ukazka/obrazky/a.webp" in result
 
 
 def test_html_druhy_beh_nic_nezmeni():
@@ -99,9 +102,9 @@ def test_html_prazdna_predvolba_nic_nedela():
     assert preved_html(html, "") == html
 
 
-# --- HTML schované v JSON ---------------------------------------------------
+# --- HTML hidden inside JSON -------------------------------------------------
 
-JSON_SKRIPT = (
+JSON_SCRIPT = (
     '<script type="application/json" data-dila>'
     '[{"slug":"a",'
     '"obrazek":"<img src=\\"/obrazky/a-960.jpg\\" '
@@ -112,18 +115,18 @@ JSON_SKRIPT = (
 
 
 def test_json_skript_prepise_atributy_s_escapovanymi_uvozovkami():
-    """Lupa v galerii dostává hotové HTML uvnitř JSON, kde jsou uvozovky
-    psané jako \\" — bez tohohle zůstanou cesty od kořene a pod podsložkou
-    skončí na 404."""
-    vysledek = preved_html(JSON_SKRIPT, "/ukazka")
-    assert 'src=\\"/ukazka/obrazky/a-960.jpg\\"' in vysledek
-    assert 'srcset=\\"/ukazka/obrazky/a-480.jpg 480w, /ukazka/obrazky/a-960.jpg 960w\\"' in vysledek
-    assert 'alt=\\"A\\"' in vysledek
+    """The gallery's viewer is handed finished HTML inside JSON, where the
+    quotes are written as \\" -- without this the paths stay at the root and
+    end at a 404 under a subfolder."""
+    result = preved_html(JSON_SCRIPT, "/ukazka")
+    assert 'src=\\"/ukazka/obrazky/a-960.jpg\\"' in result
+    assert 'srcset=\\"/ukazka/obrazky/a-480.jpg 480w, /ukazka/obrazky/a-960.jpg 960w\\"' in result
+    assert 'alt=\\"A\\"' in result
 
 
 def test_json_skript_prepise_adresu_v_hodnote():
-    vysledek = preved_html(JSON_SKRIPT, "/ukazka")
-    assert '"kam":"/ukazka/galerie/a/"' in vysledek
+    result = preved_html(JSON_SCRIPT, "/ukazka")
+    assert '"kam":"/ukazka/galerie/a/"' in result
 
 
 def test_json_skript_neprepise_co_nema():
@@ -138,22 +141,22 @@ def test_json_skript_neprepise_co_nema():
 
 
 def test_mimo_json_skript_se_retezce_nemeni():
-    """Obyčejný <script> je kód, ne data: do řetězců v něm se nesahá."""
+    """A plain <script> is code, not data: the strings inside it are left alone."""
     html = '<script>var x = {"kam":"/galerie/a/"};</script>'
     assert preved_html(html, "/ukazka") == html
 
 
 def test_json_skript_druhy_beh_nic_nezmeni():
-    jednou = preved_html(JSON_SKRIPT, "/ukazka")
+    jednou = preved_html(JSON_SCRIPT, "/ukazka")
     assert preved_html(jednou, "/ukazka") == jednou
 
 
 def test_json_skript_se_pocita_do_adres(web):
-    koren = web({"galerie/index.html": JSON_SKRIPT})
-    assert preved(koren, "/ukazka") == {"souboru": 1, "adres": 4}
+    root_dir = web({"galerie/index.html": JSON_SCRIPT})
+    assert preved(root_dir, "/ukazka") == {"souboru": 1, "adres": 4}
 
 
-JSON_SKRIPT_ADRESA = (
+JSON_SCRIPT_ADDRESS = (
     '<script type="application/json" data-dila>'
     '[{"slug":"a",'
     '"poptavka":"/kontakt/?duvod=na-miru&dilo=a",'
@@ -164,57 +167,61 @@ JSON_SKRIPT_ADRESA = (
 
 
 def test_json_skript_prepise_adresu_s_dotazem_a_kotvou():
-    """U každého díla v lupě visí odkaz „poptat na míru" (/kontakt/?duvod=…)
-    a odkaz do prodejní stránky (/obrazy-k-prodeji/#slug). Adresa nekončí
-    lomítkem ani příponou — dotaz a kotva k ní patří a musí přepsání přežít."""
-    vysledek = preved_html(JSON_SKRIPT_ADRESA, "/ukazka")
-    assert '"poptavka":"/ukazka/kontakt/?duvod=na-miru&dilo=a"' in vysledek
-    assert '"vystava":"/ukazka/obrazy-k-prodeji/#a"' in vysledek
-    assert 'href=\\"/ukazka/galerie/a/?od=lupa\\"' in vysledek
+    """Every work in the viewer carries a link "ask for one to order"
+    (`/kontakt/?duvod=...`) and a link to the sales page
+    (`/obrazy-k-prodeji/#slug`). The address ends in neither a slash nor a
+    suffix -- the query and the anchor belong to it and have to survive the
+    rewrite."""
+    result = preved_html(JSON_SCRIPT_ADDRESS, "/ukazka")
+    assert '"poptavka":"/ukazka/kontakt/?duvod=na-miru&dilo=a"' in result
+    assert '"vystava":"/ukazka/obrazy-k-prodeji/#a"' in result
+    assert 'href=\\"/ukazka/galerie/a/?od=lupa\\"' in result
 
 
 def test_json_skript_s_dotazem_druhy_beh_nic_nezmeni():
-    jednou = preved_html(JSON_SKRIPT_ADRESA, "/ukazka")
+    jednou = preved_html(JSON_SCRIPT_ADDRESS, "/ukazka")
     assert preved_html(jednou, "/ukazka") == jednou
 
 
 def test_json_skript_s_dotazem_se_pocita_do_adres(web):
-    koren = web({"galerie/index.html": JSON_SKRIPT_ADRESA})
-    assert preved(koren, "/ukazka") == {"souboru": 1, "adres": 3}
+    root_dir = web({"galerie/index.html": JSON_SCRIPT_ADDRESS})
+    assert preved(root_dir, "/ukazka") == {"souboru": 1, "adres": 3}
 
 
 def test_json_skript_mimo_zacatek_dokumentu():
-    """JSON skript nikdy nestojí na začátku souboru — má nad sebou celou
-    stránku. Když se blok krájí pozicí v celém dokumentu místo pozice v
-    nalezeném úseku, značka se rozseká a obsah se vysype na stránku jako
-    text. Proto se tu kontroluje celý výsledek, ne jen přepsaná adresa."""
+    """A JSON script never stands at the start of the file -- a whole page sits
+    above it. When the block is cut by the position in the whole document
+    instead of the position inside the stretch that was found, the tag is cut
+    to pieces and its content spills onto the page as text. Hence the whole
+    result is checked here, not only the rewritten address."""
     pred = "<!doctype html><html><body><p>Galerie</p>"
-    skript = '<script type="application/json" data-dila>[{"kam":"/galerie/a/"}]</script>'
+    script = '<script type="application/json" data-dila>[{"kam":"/galerie/a/"}]</script>'
     za = "</body></html>"
-    cekam = pred + skript.replace('"/galerie/a/"', '"/ukazka/galerie/a/"') + za
-    assert preved_html(pred + skript + za, "/ukazka") == cekam
+    cekam = pred + script.replace('"/galerie/a/"', '"/ukazka/galerie/a/"') + za
+    assert preved_html(pred + script + za, "/ukazka") == cekam
 
 
 def test_json_skript_dva_bloky_na_strance():
-    """Stránka galerie má těch bloků víc (díla, akce). Druhý v řadě se
-    nesmí rozsypat jen proto, že leží dál od začátku souboru."""
+    """The gallery page has several of those blocks (works, events). The second
+    in the row must not fall apart just because it lies further from the start
+    of the file."""
     blok = '<script type="application/json" data-%s>[{"kam":"/galerie/%s/"}]</script>'
     html = "<p>x</p>" + (blok % ("dila", "a")) + "<p>y</p>" + (blok % ("akce", "b"))
-    vysledek = preved_html(html, "/ukazka")
-    assert vysledek.count("</script>") == 2
-    assert '"/ukazka/galerie/a/"' in vysledek
-    assert '"/ukazka/galerie/b/"' in vysledek
-    assert "<p>y</p>" in vysledek
+    result = preved_html(html, "/ukazka")
+    assert result.count("</script>") == 2
+    assert '"/ukazka/galerie/a/"' in result
+    assert '"/ukazka/galerie/b/"' in result
+    assert "<p>y</p>" in result
 
 
 # --- CSS --------------------------------------------------------------------
 
 def test_css_url_vsechny_zapisy():
     css = "a{background:url(/obrazky/a.webp)}b{background:url('/obrazky/b.webp')}c{background:url(\"/obrazky/c.webp\")}"
-    vysledek = preved_css(css, "/ukazka")
-    assert "url(/ukazka/obrazky/a.webp)" in vysledek
-    assert "/ukazka/obrazky/b.webp" in vysledek
-    assert "/ukazka/obrazky/c.webp" in vysledek
+    result = preved_css(css, "/ukazka")
+    assert "url(/ukazka/obrazky/a.webp)" in result
+    assert "/ukazka/obrazky/b.webp" in result
+    assert "/ukazka/obrazky/c.webp" in result
 
 
 def test_css_neprepise_cizi_adresy():
@@ -222,45 +229,45 @@ def test_css_neprepise_cizi_adresy():
     assert preved_css(css, "/ukazka") == css
 
 
-# --- celý adresář -----------------------------------------------------------
+# --- the whole directory -----------------------------------------------------
 
 @pytest.fixture()
 def web(tmp_path):
-    def postav(soubory: dict[str, str]) -> Path:
-        for cesta, obsah in soubory.items():
-            p = tmp_path / cesta
+    def postav(files: dict[str, str]) -> Path:
+        for file_path, content in files.items():
+            p = tmp_path / file_path
             p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(obsah, encoding="utf-8")
+            p.write_text(content, encoding="utf-8")
         return tmp_path
     return postav
 
 
 def test_preved_projde_vnorene_slozky_a_pocita(web):
-    koren = web({
+    root_dir = web({
         "index.html": '<a href="/galerie/">G</a><a href="/kontakt/">K</a>',
         "en/galerie/index.html": '<a href="/en/galerie/">G</a>',
         "styl.css": "a{background:url(/obrazky/a.webp)}",
         "robots.txt": "User-agent: *\nDisallow: /\n",
     })
-    vysledek = preved(koren, "/ukazka")
-    assert vysledek == {"souboru": 3, "adres": 4}
-    assert '<a href="/ukazka/galerie/">' in (koren / "index.html").read_text(encoding="utf-8")
-    assert "/ukazka/en/galerie/" in (koren / "en/galerie/index.html").read_text(encoding="utf-8")
-    assert "url(/ukazka/obrazky/a.webp)" in (koren / "styl.css").read_text(encoding="utf-8")
-    assert (koren / "robots.txt").read_text(encoding="utf-8") == "User-agent: *\nDisallow: /\n"
+    result = preved(root_dir, "/ukazka")
+    assert result == {"souboru": 3, "adres": 4}
+    assert '<a href="/ukazka/galerie/">' in (root_dir / "index.html").read_text(encoding="utf-8")
+    assert "/ukazka/en/galerie/" in (root_dir / "en/galerie/index.html").read_text(encoding="utf-8")
+    assert "url(/ukazka/obrazky/a.webp)" in (root_dir / "styl.css").read_text(encoding="utf-8")
+    assert (root_dir / "robots.txt").read_text(encoding="utf-8") == "User-agent: *\nDisallow: /\n"
 
 
 def test_preved_druhy_beh_vrati_nuly(web):
-    koren = web({"index.html": '<a href="/galerie/">G</a>'})
-    preved(koren, "/ukazka")
-    assert preved(koren, "/ukazka") == {"souboru": 0, "adres": 0}
+    root_dir = web({"index.html": '<a href="/galerie/">G</a>'})
+    preved(root_dir, "/ukazka")
+    assert preved(root_dir, "/ukazka") == {"souboru": 0, "adres": 0}
 
 
-# --- spuštění z příkazové řádky --------------------------------------------
+# --- running it from the command line ----------------------------------------
 
 def test_main_vytiskne_radek(web, capsys):
-    koren = web({"index.html": '<a href="/galerie/">G</a>'})
-    assert main([str(koren), "ukazka"]) == 0
+    root_dir = web({"index.html": '<a href="/galerie/">G</a>'})
+    assert main([str(root_dir), "ukazka"]) == 0
     vypsano = capsys.readouterr().out.strip()
     assert vypsano == "predvolba: /ukazka, souboru: 1, adres: 1"
 
@@ -271,10 +278,45 @@ def test_main_chybejici_adresar(tmp_path, capsys):
 
 
 def test_modul_jde_spustit(web):
-    koren = web({"index.html": '<a href="/galerie/">G</a>'})
-    hotovo = subprocess.run(
-        [sys.executable, "-m", "tools.predvolba", str(koren), "ukazka"],
-        cwd=KOREN, capture_output=True, text=True,
+    root_dir = web({"index.html": '<a href="/galerie/">G</a>'})
+    done = subprocess.run(
+        [sys.executable, "-m", "tools.predvolba", str(root_dir), "ukazka"],
+        cwd=ROOT, capture_output=True, text=True,
     )
-    assert hotovo.returncode == 0, hotovo.stderr
-    assert "predvolba: /ukazka" in hotovo.stdout
+    assert done.returncode == 0, done.stderr
+    assert "predvolba: /ukazka" in done.stdout
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "tools/predvolba.py"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "tools/predvolba.py"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

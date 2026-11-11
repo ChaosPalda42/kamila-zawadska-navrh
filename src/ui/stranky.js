@@ -1,89 +1,90 @@
-/* DOM vrstva jednotlivých stránek: košík s objednávkou, kontaktní formulář,
-   přepínání měsíců v kalendáři.
+/* The DOM layer of the individual pages: the basket with its order, the
+   contact form, switching months in the calendar.
 
-   Načítá se PŘED web.js, které tyhle funkce na konci zavolá. Rozhodování
-   (co je platné, co z košíku vypadne, jak vypadá mřížka měsíce) dělají
-   moduly pod kontrakty; tady se jen čte a píše DOM. */
+   It loads BEFORE `web.js`, which calls these functions at its end. The
+   deciding (what is valid, what drops out of the basket, what the month's
+   grid looks like) is done by the modules under contract; here the DOM is
+   only read and written. */
 (function () {
   "use strict";
   var KZ = window.KZ || {};
   var doc = document;
-  function v(volba, koren) { return (koren || doc).querySelector(volba); }
-  function vse(volba, koren) { return Array.prototype.slice.call((koren || doc).querySelectorAll(volba)); }
-  var jazyk = doc.documentElement.lang === "en" ? "en" : "cs";
+  function v(volba, root) { return (root || doc).querySelector(volba); }
+  function all(volba, root) { return Array.prototype.slice.call((root || doc).querySelectorAll(volba)); }
+  var language = doc.documentElement.lang === "en" ? "en" : "cs";
 
-  function jsonZe(volba, nahrada) {
-    var znacka = v(volba);
-    if (!znacka) return nahrada;
-    try { return JSON.parse(znacka.textContent); } catch (chyba) { return nahrada; }
+  function jsonZe(volba, replacement) {
+    var tag = v(volba);
+    if (!tag) return replacement;
+    try { return JSON.parse(tag.textContent); } catch (error) { return replacement; }
   }
 
-  function chyby() { return jsonZe("script[data-chyby]", {}); }
-  function dilaZeStranky() {
+  function errors() { return jsonZe("script[data-chyby]", {}); }
+  function worksFromPage() {
     var out = [];
-    vse('[data-eshop-dila] script[type="application/json"]').forEach(function (z) {
-      try { out = out.concat(JSON.parse(z.textContent)); } catch (chyba) { /* nic */ }
+    all('[data-eshop-dila] script[type="application/json"]').forEach(function (z) {
+      try { out = out.concat(JSON.parse(z.textContent)); } catch (error) { /* nothing */ }
     });
     return out;
   }
 
-  /** Chyby z kontraktu (pole klíčů) nasadí k polím formuláře. */
-  function ukazChyby(form, klice) {
-    var slovnik = chyby();
-    vse("[data-pole]", form).forEach(function (pole) {
-      var klic = pole.getAttribute("data-pole");
-      var hlaska = v("[data-chyba]", pole);
-      var ma = klice.indexOf(klic) >= 0;
-      if (ma) pole.setAttribute("data-chyba", "1"); else pole.removeAttribute("data-chyba");
-      if (hlaska) {
-        hlaska.textContent = ma ? (slovnik[klic] || klic) : "";
-        hlaska.hidden = !ma;
+  /** Puts the contract's errors (an array of keys) onto the form's fields. */
+  function showErrors(form, keys) {
+    var dictionary = errors();
+    all("[data-pole]", form).forEach(function (field) {
+      var key = field.getAttribute("data-pole");
+      var notice = v("[data-chyba]", field);
+      var ma = keys.indexOf(key) >= 0;
+      if (ma) field.setAttribute("data-chyba", "1"); else field.removeAttribute("data-chyba");
+      if (notice) {
+        notice.textContent = ma ? (dictionary[key] || key) : "";
+        notice.hidden = !ma;
       }
     });
-    var prvni = v("[data-chyba] input, [data-chyba] select, [data-chyba] textarea", form);
-    if (prvni) prvni.focus();
+    var first = v("[data-chyba] input, [data-chyba] select, [data-chyba] textarea", form);
+    if (first) first.focus();
   }
 
-  function hodnoty(form) {
+  function values(form) {
     var out = {};
-    vse("input, select, textarea", form).forEach(function (prvek) {
-      if (!prvek.name) return;
-      if (prvek.type === "checkbox") out[prvek.name] = prvek.checked;
-      else if (prvek.type === "radio") { if (prvek.checked) out[prvek.name] = prvek.value; }
-      else out[prvek.name] = prvek.value;
+    all("input, select, textarea", form).forEach(function (element) {
+      if (!element.name) return;
+      if (element.type === "checkbox") out[element.name] = element.checked;
+      else if (element.type === "radio") { if (element.checked) out[element.name] = element.value; }
+      else out[element.name] = element.value;
     });
     return out;
   }
 
-  /* ---------- košík ---------- */
+  /* ---------- the basket ---------- */
 
   window.KZkosikStranka = function () {
-    var obal = v("[data-kosik]");
-    if (!obal || !KZ.kosik) return;
+    var wrapper = v("[data-kosik]");
+    if (!wrapper || !KZ.kosik) return;
     var web = window.KZweb;
-    var prazdny = v("[data-prazdny]");
-    var radky = v("[data-radky]");
-    var dila = dilaZeStranky();
-    var objednavka = v("[data-objednavka]");
+    var empty = v("[data-prazdny]");
+    var lines = v("[data-radky]");
+    var dila = worksFromPage();
+    var order = v("[data-objednavka]");
     var zpusoby = jsonZe("script[data-doprava]", []);
 
-    function stav() { return web.nactiKosik(); }
+    function state() { return web.nactiKosik(); }
 
-    function prekresli() {
-      // Košík se pokaždé pročistí proti aktuálnímu seznamu děl: co se mezitím
-      // prodalo nebo zamluvilo, vypadne — a člověk se to dozví, ne že mu
-      // jen tiše zmizí řádek.
-      var probrano = KZ.kosik.prober(stav(), dila);
+    function redraw() {
+      // The basket is cleaned against the current list of works every time: what
+      // has been sold or reserved meanwhile drops out -- and the visitor is told,
+      // rather than having a row quietly disappear on them.
+      var probrano = KZ.kosik.prober(state(), dila);
       web.ulozKosik(probrano.kosik);
-      var kosik = probrano.kosik;
-      var zmena = v("[data-zmena]");
-      if (zmena) {
-        zmena.textContent = probrano.odebrane.length ? web.s("zmena") : "";
-        zmena.hidden = !probrano.odebrane.length;
+      var cart = probrano.kosik;
+      var change = v("[data-zmena]");
+      if (change) {
+        change.textContent = probrano.odebrane.length ? web.s("zmena") : "";
+        change.hidden = !probrano.odebrane.length;
       }
 
-      var rek = KZ.objednavka.rekapitulace(kosik, dila, zpusoby, jazyk);
-      radky.innerHTML = "";
+      var rek = KZ.objednavka.rekapitulace(cart, dila, zpusoby, language);
+      lines.innerHTML = "";
       rek.polozky.forEach(function (p) {
         var tr = doc.createElement("tr");
         var td1 = doc.createElement("td");
@@ -93,44 +94,45 @@
         var td2 = doc.createElement("td");
         td2.innerHTML = '<span class="cena"></span>';
         v(".cena", td2).textContent = web.korun(p.cena);
-        // Odebrat má vlastní sloupec a velikost tlačítka: podtržené slovo
-        // u ceny se na mobilu nedalo trefit a nikdo ho tam nehledal.
+        // Removing has a column and a button size of its own: the underlined word
+        // by the price could not be hit on a phone and nobody looked for it there.
         var td3 = doc.createElement("td");
         td3.innerHTML = '<button class="odebrat" type="button"><span class="krizek" aria-hidden="true">×</span><span class="slovo"></span></button>';
-        var tlacitko = v("button", td3);
-        v(".slovo", tlacitko).textContent = web.s("odebrat");
-        tlacitko.setAttribute("aria-label", web.s("odebrat") + ": " + p.nazev);
-        tlacitko.setAttribute("title", web.s("odebrat") + ": " + p.nazev);
-        tlacitko.addEventListener("click", function () {
-          web.ulozKosik(KZ.kosik.uber(stav(), p.slug));
-          prekresli();
+        var button = v("button", td3);
+        v(".slovo", button).textContent = web.s("odebrat");
+        button.setAttribute("aria-label", web.s("odebrat") + ": " + p.nazev);
+        button.setAttribute("title", web.s("odebrat") + ": " + p.nazev);
+        button.addEventListener("click", function () {
+          web.ulozKosik(KZ.kosik.uber(state(), p.slug));
+          redraw();
           web.oznacKosik();
         });
         tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
-        radky.appendChild(tr);
+        lines.appendChild(tr);
       });
 
-      var soucet = KZ.kosik.soucet(kosik, zpusoby);
-      v("[data-doprava-cena]").textContent = kosik.doprava ? web.korun(soucet.doprava) : "—";
-      v("[data-celkem]").textContent = web.korun(soucet.celkem);
-      obal.hidden = soucet.pocet === 0;
-      if (prazdny) prazdny.hidden = soucet.pocet !== 0;
-      if (objednavka) objednavka.hidden = soucet.pocet === 0;
-      vse('input[name="doprava"]').forEach(function (r) { r.checked = r.value === kosik.doprava; });
-      prepniAdresu(kosik.doprava);
+      var total = KZ.kosik.soucet(cart, zpusoby);
+      v("[data-doprava-cena]").textContent = cart.doprava ? web.korun(total.doprava) : "—";
+      v("[data-celkem]").textContent = web.korun(total.celkem);
+      wrapper.hidden = total.pocet === 0;
+      if (empty) empty.hidden = total.pocet !== 0;
+      if (order) order.hidden = total.pocet === 0;
+      all('input[name="doprava"]').forEach(function (r) { r.checked = r.value === cart.doprava; });
+      switchAddress(cart.doprava);
     }
 
-    /* Adresu chce jen dopravce. U osobního převzetí by se políčka na ulici
-       a PSČ jen pletla — kontrakt C-005 je tam taky nevaliduje. */
-    function prepniAdresu(doprava) {
-      var adresa = v("[data-adresa]");
-      if (adresa) adresa.hidden = doprava !== "dobirka";
+    /* The address is only wanted by the carrier. With collection in person the
+       street and postcode fields would only be in the way -- contract C-005
+       does not validate them there either. */
+    function switchAddress(shipping) {
+      var address = v("[data-adresa]");
+      if (address) address.hidden = shipping !== "dobirka";
     }
 
-    vse('input[name="doprava"]').forEach(function (radio) {
+    all('input[name="doprava"]').forEach(function (radio) {
       radio.addEventListener("change", function () {
-        web.ulozKosik(KZ.kosik.nastavDopravu(stav(), radio.value));
-        prekresli();
+        web.ulozKosik(KZ.kosik.nastavDopravu(state(), radio.value));
+        redraw();
       });
     });
 
@@ -138,34 +140,35 @@
     if (form) {
       form.addEventListener("submit", function (udalost) {
         udalost.preventDefault();
-        var data = KZ.objednavka.ocisti(hodnoty(form));
-        data.doprava = stav().doprava;
-        var klice = KZ.objednavka.zkontroluj(data);
-        if (KZ.kosik.pocet(stav()) === 0) klice = klice.concat(["kosik"]);
-        ukazChyby(form, klice);
-        if (klice.length) return;
-        // V ukázce se nic neodesílá: potvrzení je hláška a vyprázdněný košík.
-        var hotovo = v("[data-hotovo]", form);
-        if (hotovo) hotovo.hidden = false;
+        var data = KZ.objednavka.ocisti(values(form));
+        data.doprava = state().doprava;
+        var keys = KZ.objednavka.zkontroluj(data);
+        if (KZ.kosik.pocet(state()) === 0) keys = keys.concat(["kosik"]);
+        showErrors(form, keys);
+        if (keys.length) return;
+        // In the demo nothing is sent: the confirmation is a notice and an emptied basket.
+        var done = v("[data-hotovo]", form);
+        if (done) done.hidden = false;
         web.ulozKosik(KZ.kosik.prazdny());
         form.reset();
-        prekresli();
+        redraw();
         web.oznacKosik();
-        hotovo.scrollIntoView({ block: "center" });
+        done.scrollIntoView({ block: "center" });
       });
     }
 
-    prekresli();
+    redraw();
   };
 
-  /* ---------- kontaktní formulář ---------- */
+  /* ---------- the contact form ---------- */
 
   window.KZformulare = function () {
     var form = v("[data-form-kontakt]");
     if (!form || !KZ.formular) return;
 
-    /* Z galerie se sem chodí přes „chci podobné na míru" — důvod i slug díla
-       přijdou v adrese, ať člověk nemusí vysvětlovat, o který obraz jde. */
+    /* From the gallery one arrives here through "I want something similar made"
+       -- the reason and the work's slug come in the address, so nobody has to
+       explain which painting they mean. */
     var parametry = new URLSearchParams(window.location.search);
     var predvyplneno = KZ.formular.prazdny(parametry.get("duvod") || "dotaz",
       parametry.get("dilo") || parametry.get("kurz") || "");
@@ -174,51 +177,51 @@
     var kDilu = v('[name="kDilu"]', form);
     if (kDilu) kDilu.value = predvyplneno.kDilu;
     if (predvyplneno.kDilu) {
-      var zprava = v('[name="zprava"]', form);
-      if (zprava && !zprava.value) zprava.value = KZ.formular.predmet(predvyplneno, jazyk) + ": ";
+      var message = v('[name="zprava"]', form);
+      if (message && !message.value) message.value = KZ.formular.predmet(predvyplneno, language) + ": ";
     }
 
     form.addEventListener("submit", function (udalost) {
       udalost.preventDefault();
-      var data = KZ.formular.ocisti(hodnoty(form));
-      var klice = KZ.formular.zkontroluj(data);
-      ukazChyby(form, klice);
-      if (klice.length) return;
-      var hotovo = v("[data-hotovo]", form);
-      if (hotovo) hotovo.hidden = false;
+      var data = KZ.formular.ocisti(values(form));
+      var keys = KZ.formular.zkontroluj(data);
+      showErrors(form, keys);
+      if (keys.length) return;
+      var done = v("[data-hotovo]", form);
+      if (done) done.hidden = false;
       form.reset();
       if (duvod) duvod.value = predvyplneno.duvod;
     });
   };
 
-  /* ---------- kalendář ---------- */
+  /* ---------- the calendar ---------- */
 
   window.KZkalendarStranka = function () {
-    var obal = v("[data-kalendar]");
-    if (!obal || !KZ.kalendar) return;
-    var dnes = obal.getAttribute("data-dnes");
-    var rok = Number(obal.getAttribute("data-rok"));
-    var mesic = Number(obal.getAttribute("data-mesic"));
+    var wrapper = v("[data-kalendar]");
+    if (!wrapper || !KZ.kalendar) return;
+    var today = wrapper.getAttribute("data-dnes");
+    var rok = Number(wrapper.getAttribute("data-rok"));
+    var mesic = Number(wrapper.getAttribute("data-mesic"));
     var udalosti = jsonZe("script[data-udalosti]", []);
-    var mrizka = v("[data-mrizka-mesice]");
-    var nazev = v("[data-nazev-mesice]");
+    var grid = v("[data-mrizka-mesice]");
+    var name = v("[data-nazev-mesice]");
 
-    function prekresli() {
+    function redraw() {
       var m = KZ.kalendar.mesic(rok, mesic, udalosti);
-      var telo = v("tbody", mrizka);
-      if (!telo) return;
-      telo.innerHTML = "";
-      m.tydny.forEach(function (tyden) {
+      var body = v("tbody", grid);
+      if (!body) return;
+      body.innerHTML = "";
+      m.tydny.forEach(function (week) {
         var tr = doc.createElement("tr");
-        tyden.forEach(function (den) {
+        week.forEach(function (day) {
           var td = doc.createElement("td");
-          if (!den) { td.className = "prazdny"; tr.appendChild(td); return; }
-          if (den.datum === dnes) td.className = "dnesni";
-          var cislo = doc.createElement("span");
-          cislo.className = "den";
-          cislo.textContent = String(den.den);
-          td.appendChild(cislo);
-          den.udalosti.forEach(function (id) {
+          if (!day) { td.className = "prazdny"; tr.appendChild(td); return; }
+          if (day.datum === today) td.className = "dnesni";
+          var number = doc.createElement("span");
+          number.className = "den";
+          number.textContent = String(day.den);
+          td.appendChild(number);
+          day.udalosti.forEach(function (id) {
             var u = udalosti.filter(function (x) { return x.id === id; })[0];
             if (!u) return;
             var a = doc.createElement("a");
@@ -230,27 +233,27 @@
           });
           tr.appendChild(td);
         });
-        telo.appendChild(tr);
+        body.appendChild(tr);
       });
-      if (nazev) {
-        // Jméno měsíce si vezmeme od prohlížeče, ať se nemusí tahat druhý
-        // seznam názvů do skriptu.
+      if (name) {
+        // The month's name is taken from the browser, so a second list of names
+        // need not be dragged into the script.
         var datum = new Date(Date.UTC(rok, mesic - 1, 1));
-        nazev.textContent = new Intl.DateTimeFormat(jazyk === "en" ? "en-GB" : "cs-CZ",
+        name.textContent = new Intl.DateTimeFormat(language === "en" ? "en-GB" : "cs-CZ",
           { month: "long", year: "numeric", timeZone: "UTC" }).format(datum);
       }
     }
 
     function posun(o) {
-      var kam = KZ.kalendar.posun(rok, mesic, o);
-      rok = kam.rok; mesic = kam.mesic;
-      prekresli();
+      var where = KZ.kalendar.posun(rok, mesic, o);
+      rok = where.rok; mesic = where.mesic;
+      redraw();
     }
-    var zpet = v("[data-mesic-zpet]"), vpred = v("[data-mesic-vpred]"), dnesek = v("[data-mesic-dnes]");
-    if (zpet) zpet.addEventListener("click", function () { posun(-1); });
+    var back = v("[data-mesic-zpet]"), vpred = v("[data-mesic-vpred]"), dnesek = v("[data-mesic-dnes]");
+    if (back) back.addEventListener("click", function () { posun(-1); });
     if (vpred) vpred.addEventListener("click", function () { posun(1); });
     if (dnesek) dnesek.addEventListener("click", function () {
-      rok = Number(dnes.slice(0, 4)); mesic = Number(dnes.slice(5, 7)); prekresli();
+      rok = Number(today.slice(0, 4)); mesic = Number(today.slice(5, 7)); redraw();
     });
   };
 })();

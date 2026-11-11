@@ -1,6 +1,6 @@
-// C-005 — Objednávka: validace údajů, pravidla dopravy, rekapitulace.
-// Čistý ES modul bez závislostí a bez DOM. Vrací klíče chybových hlášek
-// (texty žijí v data/texty.json pod "formular.chyba.*").
+// C-005 -- the order: checking the details, the delivery rules, the summary.
+// A plain ES module with no dependencies and no DOM. It returns the keys of the error
+// messages (the texts live in `data/texty.json` under `formular.chyba.*`).
 
 const KLCI = ["jmeno", "email", "telefon", "ulice", "mesto", "psc", "zprava", "doprava"];
 
@@ -12,12 +12,12 @@ export function platnyEmail(text) {
   const lokalni = text.slice(0, at);
   const domena = text.slice(at + 1);
   if (lokalni.length < 1) return false;
-  const casti = domena.split(".");
-  if (casti.length < 2) return false;
-  for (const cast of casti) {
+  const parts = domena.split(".");
+  if (parts.length < 2) return false;
+  for (const cast of parts) {
     if (cast.length === 0 || /\s/.test(cast)) return false;
   }
-  const tld = casti[casti.length - 1];
+  const tld = parts[parts.length - 1];
   if (!/^[A-Za-z]{2,}$/.test(tld)) return false;
   return true;
 }
@@ -36,19 +36,19 @@ export function platnePsc(text) {
 
 export function zkontroluj(data) {
   const d = data || {};
-  const chyby = [];
-  if (String(d.jmeno ?? "").trim().length < 2) chyby.push("jmeno");
-  if (!platnyEmail(d.email)) chyby.push("email");
-  if (!platnyTelefon(d.telefon)) chyby.push("telefon");
+  const errors = [];
+  if (String(d.jmeno ?? "").trim().length < 2) errors.push("jmeno");
+  if (!platnyEmail(d.email)) errors.push("email");
+  if (!platnyTelefon(d.telefon)) errors.push("telefon");
   const doprava = d.doprava;
-  const platnaDoprava = doprava === "dobirka" || doprava === "osobne";
-  if (!platnaDoprava) chyby.push("doprava");
+  const validShipping = doprava === "dobirka" || doprava === "osobne";
+  if (!validShipping) errors.push("doprava");
   if (doprava === "dobirka") {
-    if (String(d.ulice ?? "").trim() === "") chyby.push("ulice");
-    if (String(d.mesto ?? "").trim() === "") chyby.push("mesto");
-    if (!platnePsc(d.psc)) chyby.push("psc");
+    if (String(d.ulice ?? "").trim() === "") errors.push("ulice");
+    if (String(d.mesto ?? "").trim() === "") errors.push("mesto");
+    if (!platnePsc(d.psc)) errors.push("psc");
   }
-  return chyby;
+  return errors;
 }
 
 function srovniMezery(text) {
@@ -57,63 +57,63 @@ function srovniMezery(text) {
 
 export function ocisti(data) {
   const d = data || {};
-  const vysledek = {};
-  for (const klic of KLCI) {
-    const hodnota = d[klic];
-    const text = typeof hodnota === "string" ? hodnota : "";
-    if (klic === "psc") {
-      vysledek[klic] = text.replace(/\s/g, "");
-    } else if (klic === "telefon") {
-      vysledek[klic] = text.replace(/[\s\u00a0-]/g, "");
+  const result = {};
+  for (const key of KLCI) {
+    const value = d[key];
+    const text = typeof value === "string" ? value : "";
+    if (key === "psc") {
+      result[key] = text.replace(/\s/g, "");
+    } else if (key === "telefon") {
+      result[key] = text.replace(/[\s\u00a0-]/g, "");
     } else {
-      vysledek[klic] = srovniMezery(text);
+      result[key] = srovniMezery(text);
     }
   }
-  return vysledek;
+  return result;
 }
 
-function nazevProJazyk(nazev, jazyk) {
-  if (nazev && typeof nazev === "object") {
-    const j = jazyk === "en" ? "en" : "cs";
-    if (typeof nazev[j] === "string") return nazev[j];
-    if (typeof nazev.cs === "string") return nazev.cs;
+function nameForLanguage(name, language) {
+  if (name && typeof name === "object") {
+    const j = language === "en" ? "en" : "cs";
+    if (typeof name[j] === "string") return name[j];
+    if (typeof name.cs === "string") return name.cs;
   }
   return "";
 }
 
-export function rekapitulace(kosik, dila, zpusoby, jazyk) {
-  const k = kosik || {};
-  const dilaMap = new Map((dila || []).map((d) => [d.slug, d]));
-  const zpusobyMap = new Map((zpusoby || []).map((z) => [z.id, z]));
+export function rekapitulace(cart, dila, zpusoby, language) {
+  const k = cart || {};
+  const worksMap = new Map((dila || []).map((d) => [d.slug, d]));
+  const methodsMap = new Map((zpusoby || []).map((z) => [z.id, z]));
 
   const polozky = [];
-  let dilaSoucet = 0;
-  for (const polozka of k.polozky || []) {
-    const dilo = dilaMap.get(polozka.slug);
-    if (!dilo) continue;
+  let worksTotal = 0;
+  for (const item of k.polozky || []) {
+    const work = worksMap.get(item.slug);
+    if (!work) continue;
     polozky.push({
-      slug: dilo.slug,
-      nazev: nazevProJazyk(dilo.nazev, jazyk),
-      rozmer: dilo.rozmer ?? "",
-      cena: dilo.cena ?? 0,
+      slug: work.slug,
+      nazev: nameForLanguage(work.nazev, language),
+      rozmer: work.rozmer ?? "",
+      cena: work.cena ?? 0,
     });
-    dilaSoucet += dilo.cena ?? 0;
+    worksTotal += work.cena ?? 0;
   }
 
   let doprava = null;
-  const zpusob = zpusobyMap.get(k.doprava);
-  if (zpusob) {
+  const method = methodsMap.get(k.doprava);
+  if (method) {
     doprava = {
-      id: zpusob.id,
-      nazev: nazevProJazyk(zpusob.nazev, jazyk),
-      cena: zpusob.cena ?? 0,
+      id: method.id,
+      nazev: nameForLanguage(method.nazev, language),
+      cena: method.cena ?? 0,
     };
   }
 
   return {
     polozky,
-    dila: dilaSoucet,
+    dila: worksTotal,
     doprava,
-    celkem: dilaSoucet + (doprava ? doprava.cena : 0),
+    celkem: worksTotal + (doprava ? doprava.cena : 0),
   };
 }

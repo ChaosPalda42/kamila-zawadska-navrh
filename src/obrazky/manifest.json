@@ -216,6 +216,28 @@
     "sirka": 1024,
     "vyska": 784
   },
+  "portret-kamila": {
+    "varianty": [
+      {
+        "soubor": "portret-kamila-480.jpg",
+        "sirka": 480,
+        "vyska": 640
+      },
+      {
+        "soubor": "portret-kamila-960.jpg",
+        "sirka": 960,
+        "vyska": 1280
+      },
+      {
+        "soubor": "portret-kamila-1600.jpg",
+        "sirka": 1600,
+        "vyska": 2134
+      }
+    ],
+    "srcset": "obrazky/portret-kamila-480.jpg 480w, obrazky/portret-kamila-960.jpg 960w, obrazky/portret-kamila-1600.jpg 1600w",
+    "sirka": 2764,
+    "vyska": 3686
+  },
   "portret-m": {
     "varianty": [
       {

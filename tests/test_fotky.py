@@ -1,9 +1,12 @@
-"""Akceptační test C-010 — tools/fotky.py (varianty fotek a srcset).
+"""Acceptance test C-010 -- `tools/fotky.py` (photo variants and srcset).
 
-Srcset musí hlásit SKUTEČNOU šířku uloženého souboru. Na webu Truhlářství
-Valčík to byla skutečná chyba: srcsety hlásily odhad 1600, ne naměřenou šířku.
+A srcset has to report the REAL width of the saved file. On the Truhlarstvi
+Valcik site that was an actual bug: the srcsets reported the asked-for 1600,
+not the measured width.
 """
 from __future__ import annotations
+
+import pathlib
 
 import json
 import subprocess
@@ -15,13 +18,13 @@ from PIL import Image
 
 from tools.fotky import SIRKY, nazev, sizes, srcset, varianty, zmensi, zpracuj, main
 
-KOREN = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 
 
-def uloz(cesta: Path, sirka: int, vyska: int, format_="JPEG") -> Path:
-    cesta.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (sirka, vyska), (120, 90, 60)).save(cesta, format_)
-    return cesta
+def uloz(file_path: Path, width: int, height: int, format_="JPEG") -> Path:
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (width, height), (120, 90, 60)).save(file_path, format_)
+    return file_path
 
 
 def test_sirky():
@@ -33,15 +36,15 @@ def test_nazev():
 
 
 def test_zmensi_drzi_pomer(tmp_path):
-    obrazek = Image.new("RGB", (2000, 1000))
-    maly = zmensi(obrazek, 480)
+    image = Image.new("RGB", (2000, 1000))
+    maly = zmensi(image, 480)
     assert maly.size == (480, 240)
     assert maly.mode == "RGB"
 
 
 def test_zmensi_nezvetsuje(tmp_path):
-    obrazek = Image.new("RGB", (300, 200))
-    assert zmensi(obrazek, 960).size == (300, 200)
+    image = Image.new("RGB", (300, 200))
+    assert zmensi(image, 960).size == (300, 200)
 
 
 def test_zmensi_prevede_do_rgb():
@@ -54,62 +57,62 @@ def test_zmensi_vyska_nikdy_nula():
 
 
 def test_varianty_hlasi_skutecnou_sirku(tmp_path):
-    zdroj = uloz(tmp_path / "zdroj" / "sova.jpg", 2000, 1000)
-    vysledek = varianty(zdroj, tmp_path / "cil")
-    assert [v["sirka"] for v in vysledek] == [480, 960, 1600]
-    for v in vysledek:
+    source = uloz(tmp_path / "zdroj" / "sova.jpg", 2000, 1000)
+    result = varianty(source, tmp_path / "cil")
+    assert [v["sirka"] for v in result] == [480, 960, 1600]
+    for v in result:
         with Image.open(tmp_path / "cil" / v["soubor"]) as img:
             assert img.size == (v["sirka"], v["vyska"]), v["soubor"]
 
 
 def test_varianty_u_male_fotky_nenafukuji_a_nezdvojuji(tmp_path):
-    zdroj = uloz(tmp_path / "zdroj" / "mala.jpg", 700, 500)
-    vysledek = varianty(zdroj, tmp_path / "cil")
-    sirky = [v["sirka"] for v in vysledek]
-    assert sirky == sorted(sirky)
-    assert len(sirky) == len(set(sirky)), "stejná šířka se v seznamu objeví jen jednou"
-    assert max(sirky) == 700, "nikdy se nezvětšuje nad originál"
-    for v in vysledek:
+    source = uloz(tmp_path / "zdroj" / "mala.jpg", 700, 500)
+    result = varianty(source, tmp_path / "cil")
+    widths = [v["sirka"] for v in result]
+    assert widths == sorted(widths)
+    assert len(widths) == len(set(widths)), "stejná šířka se v seznamu objeví jen jednou"
+    assert max(widths) == 700, "nikdy se nezvětšuje nad originál"
+    for v in result:
         with Image.open(tmp_path / "cil" / v["soubor"]) as img:
             assert img.width == v["sirka"]
 
 
 def test_varianty_pouziji_jmeno_zdroje_nebo_zaklad(tmp_path):
-    zdroj = uloz(tmp_path / "zdroj" / "les-po-desti.jpg", 1200, 800)
-    assert varianty(zdroj, tmp_path / "a")[0]["soubor"].startswith("les-po-desti-")
-    assert varianty(zdroj, tmp_path / "b", zaklad="jiny")[0]["soubor"].startswith("jiny-")
+    source = uloz(tmp_path / "zdroj" / "les-po-desti.jpg", 1200, 800)
+    assert varianty(source, tmp_path / "a")[0]["soubor"].startswith("les-po-desti-")
+    assert varianty(source, tmp_path / "b", zaklad="jiny")[0]["soubor"].startswith("jiny-")
 
 
 def test_varianty_vytvori_adresar(tmp_path):
-    zdroj = uloz(tmp_path / "zdroj" / "x.jpg", 1000, 600)
-    cil = tmp_path / "hluboko" / "jeste" / "hloubeji"
-    assert varianty(zdroj, cil)
-    assert cil.is_dir()
+    source = uloz(tmp_path / "zdroj" / "x.jpg", 1000, 600)
+    target = tmp_path / "hluboko" / "jeste" / "hloubeji"
+    assert varianty(source, target)
+    assert target.is_dir()
 
 
 def test_varianty_umi_png_a_vraci_jpeg(tmp_path):
-    zdroj = uloz(tmp_path / "zdroj" / "kresba.png", 1200, 900, format_="PNG")
-    vysledek = varianty(zdroj, tmp_path / "cil")
-    assert all(v["soubor"].endswith(".jpg") for v in vysledek)
-    with Image.open(tmp_path / "cil" / vysledek[0]["soubor"]) as img:
+    source = uloz(tmp_path / "zdroj" / "kresba.png", 1200, 900, format_="PNG")
+    result = varianty(source, tmp_path / "cil")
+    assert all(v["soubor"].endswith(".jpg") for v in result)
+    with Image.open(tmp_path / "cil" / result[0]["soubor"]) as img:
         assert img.format == "JPEG"
 
 
 def test_srcset_bere_sirku_ze_seznamu():
-    seznam = [
+    items = [
         {"soubor": "sova-480.jpg", "sirka": 480, "vyska": 240},
         {"soubor": "sova-960.jpg", "sirka": 700, "vyska": 350},
     ]
-    assert srcset(seznam, "/obrazky") == "/obrazky/sova-480.jpg 480w, /obrazky/sova-960.jpg 700w"
+    assert srcset(items, "/obrazky") == "/obrazky/sova-480.jpg 480w, /obrazky/sova-960.jpg 700w"
     assert srcset([], "/obrazky") == ""
 
 
 def test_srcset_radi_podle_sirky():
-    seznam = [
+    items = [
         {"soubor": "b.jpg", "sirka": 960, "vyska": 1},
         {"soubor": "a.jpg", "sirka": 480, "vyska": 1},
     ]
-    assert srcset(seznam, "/o") == "/o/a.jpg 480w, /o/b.jpg 960w"
+    assert srcset(items, "/o") == "/o/a.jpg 480w, /o/b.jpg 960w"
 
 
 def test_sizes():
@@ -121,24 +124,24 @@ def test_sizes():
 
 
 def test_zpracuj_projde_adresar(tmp_path):
-    zdroj = tmp_path / "zdroj"
-    uloz(zdroj / "sova.jpg", 2000, 1000)
-    uloz(zdroj / "most.png", 1400, 900, format_="PNG")
-    (zdroj / "poznamka.txt").write_text("nic", encoding="utf-8")
-    vysledek = zpracuj(zdroj, tmp_path / "cil")
-    assert sorted(vysledek) == ["most", "sova"]
-    assert vysledek["sova"]["sirka"] == 2000
-    assert vysledek["sova"]["vyska"] == 1000
-    assert "480w" in vysledek["sova"]["srcset"]
-    assert vysledek["sova"]["varianty"][0]["sirka"] == 480
+    source = tmp_path / "zdroj"
+    uloz(source / "sova.jpg", 2000, 1000)
+    uloz(source / "most.png", 1400, 900, format_="PNG")
+    (source / "poznamka.txt").write_text("nic", encoding="utf-8")
+    result = zpracuj(source, tmp_path / "cil")
+    assert sorted(result) == ["most", "sova"]
+    assert result["sova"]["sirka"] == 2000
+    assert result["sova"]["vyska"] == 1000
+    assert "480w" in result["sova"]["srcset"]
+    assert result["sova"]["varianty"][0]["sirka"] == 480
 
 
 def test_zpracuj_prezije_rozbity_soubor(tmp_path):
-    zdroj = tmp_path / "zdroj"
-    uloz(zdroj / "dobry.jpg", 1000, 500)
-    (zdroj / "rozbity.jpg").write_bytes(b"to neni obrazek")
-    vysledek = zpracuj(zdroj, tmp_path / "cil")
-    assert sorted(vysledek) == ["dobry"]
+    source = tmp_path / "zdroj"
+    uloz(source / "dobry.jpg", 1000, 500)
+    (source / "rozbity.jpg").write_bytes(b"to neni obrazek")
+    result = zpracuj(source, tmp_path / "cil")
+    assert sorted(result) == ["dobry"]
 
 
 def test_zpracuj_prazdny_adresar(tmp_path):
@@ -147,26 +150,61 @@ def test_zpracuj_prazdny_adresar(tmp_path):
 
 
 def test_main(tmp_path, capsys):
-    zdroj = tmp_path / "zdroj"
-    uloz(zdroj / "sova.jpg", 1200, 800)
-    assert main([str(zdroj), str(tmp_path / "cil")]) == 0
+    source = tmp_path / "zdroj"
+    uloz(source / "sova.jpg", 1200, 800)
+    assert main([str(source), str(tmp_path / "cil")]) == 0
     assert main([str(tmp_path / "neni"), str(tmp_path / "cil")]) == 2
 
 
 def test_main_umi_json(tmp_path, capsys):
-    zdroj = tmp_path / "zdroj"
-    uloz(zdroj / "sova.jpg", 1200, 800)
-    main([str(zdroj), str(tmp_path / "cil"), "--json"])
-    vysledek = json.loads(capsys.readouterr().out)
-    assert "sova" in vysledek
+    source = tmp_path / "zdroj"
+    uloz(source / "sova.jpg", 1200, 800)
+    main([str(source), str(tmp_path / "cil"), "--json"])
+    result = json.loads(capsys.readouterr().out)
+    assert "sova" in result
 
 
 def test_main_jde_spustit_jako_modul(tmp_path):
-    zdroj = tmp_path / "zdroj"
-    uloz(zdroj / "sova.jpg", 1200, 800)
-    hotovo = subprocess.run(
-        [sys.executable, "-m", "tools.fotky", str(zdroj), str(tmp_path / "cil"), "--json"],
-        capture_output=True, text=True, cwd=KOREN, timeout=120,
+    source = tmp_path / "zdroj"
+    uloz(source / "sova.jpg", 1200, 800)
+    done = subprocess.run(
+        [sys.executable, "-m", "tools.fotky", str(source), str(tmp_path / "cil"), "--json"],
+        capture_output=True, text=True, cwd=ROOT, timeout=120,
     )
-    assert hotovo.returncode == 0, hotovo.stderr[:500]
-    assert "sova" in json.loads(hotovo.stdout)
+    assert done.returncode == 0, done.stderr[:500]
+    assert "sova" in json.loads(done.stdout)
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "tools/fotky.py"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "tools/fotky.py"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

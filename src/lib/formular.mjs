@@ -1,6 +1,6 @@
-// C-006 — Kontaktní formulář a poptávka díla na míru.
-// Čistý ES modul bez závislostí a bez DOM. Vrací klíče chybových hlášek
-// (texty žijí v data/texty.json pod "formular.chyba.*").
+// C-006 -- the contact form and the enquiry for a commissioned work.
+// A plain ES module with no dependencies and no DOM. It returns the keys of the error
+// messages (the texts live in `data/texty.json` under `formular.chyba.*`).
 
 export const DUVODY = Object.freeze(["dotaz", "na-miru", "kurz", "atelier"]);
 
@@ -12,17 +12,17 @@ export function platnyEmail(text) {
   const lokalni = text.slice(0, at);
   const domena = text.slice(at + 1);
   if (lokalni.length < 1) return false;
-  const casti = domena.split(".");
-  if (casti.length < 2) return false;
-  for (const cast of casti) {
+  const parts = domena.split(".");
+  if (parts.length < 2) return false;
+  for (const cast of parts) {
     if (cast.length === 0 || /\s/.test(cast)) return false;
   }
-  const tld = casti[casti.length - 1];
+  const tld = parts[parts.length - 1];
   if (!/^[A-Za-z]{2,}$/.test(tld)) return false;
   return true;
 }
 
-function platnyTelefon(text) {
+function validPhone(text) {
   if (typeof text !== "string") return false;
   const ciste = text.replace(/[\s\u00a0\-()]/g, "");
   if (ciste === "") return false;
@@ -35,13 +35,13 @@ function srovnejDuvod(duvod) {
 
 export function zkontroluj(data) {
   const d = data || {};
-  const chyby = [];
-  if (String(d.jmeno ?? "").trim().length < 2) chyby.push("jmeno");
-  if (!platnyEmail(d.email)) chyby.push("email");
-  const telefon = String(d.telefon ?? "").trim();
-  if (telefon !== "" && !platnyTelefon(d.telefon)) chyby.push("telefon");
-  if (String(d.zprava ?? "").trim().length < 10) chyby.push("zprava");
-  return chyby;
+  const errors = [];
+  if (String(d.jmeno ?? "").trim().length < 2) errors.push("jmeno");
+  if (!platnyEmail(d.email)) errors.push("email");
+  const phone = String(d.telefon ?? "").trim();
+  if (phone !== "" && !validPhone(d.telefon)) errors.push("telefon");
+  if (String(d.zprava ?? "").trim().length < 10) errors.push("zprava");
+  return errors;
 }
 
 function srovniMezery(text) {
@@ -50,14 +50,14 @@ function srovniMezery(text) {
 
 export function ocisti(data) {
   const d = data || {};
-  const retezec = (hodnota) => (typeof hodnota === "string" ? hodnota : "");
+  const string = (value) => (typeof value === "string" ? value : "");
   return {
-    jmeno: srovniMezery(retezec(d.jmeno)),
-    email: srovniMezery(retezec(d.email)),
-    telefon: retezec(d.telefon).replace(/[\s\u00a0-]/g, ""),
-    zprava: srovniMezery(retezec(d.zprava)),
+    jmeno: srovniMezery(string(d.jmeno)),
+    email: srovniMezery(string(d.email)),
+    telefon: string(d.telefon).replace(/[\s\u00a0-]/g, ""),
+    zprava: srovniMezery(string(d.zprava)),
     duvod: srovnejDuvod(d.duvod),
-    kDilu: srovniMezery(retezec(d.kDilu)),
+    kDilu: srovniMezery(string(d.kDilu)),
   };
 }
 
@@ -76,12 +76,12 @@ const PREDMETY = {
   },
 };
 
-export function predmet(data, jazyk) {
+export function predmet(data, language) {
   const d = data || {};
-  const tabulka = PREDMETY[jazyk] || PREDMETY.cs;
-  const nazev = tabulka[srovnejDuvod(d.duvod)];
+  const tabulka = PREDMETY[language] || PREDMETY.cs;
+  const name = tabulka[srovnejDuvod(d.duvod)];
   const kDilu = typeof d.kDilu === "string" ? d.kDilu.trim() : "";
-  return kDilu === "" ? nazev : `${nazev} — ${kDilu}`;
+  return kDilu === "" ? name : `${name} — ${kDilu}`;
 }
 
 export function prazdny(duvod, kDilu) {

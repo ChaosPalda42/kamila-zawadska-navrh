@@ -1,9 +1,9 @@
-"""Předvolha cesty: hotový web přesazený do podadresáře.
+"""A path prefix: the finished site moved into a subdirectory.
 
-Spustitelné jako ``python -m tools.predvolba <adresar> <predvolba>``. Mění
-hotové HTML a CSS v daném adresáři (výstup ``node build.mjs``) na místě:
-adresa, která začíná jedním "/" , dostane předvolhu. Zdroj zůstává čistý pro
-ostrou doménu. Jen standardní knihovna.
+Runnable as ``python -m tools.predvolba <directory> <prefix>``. Changes the
+finished HTML and CSS in that directory (the output of ``node build.mjs``) in
+place: an address that starts with a single "/" gets the prefix. The source
+stays clean for the live domain. Standard library only.
 """
 from __future__ import annotations
 
@@ -12,15 +12,15 @@ import re
 import sys
 from pathlib import Path
 
-# Atributy, jejichž hodnoty se přepisují (srcset zvlášť — kandidáti).
+# The attributes whose values get rewritten (srcset apart -- candidates).
 # JEDNODUCHY_VZOREC:
 # 1: atribut (href|...)
-# 2: celá hodnota s uvozovkami
+# 2: the whole value including the quotes
 # 3: content of escaped double quotes \\" ... \\"
 # 4: content of normal double quotes " ... "
 # 5: content of escaped single quotes \\' ... \\'
 # 6: content of normal single quotes ' ... '
-JEDNODUCHY_VZOREC = re.compile(
+SIMPLE_PATTERN = re.compile(
     r"(?i)(?<![\w-])(href|src|action|poster|formaction|data-kosik-cesta)"
     r"\s*=\s*("
     r"\\\"([^\\\"]*(?:\\\\\"[^\\\"]*)*)\\\""
@@ -34,12 +34,12 @@ JEDNODUCHY_VZOREC = re.compile(
 )
 
 # SRCSET_VZOREC:
-# 1: celá hodnota s uvozovkami
+# 1: the whole value including the quotes
 # 2: content of escaped double quotes \\" ... \\"
 # 3: content of normal double quotes " ... "
 # 4: content of escaped single quotes \\' ... \\'
 # 5: content of normal single quotes ' ... '
-SRCSET_VZOREC = re.compile(
+SRCSET_PATTERN = re.compile(
     r"(?i)(?<![\w-])srcset\s*=\s*("
     r"\\\"([^\\\"]*(?:\\\\\"[^\\\"]*)*)\\\""
     r"|"
@@ -51,116 +51,116 @@ SRCSET_VZOREC = re.compile(
     r")"
 )
 
-SCHEMA_VZOREC = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
-CSS_URL_VZOREC = re.compile(r"(?i)url\(\s*(\"|')?([^\"')]+)\1?\s*\)")
+SCHEME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
+CSS_URL_PATTERN = re.compile(r"(?i)url\(\s*(\"|')?([^\"')]+)\1?\s*\)")
 
 # Regex pro detekci <script type="application/json">...</script>
-JSON_SKRIPT_VZOREC = re.compile(
+JSON_SCRIPT_PATTERN = re.compile(
     r'(?i)<script\s+type=["\']application/json["\'][^>]*>(.*?)</script>',
     re.DOTALL
 )
 
-# Regex pro řetězce v JSONu (včetně escapovaných uvozovek)
-# Hledá "..." nebo '...' (v JSONu téměř vždy dvojité)
-JSON_STRING_VZOREC = re.compile(r'("((?:[^"\\]|\\.)*)")')
+# A regex for the strings in JSON (escaped quotes included)
+# Looks for "..." or '...' (in JSON nearly always double)
+JSON_STRING_PATTERN = re.compile(r'("((?:[^"\\]|\\.)*)")')
 
 
-# --- normalizace předvolby --------------------------------------------------
+# --- normalizing the prefix -------------------------------------------------
 
 def uprav_predvolbu(predvolba: str) -> str:
-    """Doplní vedoucí "/", odřízne koncová "/", srazí opakovaná "/".
+    """Adds the leading "/", cuts the trailing "/" and squeezes repeated "/".
 
-    Prázdný řetězec, "/" i "///" dají "".
+    An empty string, "/" and "///" all give "".
     """
-    srazene = re.sub(r"/+", "/", predvolba.strip())
-    srazene = srazene.strip("/")
-    if not srazene:
+    collapsed = re.sub(r"/+", "/", predvolba.strip())
+    collapsed = collapsed.strip("/")
+    if not collapsed:
         return ""
-    return "/" + srazene
+    return "/" + collapsed
 
 
-# --- přepis jednotlivých adres ----------------------------------------------
+# --- rewriting one address --------------------------------------------------
 
-def _pripoj(predvolba: str, hodnota: str) -> str:
-    """Přepíše hodnotu na predvolba + hodnota, pokud to pravidla dovolí."""
-    if not predvolba or not hodnota:
-        return hodnota
-    if not hodnota.startswith("/"):
-        return hodnota  # relativní cesta bez vedoucího "/"
-    if hodnota.startswith("//"):
-        return hodnota  # adresa bez schématu
-    if SCHEMA_VZOREC.match(hodnota):
-        return hodnota  # https:, http:, mailto:, tel:, data: …
-    if hodnota.startswith(("#", "?")):
-        return hodnota  # kotva / dotaz
-    if hodnota == predvolba or hodnota.startswith(predvolba + "/"):
-        return hodnota  # už předvolbou začíná
-    return predvolba + hodnota
+def _append(predvolba: str, value: str) -> str:
+    """Rewrites the value to ``predvolba`` + the value, when the rules allow it."""
+    if not predvolba or not value:
+        return value
+    if not value.startswith("/"):
+        return value  # a relative path with no leading "/"
+    if value.startswith("//"):
+        return value  # an address with no scheme
+    if SCHEME_PATTERN.match(value):
+        return value  # https:, http:, mailto:, tel:, data: …
+    if value.startswith(("#", "?")):
+        return value  # an anchor / a query
+    if value == predvolba or value.startswith(predvolba + "/"):
+        return value  # it starts with the prefix already
+    return predvolba + value
 
 
-def _srcset_kandidati(hodnota: str, predvolba: str) -> tuple[str, int]:
-    """Přepíše adresu každého kandidáta; deskriptor (800w, 2x) zůstane."""
-    kandidati = []
-    adres = 0
-    for kus in hodnota.split(","):
-        casti = kus.split(None, 1)
-        adresa_original = casti[0]
-        adresa = _pripoj(predvolba, adresa_original)
-        if adresa != adresa_original:
-            adres += 1
-        kandidati.append(adresa + (" " + casti[1] if len(casti) > 1 else ""))
-    return ", ".join(kandidati), adres
+def _srcset_candidates(value: str, predvolba: str) -> tuple[str, int]:
+    """Rewrites every candidate's address; the descriptor (800w, 2x) stays."""
+    candidates = []
+    addresses = 0
+    for piece in value.split(","):
+        parts = piece.split(None, 1)
+        address_before = parts[0]
+        address = _append(predvolba, address_before)
+        if address != address_before:
+            addresses += 1
+        candidates.append(address + (" " + parts[1] if len(parts) > 1 else ""))
+    return ", ".join(candidates), addresses
 
 
 # --- HTML -------------------------------------------------------------------
 
 def preved_html(html: str, predvolba: str) -> str:
-    """Přepíše adresy v vyjemených atributech; text a cizí atributy ne."""
+    """Rewrites the addresses in the chosen attributes; text and other attributes not."""
     if not predvolba:
         return html
-    res, _ = _preved_html_s_poctem(html, predvolba)
+    res, _ = _convert_html_with_count(html, predvolba)
     return res
 
 
-def _preved_html_s_poctem(html: str, predvolba: str) -> tuple[str, int]:
-    """Jako preved_html, ale vrátí i počet přepsaných adres."""
+def _convert_html_with_count(html: str, predvolba: str) -> tuple[str, int]:
+    """Like ``preved_html``, but it also returns how many addresses were rewritten."""
     if not predvolba:
         return html, 0
     pocet = 0
 
-    def jednoduchy_safe(m: re.Match) -> str:
+    def simple_safe(m: re.Match) -> str:
         nonlocal pocet
         attr = m.group(1)
         
-        hodnota = ""
+        value = ""
         quote_type = "" # "e_d", "n_d", "e_s", "n_s"
         
         if m.group(3) is not None:
-            hodnota = m.group(3)
+            value = m.group(3)
             quote_type = "e_d"
         elif m.group(4) is not None:
-            hodnota = m.group(4)
+            value = m.group(4)
             quote_type = "n_d"
         elif m.group(5) is not None:
-            hodnota = m.group(5)
+            value = m.group(5)
             quote_type = "e_s"
         elif m.group(6) is not None:
-            hodnota = m.group(6)
+            value = m.group(6)
             quote_type = "n_s"
         else:
             return m.group(0)
 
-        novy_hodnota = _pripoj(predvolba, hodnota)
-        if novy_hodnota != hodnota:
+        new_value = _append(predvolba, value)
+        if new_value != value:
             pocet += 1
             if quote_type == "e_d":
-                return f'{attr}=\\"{novy_hodnota}\\"'
+                return f'{attr}=\\"{new_value}\\"'
             elif quote_type == "n_d":
-                return f'{attr}="{novy_hodnota}"'
+                return f'{attr}="{new_value}"'
             elif quote_type == "e_s":
-                return f"\\'{novy_hodnota}\\'"
+                return f"\\'{new_value}\\'"
             elif quote_type == "n_s":
-                return f"'{novy_hodnota}'"
+                return f"'{new_value}'"
         
         return m.group(0)
 
@@ -170,47 +170,47 @@ def _preved_html_s_poctem(html: str, predvolba: str) -> tuple[str, int]:
         eq_idx = match_str.find('=')
         attr = match_str[:eq_idx].strip()
         
-        hodnota = ""
+        value = ""
         quote_type = ""
         
         if m.group(2) is not None:
-            hodnota = m.group(2)
+            value = m.group(2)
             quote_type = "e_d"
         elif m.group(3) is not None:
-            hodnota = m.group(3)
+            value = m.group(3)
             quote_type = "n_d"
         elif m.group(4) is not None:
-            hodnota = m.group(4)
+            value = m.group(4)
             quote_type = "e_s"
         elif m.group(5) is not None:
-            hodnota = m.group(5)
+            value = m.group(5)
             quote_type = "n_s"
         else:
             return m.group(0)
 
-        novy_hodnota, kolik = _srcset_kandidati(hodnota, predvolba)
+        new_value, kolik = _srcset_candidates(value, predvolba)
         if kolik > 0:
             pocet += kolik
             if quote_type == "e_d":
-                return f'{attr}=\\"{novy_hodnota}\\"'
+                return f'{attr}=\\"{new_value}\\"'
             elif quote_type == "n_d":
-                return f'{attr}="{novy_hodnota}"'
+                return f'{attr}="{new_value}"'
             elif quote_type == "e_s":
-                return f"\\'{novy_hodnota}\\'"
+                return f"\\'{new_value}\\'"
             elif quote_type == "n_s":
-                return f"'{novy_hodnota}'"
+                return f"'{new_value}'"
         
         return m.group(0)
 
-    def json_skript_callback(m: re.Match) -> str:
+    def json_script_callback(m: re.Match) -> str:
         nonlocal pocet
-        # Pozice ze zápasu jsou pozice v CELÉM dokumentu, kdežto krájí se
-        # nalezený úsek — proto se od nich odečítá jeho začátek. Bez toho
-        # se blok dál od začátku souboru rozsekne, ztratí </script> a jeho
-        # obsah se vysype na stránku jako text.
-        zacatek = m.start()
-        script_start = m.group(0)[:m.start(1) - zacatek]
-        script_end = m.group(0)[m.end(1) - zacatek:]
+        # The positions from the match are positions in the WHOLE document,
+        # whereas what gets cut is the stretch that was found -- so its beginning
+        # is subtracted from them. Without that, a block further from the start of
+        # the file is chopped up, loses its </script> and spills its contents out
+        start = m.start()
+        script_start = m.group(0)[:m.start(1) - start]
+        script_end = m.group(0)[m.end(1) - start:]
         content = m.group(1)
         
         # Process content of JSON script
@@ -223,133 +223,133 @@ def _preved_html_s_poctem(html: str, predvolba: str) -> tuple[str, int]:
             match_str = ms.group(0)
             eq_idx = match_str.find('=')
             attr = match_str[:eq_idx].strip()
-            hodnota = ""
+            value = ""
             quote_type = ""
             if ms.group(2) is not None:
-                hodnota = ms.group(2)
+                value = ms.group(2)
                 quote_type = "e_d"
             elif ms.group(3) is not None:
-                hodnota = ms.group(3)
+                value = ms.group(3)
                 quote_type = "n_d"
             elif ms.group(4) is not None:
-                hodnota = ms.group(4)
+                value = ms.group(4)
                 quote_type = "e_s"
             elif ms.group(5) is not None:
-                hodnota = ms.group(5)
+                value = ms.group(5)
                 quote_type = "n_s"
             else: return ms.group(0)
 
-            novy, kolik = _srcset_kandidati(hodnota, predvolba)
+            updated, kolik = _srcset_candidates(value, predvolba)
             if kolik > 0:
                 pocet += kolik
-                if quote_type == "e_d": return f'{attr}=\\"{novy}\\"'
-                elif quote_type == "n_d": return f'{attr}="{novy}"'
-                elif quote_type == "e_s": return f"\\'{novy}\\'"
-                elif quote_type == "n_s": return f"'{novy}'"
+                if quote_type == "e_d": return f'{attr}=\\"{updated}\\"'
+                elif quote_type == "n_d": return f'{attr}="{updated}"'
+                elif quote_type == "e_s": return f"\\'{updated}\\'"
+                elif quote_type == "n_s": return f"'{updated}'"
             return ms.group(0)
 
         def sub_attr(ms: re.Match) -> str:
             nonlocal pocet
             attr = ms.group(1)
-            hodnota = ""
+            value = ""
             quote_type = ""
             if ms.group(3) is not None:
-                hodnota = ms.group(3)
+                value = ms.group(3)
                 quote_type = "e_d"
             elif ms.group(4) is not None:
-                hodnota = ms.group(4)
+                value = ms.group(4)
                 quote_type = "n_d"
             elif ms.group(5) is not None:
-                hodnota = ms.group(5)
+                value = ms.group(5)
                 quote_type = "e_s"
             elif ms.group(6) is not None:
-                hodnota = ms.group(6)
+                value = ms.group(6)
                 quote_type = "n_s"
             else: return ms.group(0)
 
-            novy = _pripoj(predvolba, hodnota)
-            if novy != hodnota:
+            updated = _append(predvolba, value)
+            if updated != value:
                 pocet += 1
-                if quote_type == "e_d": return f'{attr}=\\"{novy}\\"'
-                elif quote_type == "n_d": return f'{attr}="{novy}"'
-                elif quote_type == "e_s": return f"\\'{novy}\\'"
-                elif quote_type == "n_s": return f"'{novy}'"
+                if quote_type == "e_d": return f'{attr}=\\"{updated}\\"'
+                elif quote_type == "n_d": return f'{attr}="{updated}"'
+                elif quote_type == "e_s": return f"\\'{updated}\\'"
+                elif quote_type == "n_s": return f"'{updated}'"
             return ms.group(0)
 
         def sub_string(ms: re.Match) -> str:
             nonlocal pocet
             full_match = ms.group(1)
             content = ms.group(2)
-            novy = _pripoj(predvolba, content)
-            if novy != content:
+            updated = _append(predvolba, content)
+            if updated != content:
                 pocet += 1
-                return f'"{novy}"'
+                return f'"{updated}"'
             return full_match
 
-        new_content = SRCSET_VZOREC.sub(sub_srcset, content)
-        new_content = JEDNODUCHY_VZOREC.sub(sub_attr, new_content)
-        new_content = JSON_STRING_VZOREC.sub(sub_string, new_content)
+        new_content = SRCSET_PATTERN.sub(sub_srcset, content)
+        new_content = SIMPLE_PATTERN.sub(sub_attr, new_content)
+        new_content = JSON_STRING_PATTERN.sub(sub_string, new_content)
         
         return f"{script_start}{new_content}{script_end}"
 
-    vysledek = JEDNODUCHY_VZOREC.sub(jednoduchy_safe, html)
-    vysledek = SRCSET_VZOREC.sub(srcset_safe, vysledek)
-    vysledek = JSON_SKRIPT_VZOREC.sub(json_skript_callback, vysledek)
+    result = SIMPLE_PATTERN.sub(simple_safe, html)
+    result = SRCSET_PATTERN.sub(srcset_safe, result)
+    result = JSON_SCRIPT_PATTERN.sub(json_script_callback, result)
     
-    return vysledek, pocet
+    return result, pocet
 
 
 # --- CSS --------------------------------------------------------------------
 
 def preved_css(css: str, predvolba: str) -> str:
-    """url(/x), url(\"/x\") a url('/x') dostanou předvolhu; výjimky jako v HTML."""
+    """url(/x), url(\"/x\") and url('/x') get the prefix; the same exceptions as in HTML."""
     if not predvolba:
         return css
-    res, _ = _preved_css_s_poctem(css, predvolba)
+    res, _ = _convert_css_with_count(css, predvolba)
     return res
 
 
-def _preved_css_s_poctem(css: str, predvolba: str) -> tuple[str, int]:
-    """Jako preved_css, ale vrátí i počet přepsaných adres."""
+def _convert_css_with_count(css: str, predvolba: str) -> tuple[str, int]:
+    """Like ``preved_css``, but it also returns how many addresses were rewritten."""
     if not predvolba:
         return css, 0
     pocet = 0
 
     def url_sub(m: re.Match) -> str:
         nonlocal pocet
-        hodnota = m.group(2)
-        novy_hodnota = _pripoj(predvolba, hodnota)
-        if novy_hodnota != hodnota:
+        value = m.group(2)
+        new_value = _append(predvolba, value)
+        if new_value != value:
             pocet += 1
-            return m.group(0).replace(hodnota, novy_hodnota)
+            return m.group(0).replace(value, new_value)
         return m.group(0)
 
-    return CSS_URL_VZOREC.sub(url_sub, css), pocet
+    return CSS_URL_PATTERN.sub(url_sub, css), pocet
 
 
-# --- celý adresář -----------------------------------------------------------
+# --- the whole directory ----------------------------------------------------
 
 def preved(koren, predvolba: str) -> dict:
-    """Projde *.html a *.css pod korenem, přepíše na místě, vrátí počty."""
+    """Walks *.html and *.css under ``koren``, rewrites in place, returns the counts."""
     koren = Path(koren)
-    souboru = 0
-    adres = 0
-    soubory = sorted(
+    file_count = 0
+    addresses = 0
+    files = sorted(
         list(koren.rglob("*.html")) + list(koren.rglob("*.css")),
         key=lambda p: p.relative_to(koren).as_posix(),
     )
-    for soubor in soubory:
-        obsah = soubor.read_text(encoding="utf-8")
-        if soubor.suffix == ".html":
-            novy, pocet = _preved_html_s_poctem(obsah, predvolba)
+    for file_path in files:
+        file_text = file_path.read_text(encoding="utf-8")
+        if file_path.suffix == ".html":
+            updated, pocet = _convert_html_with_count(file_text, predvolba)
         else:
-            novy, pocet = _preved_css_s_poctem(obsah, predvolba)
-        if novy == obsah:
+            updated, pocet = _convert_css_with_count(file_text, predvolba)
+        if updated == file_text:
             continue
-        soubor.write_text(novy, encoding="utf-8")
-        souboru += 1
-        adres += pocet
-    return {"souboru": souboru, "adres": adres}
+        file_path.write_text(updated, encoding="utf-8")
+        file_count += 1
+        addresses += pocet
+    return {"souboru": file_count, "adres": addresses}
 
 
 # --- CLI --------------------------------------------------------------------
@@ -369,8 +369,8 @@ def main(argv=None) -> int:
         return 2
 
     predvolba = uprav_predvolbu(args.predvolba)
-    vysledek = preved(koren, predvolba)
-    print(f"predvolba: {predvolba}, souboru: {vysledek['souboru']}, adres: {vysledek['adres']}")
+    result = preved(koren, predvolba)
+    print(f"predvolba: {predvolba}, souboru: {result['souboru']}, adres: {result['adres']}")
     return 0
 
 

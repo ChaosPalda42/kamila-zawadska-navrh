@@ -1,25 +1,27 @@
-/* Pohyb. Klientka chce víc animací, než má vzor, tak je tu vlastní vrstva.
+/* Motion. The client wants more animation than the model has, so there is a
+   layer of our own for it.
 
-   Jedno pravidlo drží všechno pohromadě: nic se nehýbe a nic není schované,
-   dokud tenhle skript nepřidá na <html> třídu "pohyb". Bez skriptu, se
-   zapnutým omezeným pohybem i při chybě v JS je tedy celý web hned vidět
-   a na svém místě — animace je ozdoba, ne nosná konstrukce.
+   One rule holds it all together: nothing moves and nothing is hidden until
+   this script adds the class `pohyb` to <html>. With no script, with reduced
+   motion turned on, and after an error in the JS, the whole site is therefore
+   visible at once and in its place -- the animation is an ornament, not a
+   load-bearing wall.
 
-   Animuje se jen opacity a transform (to umí grafická karta) a nikdy ne
-   samotná reprodukce obrazu: žádné filtry, žádné rozmazání, žádné
-   obarvení. Obraz se smí jen zvětšit o dva procenta pod kurzorem. */
+   Only opacity and transform are animated (the graphics card can do those)
+   and never the reproduction of a painting itself: no filters, no blur, no
+   tinting. A painting may only grow by two per cent under the cursor. */
 (function () {
   "use strict";
   var doc = document;
   var html = doc.documentElement;
   var klidne = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  function vse(volba, koren) {
-    return Array.prototype.slice.call((koren || doc).querySelectorAll(volba));
+  function all(volba, root) {
+    return Array.prototype.slice.call((root || doc).querySelectorAll(volba));
   }
 
-  /* Prvky, které se vynořují při scrollování. Značíme je odsud, aby šablony
-     o animacích nemusely vědět. */
+  /* The elements that surface while scrolling. They are marked from here, so
+     the templates need know nothing about animation. */
   var ODHALIT = [
     ".obsah > section",
     ".mrizka > .dlazdice",
@@ -32,43 +34,44 @@
 
   function pripravOdhaleni() {
     if (!window.IntersectionObserver) return;
-    var hlidac = new IntersectionObserver(function (zaznamy) {
-      zaznamy.forEach(function (z) {
+    var hlidac = new IntersectionObserver(function (records) {
+      records.forEach(function (z) {
         if (!z.isIntersecting) return;
         z.target.classList.add("videt");
         hlidac.unobserve(z.target);
       });
-      // Práh je nula schválně: oddíl galerie je vyšší než okno a při
-      // procentním prahu by se nikdy nevynořil.
+      // The threshold is zero on purpose: the gallery section is taller than the
+      // window, and with a threshold in per cent it would never surface.
     }, { rootMargin: "0px 0px -6% 0px", threshold: 0 });
 
     ODHALIT.forEach(function (volba) {
-      vse(volba).forEach(function (prvek, i) {
-        if (prvek.classList.contains("odhal")) return;
-        // Změřit se musí DŘÍV, než prvek dostane třídu "odhal": čtení
-        // rozměru si vynutí přepočet stylů, a kdyby mezi tím už byl
-        // průhledný, přechod by i tak proběhl.
-        var naObrazovce = prvek.getBoundingClientRect().top < window.innerHeight;
-        prvek.classList.add("odhal");
-        // Pořadí v řadě dává kaskádu; po šesti prvcích už se nečeká,
-        // ať se spodek dlouhé galerie neotvírá pomaleji než horní.
-        prvek.style.setProperty("--poradi", String(Math.min(i, 5)));
-        // Co je po načtení rovnou na obrazovce, je vidět hned a bez
-        // přechodu: o příjezd první obrazovky se stará přechod mezi
-        // stránkami, dvojí prolnutí by působilo loudavě.
+      all(volba).forEach(function (element, i) {
+        if (element.classList.contains("odhal")) return;
+        // It has to be measured BEFORE the element gets the class `odhal`:
+        // reading a dimension forces the styles to be recomputed, and were it
+        // already transparent by then, the transition would run all the same.
+        var naObrazovce = element.getBoundingClientRect().top < window.innerHeight;
+        element.classList.add("odhal");
+        // The position in the row gives the cascade; after six elements nothing
+        // waits any more, so the bottom of a long gallery does not open slower
+        element.style.setProperty("--poradi", String(Math.min(i, 5)));
+        // What is on the screen right after loading is visible at once and with no
+        // transition: the arrival of the first screen is handled by the transition
+        // between pages, and a double fade would look sluggish.
         if (naObrazovce) {
-          prvek.classList.add("videt");
+          element.classList.add("videt");
           return;
         }
-        hlidac.observe(prvek);
+        hlidac.observe(element);
       });
     });
   }
 
-  /* Fotky dojíždějí: jakmile se obrázek načte, vyjede z průhledna. Zabrání to
-     tomu, aby dlaždice problikla bílým rámem. */
-  function fotky() {
-    vse(".ram img, .platno img, .portret img").forEach(function (obr) {
+  /* The photographs arrive one by one: as soon as an image has loaded, it
+     comes out of transparent. That keeps a tile from flashing a white
+     frame. */
+  function photos() {
+    all(".ram img, .platno img, .portret img").forEach(function (obr) {
       if (obr.complete && obr.naturalWidth > 0) {
         obr.classList.add("nactena");
         return;
@@ -78,8 +81,8 @@
     });
   }
 
-  /* Tenká okrová linka nahoře ukazuje, kolik dlouhé galerie je za námi. */
-  function postup() {
+  /* The thin ochre line at the top shows how much of a long gallery is behind us. */
+  function progress() {
     var pas = doc.createElement("div");
     pas.className = "postup";
     pas.setAttribute("aria-hidden", "true");
@@ -88,48 +91,48 @@
     doc.body.appendChild(pas);
 
     var ceka = false;
-    function prepocitej() {
+    function recalculate() {
       ceka = false;
-      var vyska = doc.documentElement.scrollHeight - window.innerHeight;
-      var kde = vyska > 120 ? Math.min(1, Math.max(0, window.scrollY / vyska)) : 0;
-      cara.style.transform = "scaleX(" + kde.toFixed(4) + ")";
-      pas.classList.toggle("vidno", vyska > 120);
+      var height = doc.documentElement.scrollHeight - window.innerHeight;
+      var where = height > 120 ? Math.min(1, Math.max(0, window.scrollY / height)) : 0;
+      cara.style.transform = "scaleX(" + where.toFixed(4) + ")";
+      pas.classList.toggle("vidno", height > 120);
     }
     window.addEventListener("scroll", function () {
       if (ceka) return;
       ceka = true;
-      window.requestAnimationFrame(prepocitej);
+      window.requestAnimationFrame(recalculate);
     }, { passive: true });
-    window.addEventListener("resize", prepocitej);
-    prepocitej();
+    window.addEventListener("resize", recalculate);
+    recalculate();
   }
 
-  /* Dlaždice se pod kurzorem nakloní za myší. Dva stupně, nic divokého —
-     obraz má zůstat obrazem. */
+  /* A tile tips after the mouse under the cursor. Two degrees, nothing wild --
+     a painting is to stay a painting. */
   function naklon() {
     if (!window.matchMedia("(hover: hover) and (min-width: 60.01rem)").matches) return;
-    vse(".mrizka > .dlazdice .ram").forEach(function (ram) {
-      var dlazdice = ram.closest(".dlazdice");
+    all(".mrizka > .dlazdice .ram").forEach(function (frame) {
+      var dlazdice = frame.closest(".dlazdice");
       if (!dlazdice) return;
       dlazdice.addEventListener("pointermove", function (e) {
-        var r = ram.getBoundingClientRect();
+        var r = frame.getBoundingClientRect();
         if (!r.width || !r.height) return;
         var x = (e.clientX - r.left) / r.width - 0.5;
         var y = (e.clientY - r.top) / r.height - 0.5;
-        ram.style.setProperty("--naklon-x", (-y * 2.4).toFixed(2) + "deg");
-        ram.style.setProperty("--naklon-y", (x * 2.4).toFixed(2) + "deg");
+        frame.style.setProperty("--naklon-x", (-y * 2.4).toFixed(2) + "deg");
+        frame.style.setProperty("--naklon-y", (x * 2.4).toFixed(2) + "deg");
       });
       dlazdice.addEventListener("pointerleave", function () {
-        ram.style.setProperty("--naklon-x", "0deg");
-        ram.style.setProperty("--naklon-y", "0deg");
+        frame.style.setProperty("--naklon-x", "0deg");
+        frame.style.setProperty("--naklon-y", "0deg");
       });
     });
   }
 
-  /* Uvítací clona. Objeví se jednou za návštěvu (ne při každém prokliku),
-     překryje chvíli, kdy se dotahují fotky, a sama po sobě uklidí. Tvrdý
-     časovač je tu schválně: kdyby se "load" nikdy neozval, clona zmizí i
-     tak — nikdo nesmí zůstat koukat na bílo. */
+  /* The welcome curtain. It appears once a visit (not on every click through),
+     covers the moment while the photographs are being fetched, and clears up
+     after itself. The hard timer is here on purpose: were "load" never to
+     fire, the curtain goes anyway -- nobody may be left looking at white. */
   var CLONA_NEJMIN = 700;
   var CLONA_NEJDEL = 2400;
 
@@ -139,33 +142,33 @@
       window.sessionStorage.setItem("kz-uvitani", "1");
       return false;
     } catch (e) {
-      // Soukromé okno nebo zakázané úložiště: clonu ukážeme, nic se neděje.
+      // A private window or storage turned off: we show the curtain, no harm done.
       return false;
     }
   }
 
   function clona() {
     if (uzVidel()) return;
-    var jmeno = doc.querySelector(".logo span");
-    var prvek = doc.createElement("div");
-    prvek.className = "nacitani";
-    prvek.setAttribute("aria-hidden", "true");
-    prvek.innerHTML = '<div class="znacka"><span class="jmeno"></span><span class="tah"></span></div>';
-    prvek.querySelector(".jmeno").textContent = (jmeno && jmeno.textContent) || "";
-    doc.body.appendChild(prvek);
+    var name = doc.querySelector(".logo span");
+    var element = doc.createElement("div");
+    element.className = "nacitani";
+    element.setAttribute("aria-hidden", "true");
+    element.innerHTML = '<div class="znacka"><span class="jmeno"></span><span class="tah"></span></div>';
+    element.querySelector(".jmeno").textContent = (name && name.textContent) || "";
+    doc.body.appendChild(element);
 
-    var zacatek = Date.now();
+    var beginning = Date.now();
     var uklizeno = false;
     function ukliď() {
       if (uklizeno) return;
       uklizeno = true;
-      prvek.classList.add("pryc");
+      element.classList.add("pryc");
       window.setTimeout(function () {
-        if (prvek.parentNode) prvek.parentNode.removeChild(prvek);
+        if (element.parentNode) element.parentNode.removeChild(element);
       }, 600);
     }
     function dojelo() {
-      var uplynulo = Date.now() - zacatek;
+      var uplynulo = Date.now() - beginning;
       window.setTimeout(ukliď, Math.max(0, CLONA_NEJMIN - uplynulo));
     }
     if (doc.readyState === "complete") dojelo();
@@ -173,104 +176,106 @@
     window.setTimeout(ukliď, CLONA_NEJDEL);
   }
 
-  /* Prohlížeč: při přepnutí na další dílo se obraz prolne. Měníme ho
-     my tady, protože web.js jen vymění obsah plochy a o animace se nestará. */
-  function prohlizec() {
-    var plocha = doc.querySelector("[data-prohlizec] [data-plocha]");
-    var popisek = doc.querySelector("[data-prohlizec] [data-popisek]");
-    if (!plocha || !window.MutationObserver) return;
-    function prolni(prvek) {
-      if (!prvek) return;
-      prvek.classList.remove("prolnuti");
-      // Překreslení mezi tím, jinak prohlížeč animaci nespustí znovu.
-      void prvek.offsetWidth;
-      prvek.classList.add("prolnuti");
+  /* The viewer: switching to the next work fades the picture. We change it
+     here, because `web.js` only swaps the surface's content and leaves the
+     animation alone. */
+  function viewer() {
+    var area = doc.querySelector("[data-prohlizec] [data-plocha]");
+    var caption = doc.querySelector("[data-prohlizec] [data-popisek]");
+    if (!area || !window.MutationObserver) return;
+    function fade(element) {
+      if (!element) return;
+      element.classList.remove("prolnuti");
+      // A redraw in between, or the browser will not start the animation again.
+      void element.offsetWidth;
+      element.classList.add("prolnuti");
     }
-    new MutationObserver(function () { prolni(plocha.firstElementChild); })
-      .observe(plocha, { childList: true });
-    if (popisek) {
-      new MutationObserver(function () { prolni(popisek); })
-        .observe(popisek, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(function () { fade(area.firstElementChild); })
+      .observe(area, { childList: true });
+    if (caption) {
+      new MutationObserver(function () { fade(caption); })
+        .observe(caption, { childList: true, characterData: true, subtree: true });
     }
   }
 
-  /* Claim na úvodu naskakuje po slovech. Rozdělujeme ho tady, ne v šabloně:
-     v HTML má zůstat jedna celá věta, aby ji vyhledávač i čtečka přečetly
-     jako větu a brána na viditelný text ji našla. */
+  /* The claim on the opening comes in word by word. We split it here, not in
+     the template: the HTML is to keep one whole sentence, so that a search
+     engine and a screen reader read it as a sentence and the gate over the
+     visible text finds it. */
   function slova() {
-    var nadpis = doc.querySelector(".hero-text h1");
-    if (!nadpis || nadpis.querySelector(".slovo")) return;
-    var veta = (nadpis.textContent || "").trim();
-    if (!veta) return;
-    var casti = veta.split(/\s+/);
-    nadpis.textContent = "";
-    casti.forEach(function (slovo, i) {
+    var heading = doc.querySelector(".hero-text h1");
+    if (!heading || heading.querySelector(".slovo")) return;
+    var sentence = (heading.textContent || "").trim();
+    if (!sentence) return;
+    var parts = sentence.split(/\s+/);
+    heading.textContent = "";
+    parts.forEach(function (word, i) {
       var vnejsi = doc.createElement("span");
       vnejsi.className = "slovo";
       vnejsi.style.setProperty("--poradi", String(i));
       var vnitrni = doc.createElement("span");
-      vnitrni.textContent = slovo;
+      vnitrni.textContent = word;
       vnejsi.appendChild(vnitrni);
-      nadpis.appendChild(vnejsi);
-      if (i < casti.length - 1) nadpis.appendChild(doc.createTextNode(" "));
+      heading.appendChild(vnejsi);
+      if (i < parts.length - 1) heading.appendChild(doc.createTextNode(" "));
     });
-    nadpis.classList.add("po-slovech");
+    heading.classList.add("po-slovech");
   }
 
-  /* Vnitřní odkazy (filtry, kotvy) jedou plynule — řeší CSS, tady jen
-     doplníme chování pro prohlížeče bez scroll-behavior. */
-  function kotvy() {
+  /* Internal links (filters, anchors) travel smoothly -- CSS does that, and
+     here we only add the behaviour for browsers without scroll-behavior. */
+  function anchors() {
     if ("scrollBehavior" in html.style) return;
-    vse('a[href^="#"]').forEach(function (odkaz) {
-      odkaz.addEventListener("click", function (e) {
-        var cil = doc.getElementById(odkaz.getAttribute("href").slice(1));
-        if (!cil) return;
+    all('a[href^="#"]').forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        var target = doc.getElementById(link.getAttribute("href").slice(1));
+        if (!target) return;
         e.preventDefault();
-        cil.scrollIntoView();
+        target.scrollIntoView();
       });
     });
   }
 
-  var prvniZapnuti = true;
+  var firstEnable = true;
 
-  function zapni() {
+  function enable() {
     html.classList.add("pohyb");
-    // Clona patří ke startu stránky. Když si člověk pohyb povolí až během
-    // čtení, nebudeme mu přes text přehazovat uvítání.
-    if (prvniZapnuti) clona();
-    prvniZapnuti = false;
-    // Kdyby se hlídač z jakéhokoli důvodu neozval, po pěti vteřinách
-    // odhalíme všechno. Nic na webu nesmí zůstat schované kvůli ozdobě.
+    // The curtain belongs to the page's start. If motion is allowed only while
+    // someone is already reading, we will not throw a welcome over their text.
+    if (firstEnable) clona();
+    firstEnable = false;
+    // Should the observer stay silent for any reason, after five seconds we
+    // reveal everything. Nothing on the site may stay hidden for an ornament.
     window.setTimeout(function () {
-      vse(".odhal:not(.videt)").forEach(function (p) {
+      all(".odhal:not(.videt)").forEach(function (p) {
         if (p.getBoundingClientRect().top < window.innerHeight * 1.5) p.classList.add("videt");
       });
     }, 5000);
     pripravOdhaleni();
     slova();
-    fotky();
-    prohlizec();
-    postup();
+    photos();
+    viewer();
+    progress();
     naklon();
-    kotvy();
+    anchors();
   }
 
   function vypni() {
     html.classList.remove("pohyb");
-    vse(".odhal").forEach(function (p) { p.classList.add("videt"); });
+    all(".odhal").forEach(function (p) { p.classList.add("videt"); });
   }
 
   function start() {
     if (klidne && klidne.matches) {
-      // I tak doběhne fotky(): jen dosadí třídu, nic se nehýbe.
-      fotky();
+      // `fotky()` runs even so: it only sets a class, nothing moves.
+      photos();
     } else {
-      zapni();
+      enable();
     }
-    // Když si člověk omezení pohybu zapne až během prohlížení, vypínáme.
+    // When someone turns reduced motion on mid-visit, we switch off.
     if (klidne && klidne.addEventListener) {
       klidne.addEventListener("change", function () {
-        if (klidne.matches) vypni(); else zapni();
+        if (klidne.matches) vypni(); else enable();
       });
     }
   }
@@ -278,5 +283,5 @@
   if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", start);
   else start();
 
-  window.KZanimace = { zapni: zapni, vypni: vypni };
+  window.KZanimace = { zapni: enable, vypni: vypni };
 })();

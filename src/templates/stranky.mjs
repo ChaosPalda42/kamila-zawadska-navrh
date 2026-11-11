@@ -1,5 +1,5 @@
-/* Jednotlivé stránky webu. Každá funkce vrací HTML obsahu; obal (menu,
-   aktuality, patička) přidá layout(). */
+/* The site's individual pages. Every function returns the content HTML; the
+   wrapper (menu, news, footer) is added by `layout()`. */
 
 import { layout, e, ukazka, korun, ostryWeb, obrazek } from "./layout.mjs";
 import { t, pole, cesta, cestaDila } from "../lib/preklad.mjs";
@@ -11,60 +11,62 @@ import { mesic as mrizkaMesice, chystaSe, bylo, format } from "../lib/kalendar.m
 import { DUVODY, prazdny as prazdnyFormular } from "../lib/formular.mjs";
 import { nazevMesice } from "./mesice.mjs";
 
-const DNY_CS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
-const DNY_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-function nazevDila(dilo, jazyk) { return pole(dilo.nazev, jazyk) || dilo.slug; }
-function altDila(dilo, jazyk) { return pole(dilo.alt, jazyk) || nazevDila(dilo, jazyk); }
+const DAYS_CS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+const DAYS_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function workName(dilo, jazyk) { return pole(dilo.nazev, jazyk) || dilo.slug; }
+function altWorks(dilo, jazyk) { return pole(dilo.alt, jazyk) || workName(dilo, jazyk); }
 
-/** Odznak stavu. Dílo k prodeji odznak nepotřebuje — to je výchozí stav. */
+/** The state badge. A work for sale needs none -- that is the default state. */
 function odznak(dilo, texty, jazyk) {
   if (dilo.stav === "v-prodeji") return "";
   return `<span class="odznak ${e(dilo.stav)}">${e(t(texty, "stav." + dilo.stav, jazyk))}</span>`;
 }
 
-/** Jedna dlaždice. `kam` je cíl odkazu, `volby.sloupcu` kvůli sizes obrázku. */
+/** One tile. `kam` is the link's target, `volby.sloupcu` is there for the picture's sizes. */
 function dlazdice(dilo, o) {
   const { texty, jazyk, sloupcu = 3, prednost = false, kam } = o;
-  const popis = [dilo.rok, dilo.rozmer].filter(Boolean).join(" · ");
+  const description = [dilo.rok, dilo.rozmer].filter(Boolean).join(" · ");
   const cenovka = lzeKoupit(dilo) ? `<span class="cena">${korun(cena(dilo), jazyk)}</span>` : "";
-  const odkaz = kam || cestaDila(dilo.slug, jazyk);
+  const link = kam || cestaDila(dilo.slug, jazyk);
   return `<li class="dlazdice" data-slug="${e(dilo.slug)}"
 data-technika="${e(dilo.technika || "")}" data-styl="${e(dilo.styl || "")}" data-album="${e(dilo.album || "")}">
-<a href="${odkaz}" data-otevri="${e(dilo.slug)}">
-<span class="ram">${odznak(dilo, texty, jazyk)}${obrazek(dilo.obrazek, altDila(dilo, jazyk), { sloupcu, prednost })}</span>
+<a href="${link}" data-otevri="${e(dilo.slug)}">
+<span class="ram">${odznak(dilo, texty, jazyk)}${obrazek(dilo.obrazek, altWorks(dilo, jazyk), { sloupcu, prednost })}</span>
 <span class="popis">
-<span class="nazev">${e(nazevDila(dilo, jazyk))}</span>
-<span class="radek">${e(popis)}${cenovka ? " · " : ""}${cenovka}</span>
+<span class="nazev">${e(workName(dilo, jazyk))}</span>
+<span class="radek">${e(description)}${cenovka ? " · " : ""}${cenovka}</span>
 </span>
 </a>
 </li>`;
 }
 
-/* Co o dílech potřebuje prohlížeč: ceny a stavy pro košík. Bere se to
-   z vykresleného webu, ne z kopie v localStorage — ta by po prodeji lhala.
-   `prober()` z C-002 pak košík pročistí proti tomuhle seznamu. */
-function dataProEshop(dila, jazyk) {
-  // Název jde ven jako dvojjazyčný objekt, ne jako hotový řetězec:
-  // rekapitulace() z C-005 si jazyk vybírá sama a nad obyčejným řetězcem
-  // vrací prázdno, takže by v košíku chyběly názvy děl.
-  const zaznamy = dila.map((d) => ({
+/* What the browser needs to know about the works: prices and states, for the
+   basket. It is taken from the rendered site, not from the copy in
+   localStorage -- that one would lie once something is sold. `prober()` from
+   C-002 then cleans the basket against this list. */
+function dataProEshop(works, jazyk) {
+  // The name goes out as a two-language object, not as a finished string:
+  // `rekapitulace()` from C-005 picks the language itself and returns nothing
+  // over a plain string, so the basket would be missing the works' names.
+  const records = works.map((d) => ({
     slug: d.slug, nazev: d.nazev, rozmer: d.rozmer || "",
     cena: cena(d), stav: d.stav,
   }));
-  return `<div data-eshop-dila hidden><script type="application/json">${JSON.stringify(zaznamy).replace(/</g, "\\u003c")}</script></div>`;
+  return `<div data-eshop-dila hidden><script type="application/json">${JSON.stringify(records).replace(/</g, "\\u003c")}</script></div>`;
 }
 
-/* ---------- domovská stránka ---------- */
+/* ---------- the home page ---------- */
 
-/* Podle přání klientky (přepis 05:25): její fotka, dvě tři díla z poslední
-   tvorby, proklik do galerie a do bia. Aktuality jsou v levém sloupci. */
+/* As the client asked (transcript 05:25): her photograph, two or three works
+   from the recent output, a way through to the gallery and to the biography.
+   The news sits in the left column. */
 export function uvod(o) {
   const { site, texty, jazyk } = o;
   const nejnovejsi = vGalerii(site.dila).filter((d) => d.obrazek).slice(0, 3);
   const naProdej = vEshopu(site.dila).slice(0, 3);
-  // Úvod má podle klientky nést její fotku a dvě tři aktuální díla
-  // (přepis 05:25–05:46). Fotka je vpravo, text vlevo — a než dojedou
-  // fotografie, drží místo zástupný obrázek.
+  // The client wants the opening to carry her photograph and two or three
+  // current works (transcript 05:25-05:46). The photograph is on the right,
+  // the text on the left -- and a stand-in holds the place until they arrive.
   const foto = (site.uvod && site.uvod.foto) || (site.bio && site.bio.portret) || "atelier";
   const telo = `
 <section class="hero">
@@ -91,9 +93,10 @@ ${naProdej.length ? `<section>
   return layout({ ...o, aktivni: "domu", adresa: cesta("domu", jazyk), titul: "", popis: t(texty, "uvod.podtitul", jazyk), telo });
 }
 
-/* Čeština má tři tvary: 1 dílo, 2–4 díla, 5 a víc děl. Modul překladu je
-   pod kontraktem a žádné skloňování neumí, tak je tady — a stejné pravidlo
-   má i src/ui/web.js, který počet přepisuje po přefiltrování. */
+/* Czech has three forms: 1 `dilo`, 2-4 `dila`, 5 and up `del`. The
+   translation module is under contract and knows no inflection, so the rule
+   lives here -- and `src/ui/web.js`, which rewrites the count after
+   filtering, carries the same one. */
 export function tvaryPoctu(texty, jazyk) {
   return [
     t(texty, "galerie.pocet.1", jazyk),
@@ -102,31 +105,31 @@ export function tvaryPoctu(texty, jazyk) {
   ];
 }
 
-export function pocetDel(kolik, texty, jazyk) {
-  const tvary = tvaryPoctu(texty, jazyk);
-  if (kolik === 1) return tvary[0];
-  if (kolik >= 2 && kolik <= 4) return tvary[1];
-  return tvary[2];
+export function pocetDel(howMany, texty, jazyk) {
+  const forms = tvaryPoctu(texty, jazyk);
+  if (howMany === 1) return forms[0];
+  if (howMany >= 2 && howMany <= 4) return forms[1];
+  return forms[2];
 }
 
-/* ---------- galerie ---------- */
+/* ---------- the gallery ---------- */
 
 function filtrovaciRada(klic, titulek, seznam, pocetDle, texty, jazyk) {
-  const polozky = seznam
+  const items = seznam
     .filter((x) => pocetDle[x.id])
     .map((x) => `<button type="button" data-klic="${klic}" data-hodnota="${e(x.id)}" aria-pressed="false">${e(pole(x.nazev, jazyk))} <span class="pocet">${pocetDle[x.id]}</span></button>`);
-  if (!polozky.length) return "";
+  if (!items.length) return "";
   return `<div class="filtry-rada">
 <span class="verzalky">${e(titulek)}</span>
 <button type="button" data-klic="${klic}" data-hodnota="vse" aria-pressed="true">${e(t(texty, "galerie.filtr.vse", jazyk))}</button>
-${polozky.join("")}
+${items.join("")}
 </div>`;
 }
 
-/* Prohlížeč na celou obrazovku: v HTML je prázdná skořápka, obsah do ní
-   doplní src/ui/web.js z dat vedle mřížky. Kdyby skript nedojel, dlaždice
-   vedou na vlastní stránku díla — klikání o nic nepřijde. */
-function prohlizec(texty, jazyk) {
+/* The full-screen viewer: the HTML holds an empty shell and `src/ui/web.js`
+   fills it from the data beside the grid. If the script never arrives, the
+   tiles lead to the work's own page -- clicking loses nothing. */
+function viewer(texty, jazyk) {
   return `<div class="prohlizec" data-prohlizec hidden role="dialog" aria-modal="true" aria-label="${e(t(texty, "galerie.titul", jazyk))}">
 <div class="hlava">
 <p class="pozice" data-pozice></p>
@@ -143,24 +146,24 @@ function prohlizec(texty, jazyk) {
 </div>`;
 }
 
-/** Data pro prohlížeč. `<` se escapuje, aby text neukončil <script>. */
-function dataProProhlizec(dila, texty, jazyk) {
-  const zaznamy = dila.map((d) => ({
+/** Data for the viewer. `<` is escaped, so the text cannot end the <script>. */
+function dataForViewer(works, texty, jazyk) {
+  const records = works.map((d) => ({
     slug: d.slug,
-    nazev: nazevDila(d, jazyk),
+    nazev: workName(d, jazyk),
     popis: pole(d.popis, jazyk),
     radek: [d.rok, d.rozmer, t(texty, "stav." + d.stav, jazyk)].filter(Boolean).join(" · "),
-    obrazek: obrazek(d.obrazek, altDila(d, jazyk), { sloupcu: 1 }),
+    obrazek: obrazek(d.obrazek, altWorks(d, jazyk), { sloupcu: 1 }),
     odkaz: lzeKoupit(d) ? { kam: cesta("eshop", jazyk) + "#" + d.slug, text: t(texty, "galerie.koupit", jazyk) }
       : naMiru(d) ? { kam: cesta("kontakt", jazyk) + "?duvod=na-miru&dilo=" + encodeURIComponent(d.slug), text: t(texty, "galerie.na-miru", jazyk) }
       : null,
   }));
-  return `<script type="application/json" data-dila>${JSON.stringify(zaznamy).replace(/</g, "\\u003c")}</script>`;
+  return `<script type="application/json" data-dila>${JSON.stringify(records).replace(/</g, "\\u003c")}</script>`;
 }
 
 export function galerieStranka(o) {
   const { site, texty, jazyk } = o;
-  const dila = vGalerii(site.dila);
+  const works = vGalerii(site.dila);
   const telo = `
 <section>
 <h1>${e(t(texty, "galerie.titul", jazyk))}</h1>
@@ -168,38 +171,38 @@ export function galerieStranka(o) {
 </section>
 <section>
 <div class="filtry" data-filtry>
-${filtrovaciRada("technika", t(texty, "galerie.filtr.technika", jazyk), site.techniky, pocty(dila, "technika"), texty, jazyk)}
-${filtrovaciRada("styl", t(texty, "galerie.filtr.styl", jazyk), site.styly, pocty(dila, "styl"), texty, jazyk)}
-${filtrovaciRada("album", t(texty, "galerie.filtr.udalost", jazyk), site.albumy, pocty(dila, "album"), texty, jazyk)}
-<p class="vysledek" data-vysledek data-tvary="${e(JSON.stringify(tvaryPoctu(texty, jazyk)))}">${dila.length} ${e(pocetDel(dila.length, texty, jazyk))}</p>
+${filtrovaciRada("technika", t(texty, "galerie.filtr.technika", jazyk), site.techniky, pocty(works, "technika"), texty, jazyk)}
+${filtrovaciRada("styl", t(texty, "galerie.filtr.styl", jazyk), site.styly, pocty(works, "styl"), texty, jazyk)}
+${filtrovaciRada("album", t(texty, "galerie.filtr.udalost", jazyk), site.albumy, pocty(works, "album"), texty, jazyk)}
+<p class="vysledek" data-vysledek data-tvary="${e(JSON.stringify(tvaryPoctu(texty, jazyk)))}">${works.length} ${e(pocetDel(works.length, texty, jazyk))}</p>
 </div>
-<ul class="mrizka ctverec" data-mrizka>${dila.map((d, i) => dlazdice(d, { texty, jazyk, sloupcu: 3, prednost: i < 3 })).join("")}</ul>
+<ul class="mrizka ctverec" data-mrizka>${works.map((d, i) => dlazdice(d, { texty, jazyk, sloupcu: 3, prednost: i < 3 })).join("")}</ul>
 <p class="vysledek" data-nic hidden>${e(t(texty, "galerie.nic", jazyk))}</p>
 </section>
-${dataProProhlizec(dila, texty, jazyk)}
-${prohlizec(texty, jazyk)}
+${dataForViewer(works, texty, jazyk)}
+${viewer(texty, jazyk)}
 `;
   return layout({ ...o, aktivni: "galerie", adresa: cesta("galerie", jazyk), titul: t(texty, "galerie.titul", jazyk), popis: t(texty, "galerie.popis", jazyk), telo });
 }
 
-/* ---------- detail díla ---------- */
+/* ---------- the work's detail ---------- */
 
 export function diloStranka(o) {
   const { site, texty, jazyk, dilo } = o;
   const vGal = vGalerii(site.dila);
   const sous = sousedi(vGal, dilo.slug);
-  const technika = (site.techniky.find((x) => x.id === dilo.technika) || {}).nazev;
-  const styl = (site.styly.find((x) => x.id === dilo.styl) || {}).nazev;
+  const technique = (site.techniky.find((x) => x.id === dilo.technika) || {}).nazev;
+  const style = (site.styly.find((x) => x.id === dilo.styl) || {}).nazev;
   const album = site.albumy.find((x) => x.id === dilo.album);
-  const radky = [
-    [t(texty, "galerie.filtr.technika", jazyk), technika ? pole(technika, jazyk) : ""],
-    [t(texty, "galerie.filtr.styl", jazyk), styl ? pole(styl, jazyk) : ""],
+  const lines = [
+    [t(texty, "galerie.filtr.technika", jazyk), technique ? pole(technique, jazyk) : ""],
+    [t(texty, "galerie.filtr.styl", jazyk), style ? pole(style, jazyk) : ""],
     [t(texty, "galerie.filtr.udalost", jazyk), album ? `${pole(album.nazev, jazyk)}, ${album.rok}` : ""],
     ["", dilo.rozmer],
     [t(texty, "stav." + dilo.stav, jazyk), lzeKoupit(dilo) ? korun(cena(dilo), jazyk) : ""],
-  ].filter(([, hodnota]) => hodnota);
+  ].filter(([, value]) => value);
 
-  const akce = lzeKoupit(dilo)
+  const event = lzeKoupit(dilo)
     ? `<p><a class="tlacitko" href="${cesta("eshop", jazyk)}#${e(dilo.slug)}">${e(t(texty, "galerie.koupit", jazyk))}</a></p>`
     : naMiru(dilo)
       ? `<p><a class="tlacitko lehke" href="${cesta("kontakt", jazyk)}?duvod=na-miru&amp;dilo=${encodeURIComponent(dilo.slug)}">${e(t(texty, "galerie.na-miru", jazyk))}</a></p>`
@@ -207,73 +210,73 @@ export function diloStranka(o) {
 
   const telo = `
 <article class="dilo">
-<div class="platno">${obrazek(dilo.obrazek, altDila(dilo, jazyk), { sloupcu: 1, prednost: true, pomer: 1 })}</div>
+<div class="platno">${obrazek(dilo.obrazek, altWorks(dilo, jazyk), { sloupcu: 1, prednost: true, pomer: 1 })}</div>
 <div>
-<h1>${e(nazevDila(dilo, jazyk))}</h1>
+<h1>${e(workName(dilo, jazyk))}</h1>
 <p>${e(pole(dilo.popis, jazyk))}</p>
-<dl>${radky.map(([k, v]) => `${k ? `<dt>${e(k)}</dt>` : ""}<dd>${e(v)}</dd>`).join("")}</dl>
-${akce}
+<dl>${lines.map(([k, v]) => `${k ? `<dt>${e(k)}</dt>` : ""}<dd>${e(v)}</dd>`).join("")}</dl>
+${event}
 </div>
 </article>
 <nav class="sousedi">
-${sous.predchozi ? `<a href="${cestaDila(sous.predchozi.slug, jazyk)}">← ${e(nazevDila(sous.predchozi, jazyk))}</a>` : "<span></span>"}
+${sous.predchozi ? `<a href="${cestaDila(sous.predchozi.slug, jazyk)}">← ${e(workName(sous.predchozi, jazyk))}</a>` : "<span></span>"}
 <a href="${cesta("galerie", jazyk)}">${e(t(texty, "galerie.titul", jazyk))}</a>
-${sous.dalsi ? `<a href="${cestaDila(sous.dalsi.slug, jazyk)}">${e(nazevDila(sous.dalsi, jazyk))} →</a>` : "<span></span>"}
+${sous.dalsi ? `<a href="${cestaDila(sous.dalsi.slug, jazyk)}">${e(workName(sous.dalsi, jazyk))} →</a>` : "<span></span>"}
 </nav>
 `;
-  return layout({ ...o, aktivni: "galerie", adresa: cestaDila(dilo.slug, jazyk), titul: nazevDila(dilo, jazyk), popis: pole(dilo.popis, jazyk), telo });
+  return layout({ ...o, aktivni: "galerie", adresa: cestaDila(dilo.slug, jazyk), titul: workName(dilo, jazyk), popis: pole(dilo.popis, jazyk), telo });
 }
 
 /* ---------- e-shop ---------- */
 
-/* Zamluvené dílo v e-shopu zůstane vidět, ale koupit se nedá — proto má
-   tlačítko vypnuté a vlastní hlášku, ne zmizelý řádek. */
+/* A reserved work stays visible in the shop but cannot be bought -- hence a
+   disabled button and a notice of its own, not a row that vanished. */
 function eshopDlazdice(dilo, texty, jazyk) {
   const koupit = lzeKoupit(dilo);
-  const tlacitko = koupit
+  const button = koupit
     ? `<button class="tlacitko" type="button" data-doKosiku="${e(dilo.slug)}"
 data-pridat="${e(t(texty, "eshop.do-kosiku", jazyk))}" data-odebrat="${e(t(texty, "eshop.odebrat", jazyk))}">${e(t(texty, "eshop.do-kosiku", jazyk))}</button>`
     : `<button class="tlacitko" type="button" disabled>${e(t(texty, "eshop.nedostupne", jazyk))}</button>`;
   return `<li class="dlazdice" id="${e(dilo.slug)}" data-slug="${e(dilo.slug)}">
 <a href="${cestaDila(dilo.slug, jazyk)}">
-<span class="ram">${odznak(dilo, texty, jazyk)}${obrazek(dilo.obrazek, altDila(dilo, jazyk), { sloupcu: 2 })}</span>
+<span class="ram">${odznak(dilo, texty, jazyk)}${obrazek(dilo.obrazek, altWorks(dilo, jazyk), { sloupcu: 2 })}</span>
 </a>
 <div class="popis">
-<a href="${cestaDila(dilo.slug, jazyk)}" class="nazev">${e(nazevDila(dilo, jazyk))}</a>
+<a href="${cestaDila(dilo.slug, jazyk)}" class="nazev">${e(workName(dilo, jazyk))}</a>
 <span class="radek">${e([dilo.rok, dilo.rozmer].filter(Boolean).join(" · "))} · <span class="cena">${korun(cena(dilo), jazyk)}</span></span>
 <p>${e(pole(dilo.popis, jazyk))}</p>
-${tlacitko}
+${button}
 </div>
 </li>`;
 }
 
 export function eshopStranka(o) {
   const { site, texty, jazyk } = o;
-  const dila = vEshopu(site.dila);
+  const works = vEshopu(site.dila);
   const telo = `
 <section>
 <h1>${e(t(texty, "eshop.titul", jazyk))}</h1>
 <div class="uvodka"><p>${e(t(texty, "eshop.popis", jazyk))}</p></div>
 </section>
 <section>
-${dila.length
-    ? `<ul class="mrizka siroka">${dila.map((d) => eshopDlazdice(d, texty, jazyk)).join("")}</ul>`
+${works.length
+    ? `<ul class="mrizka siroka">${works.map((d) => eshopDlazdice(d, texty, jazyk)).join("")}</ul>`
     : `<p>${e(t(texty, "eshop.prazdno", jazyk))}</p>`}
 <p><a href="${cesta("kosik", jazyk)}">${e(t(texty, "nav.kosik", jazyk))} <span data-pocet-kosiku hidden></span> →</a></p>
 </section>
-${dataProEshop(dila, jazyk)}
+${dataProEshop(works, jazyk)}
 `;
   return layout({ ...o, aktivni: "eshop", adresa: cesta("eshop", jazyk), titul: t(texty, "eshop.titul", jazyk), popis: t(texty, "eshop.popis", jazyk), telo });
 }
 
-/* ---------- košík ---------- */
+/* ---------- the basket ---------- */
 
-/* Košík žije v prohlížeči (localStorage), takže je stránka jen skořápka,
-   kterou naplní src/ui/web.js. Bez skriptu je vidět hláška o prázdném
-   košíku a cesta zpět do e-shopu. */
+/* The basket lives in the browser (localStorage), so the page is only a
+   shell that `src/ui/web.js` fills. Without the script what shows is the
+   notice about an empty basket and the way back to the shop. */
 export function kosikStranka(o) {
   const { site, texty, jazyk } = o;
-  const zpusoby = site.doprava.map((d) => `<li><label>
+  const methods = site.doprava.map((d) => `<li><label>
 <input type="radio" name="doprava" value="${e(d.id)}">
 <span><span class="nazev">${e(pole(d.nazev, jazyk))}</span><br><span class="popis">${e(pole(d.popis, jazyk))}</span></span>
 <span class="cena">${d.cena ? korun(d.cena, jazyk) : korun(0, jazyk)}</span>
@@ -290,7 +293,7 @@ export function kosikStranka(o) {
 <tr><td>${e(t(texty, "kosik.celkem", jazyk))}</td><td data-celkem></td><td></td></tr>
 </tfoot>
 </table>
-<ul class="doprava">${zpusoby}</ul>
+<ul class="doprava">${methods}</ul>
 <script type="application/json" data-doprava>${JSON.stringify(site.doprava.map((d) => ({
     id: d.id, nazev: pole(d.nazev, jazyk), cena: d.cena,
   }))).replace(/</g, "\\u003c")}</script>
@@ -305,11 +308,11 @@ ${dataProEshop(vEshopu(site.dila), jazyk)}
 <h2>${e(t(texty, "objednavka.titul", jazyk))}</h2>
 ${ukazka(texty, "ukazka.formular", jazyk)}
 <form class="formular" data-form-objednavka novalidate>
-${["jmeno", "email", "telefon"].map((k) => polePformulare(k, t(texty, "objednavka." + k, jazyk))).join("")}
+${["jmeno", "email", "telefon"].map((k) => formFields(k, t(texty, "objednavka." + k, jazyk))).join("")}
 <div data-adresa>
-${polePformulareUlice(texty, jazyk)}
+${formFieldsStreet(texty, jazyk)}
 </div>
-${polePformulareZprava(t(texty, "objednavka.zprava", jazyk))}
+${formFieldsMessage(t(texty, "objednavka.zprava", jazyk))}
 <p><button class="tlacitko" type="submit">${e(t(texty, "objednavka.odeslat", jazyk))}</button></p>
 <p class="ukazka" data-hotovo hidden>${e(t(texty, "objednavka.hotovo", jazyk))}</p>
 </form>
@@ -318,59 +321,60 @@ ${polePformulareZprava(t(texty, "objednavka.zprava", jazyk))}
   return layout({ ...o, aktivni: "eshop", adresa: cesta("kosik", jazyk), titul: t(texty, "kosik.titul", jazyk), popis: t(texty, "kosik.titul", jazyk), telo });
 }
 
-function polePformulareUlice(texty, jazyk) {
-  return `${polePformulare("ulice", t(texty, "objednavka.ulice", jazyk))}
+function formFieldsStreet(texty, jazyk) {
+  return `${formFields("ulice", t(texty, "objednavka.ulice", jazyk))}
 <div class="dvojice">
-${polePformulare("mesto", t(texty, "objednavka.mesto", jazyk))}
-${polePformulare("psc", t(texty, "objednavka.psc", jazyk))}
+${formFields("mesto", t(texty, "objednavka.mesto", jazyk))}
+${formFields("psc", t(texty, "objednavka.psc", jazyk))}
 </div>`;
 }
-function polePformulareZprava(titulek) {
+function formFieldsMessage(titulek) {
   return `<div class="pole" data-pole="zprava"><label for="pole-zprava">${e(titulek)}</label>
 <textarea id="pole-zprava" name="zprava"></textarea><span class="chyba" data-chyba hidden></span></div>`;
 }
-function polePformulare(klic, titulek) {
-  const typ = klic === "email" ? "email" : klic === "telefon" ? "tel" : "text";
+function formFields(klic, titulek) {
+  const type = klic === "email" ? "email" : klic === "telefon" ? "tel" : "text";
   return `<div class="pole" data-pole="${e(klic)}"><label for="pole-${e(klic)}">${e(titulek)}</label>
-<input id="pole-${e(klic)}" name="${e(klic)}" type="${typ}" autocomplete="${autoVyplnit(klic)}">
+<input id="pole-${e(klic)}" name="${e(klic)}" type="${type}" autocomplete="${autoVyplnit(klic)}">
 <span class="chyba" data-chyba hidden></span></div>`;
 }
 function autoVyplnit(klic) {
   return { jmeno: "name", email: "email", telefon: "tel", ulice: "street-address", mesto: "address-level2", psc: "postal-code" }[klic] || "off";
 }
-/* ---------- kalendář ---------- */
+/* ---------- the calendar ---------- */
 
-/* Mřížka měsíce. Den bez akce je prázdná buňka, ne nula — kalendář se čte
-   očima a nula by v něm dělala šum. Dny mimo měsíc jsou buňky bez rámu. */
-export function mrizkaHtml(rok, mesicCislo, udalosti, dnes, jazyk, texty) {
-  const m = mrizkaMesice(rok, mesicCislo, udalosti);
-  const dny = jazyk === "en" ? DNY_EN : DNY_CS;
-  const podleId = new Map(udalosti.map((u) => [u.id, u]));
-  const tydny = m.tydny.map((tyden) => `<tr>${tyden.map((den) => {
-    if (!den) return '<td class="prazdny"></td>';
-    const akce = den.udalosti.map((id) => {
-      const u = podleId.get(id);
+/* The month's grid. A day with no event is an empty cell, not a zero -- a
+   calendar is read with the eyes and a zero would be noise in it. Days
+   outside the month are cells without a frame. */
+export function mrizkaHtml(year, mesicCislo, udalosti, dnes, jazyk, texty) {
+  const m = mrizkaMesice(year, mesicCislo, udalosti);
+  const days = jazyk === "en" ? DAYS_EN : DAYS_CS;
+  const byId = new Map(udalosti.map((u) => [u.id, u]));
+  const weeks = m.tydny.map((week) => `<tr>${week.map((day) => {
+    if (!day) return '<td class="prazdny"></td>';
+    const event = day.udalosti.map((id) => {
+      const u = byId.get(id);
       if (!u) return "";
-      // data-akce: klik otevře detail na místě (src/ui/akce.js). Bez skriptu
-      // zůstane odkaz na položku v seznamu pod kalendářem.
+      // `data-akce`: a click opens the detail in place (`src/ui/akce.js`). Without
+      // the script the link to the item in the list below the calendar remains.
       return `<a class="akce ${e(u.typ)}" href="#${e(u.id)}" data-akce="${e(u.id)}">${e(pole(u.nazev, jazyk))}</a>`;
     }).join("");
-    const dnesni = den.datum === dnes ? ' class="dnesni"' : "";
-    return `<td${dnesni}><span class="den">${den.den}</span>${akce}</td>`;
+    const dnesni = day.datum === dnes ? ' class="dnesni"' : "";
+    return `<td${dnesni}><span class="den">${day.den}</span>${event}</td>`;
   }).join("")}</tr>`).join("");
   return `<table class="kalendar">
-<caption class="skryte">${e(nazevMesice(rok, mesicCislo, jazyk))}</caption>
-<thead><tr>${dny.map((d) => `<th scope="col">${e(d)}</th>`).join("")}</tr></thead>
-<tbody>${tydny}</tbody>
+<caption class="skryte">${e(nazevMesice(year, mesicCislo, jazyk))}</caption>
+<thead><tr>${days.map((d) => `<th scope="col">${e(d)}</th>`).join("")}</tr></thead>
+<tbody>${weeks}</tbody>
 </table>`;
 }
 
-function akceSeznam(udalosti, jazyk, texty) {
+function eventList(udalosti, jazyk, texty) {
   if (!udalosti.length) return `<p>${e(t(texty, "kalendar.bez-akci", jazyk))}</p>`;
-  /* Celá karta je klikací (data-akce) a detail se z ní vyzvedne na místě.
-     Tlačítko „detail" je schované, dokud ho src/ui/akce.js neodemkne: bez
-     skriptu je totiž celý popis akce vidět rovnou tady a tlačítko by
-     nikam nevedlo. */
+  /* The whole card is clickable (`data-akce`) and the detail is picked up from
+     it in place. The "detail" button stays hidden until `src/ui/akce.js`
+     unlocks it: without the script the event's whole description is visible
+     right here and the button would lead nowhere. */
   return `<ul class="akce-seznam">${udalosti.map((u) => `<li id="${e(u.id)}" data-akce="${e(u.id)}">
 <span class="kdy">${e(format(u, jazyk))}${u.cas ? `, ${e(u.cas)}` : ""}<br>${e(t(texty, "kalendar.typ." + u.typ, jazyk))}</span>
 <div>
@@ -384,47 +388,48 @@ ${u.misto ? `<p class="kde">${e(pole(u.misto, jazyk))}</p>` : ""}
 
 export function kalendarStranka(o) {
   const { site, texty, jazyk, dnes } = o;
-  const rok = Number(dnes.slice(0, 4));
+  const year = Number(dnes.slice(0, 4));
   const mesicCislo = Number(dnes.slice(5, 7));
   const telo = `
 <section>
 <h1>${e(t(texty, "kalendar.titul", jazyk))}</h1>
 <div class="uvodka"><p>${e(t(texty, "kalendar.popis", jazyk))}</p></div>
 </section>
-<section data-kalendar data-rok="${rok}" data-mesic="${mesicCislo}" data-dnes="${e(dnes)}">
+<section data-kalendar data-rok="${year}" data-mesic="${mesicCislo}" data-dnes="${e(dnes)}">
 <div class="mesic">
-<h2 data-nazev-mesice>${e(nazevMesice(rok, mesicCislo, jazyk))}</h2>
+<h2 data-nazev-mesice>${e(nazevMesice(year, mesicCislo, jazyk))}</h2>
 <div>
 <button type="button" data-mesic-zpet>← ${e(t(texty, "kalendar.predchozi-mesic", jazyk))}</button>
 <button type="button" data-mesic-dnes>${e(t(texty, "kalendar.dnes", jazyk))}</button>
 <button type="button" data-mesic-vpred>${e(t(texty, "kalendar.dalsi-mesic", jazyk))} →</button>
 </div>
 </div>
-<div data-mrizka-mesice>${mrizkaHtml(rok, mesicCislo, site.udalosti, dnes, jazyk, texty)}</div>
+<div data-mrizka-mesice>${mrizkaHtml(year, mesicCislo, site.udalosti, dnes, jazyk, texty)}</div>
 <script type="application/json" data-udalosti>${JSON.stringify(site.udalosti.map((u) => ({
     id: u.id, typ: u.typ, od: u.od, do: u.do || "", nazev: pole(u.nazev, jazyk),
   }))).replace(/</g, "\\u003c")}</script>
 </section>
 <section>
 <h2 class="verzalky">${e(t(texty, "kalendar.pristi", jazyk))}</h2>
-${akceSeznam(chystaSe(site.udalosti, dnes), jazyk, texty)}
+${eventList(chystaSe(site.udalosti, dnes), jazyk, texty)}
 </section>
 <section>
 <h2 class="verzalky">${e(t(texty, "kalendar.minule", jazyk))}</h2>
-${akceSeznam(bylo(site.udalosti, dnes), jazyk, texty)}
+${eventList(bylo(site.udalosti, dnes), jazyk, texty)}
 </section>
 `;
   return layout({ ...o, aktivni: "kalendar", adresa: cesta("kalendar", jazyk), titul: t(texty, "kalendar.titul", jazyk), popis: t(texty, "kalendar.popis", jazyk), telo });
 }
 
-/* ---------- kurzy ---------- */
+/* ---------- the courses ---------- */
 
-/* Nabídka a rezervační logika se podle zápisu dopracují později, takže tady
-   je rozvrh a nezávazná poptávka, ne rezervační systém. */
+/* The offer and the booking logic are to be worked out later, the notes say,
+   so what is here is a timetable and a non-binding enquiry, not a booking
+   system. */
 export function kurzyStranka(o) {
   const { site, texty, jazyk } = o;
-  const kurzy = site.kurzy.map((k) => {
-    const terminy = (k.terminy || []).filter(Boolean);
+  const courses = site.kurzy.map((k) => {
+    const dates = (k.terminy || []).filter(Boolean);
     return `<article class="kurz" id="${e(k.id)}">
 <h2>${e(pole(k.nazev, jazyk))}</h2>
 <p class="radek">
@@ -434,8 +439,8 @@ export function kurzyStranka(o) {
 </p>
 <p>${e(pole(k.popis, jazyk))}</p>
 <p class="verzalky">${e(t(texty, "kurzy.terminy", jazyk))}</p>
-${terminy.length
-      ? `<ul class="terminy">${terminy.map((d) => `<li>${e(format({ od: d }, jazyk))}</li>`).join("")}</ul>`
+${dates.length
+      ? `<ul class="terminy">${dates.map((d) => `<li>${e(format({ od: d }, jazyk))}</li>`).join("")}</ul>`
       : `<p>${e(t(texty, "kurzy.terminy-chybi", jazyk))}</p>`}
 <p class="prihlaska"><a class="tlacitko lehke" href="${cesta("kontakt", jazyk)}?duvod=kurz&amp;kurz=${encodeURIComponent(k.id)}">${e(t(texty, "kurzy.mam-zajem", jazyk))}</a></p>
 </article>`;
@@ -445,33 +450,34 @@ ${terminy.length
 <h1>${e(t(texty, "kurzy.titul", jazyk))}</h1>
 <div class="uvodka"><p>${e(t(texty, "kurzy.popis", jazyk))}</p></div>
 </section>
-<section>${kurzy}</section>
+<section>${courses}</section>
 `;
   return layout({ ...o, aktivni: "kurzy", adresa: cesta("kurzy", jazyk), titul: t(texty, "kurzy.titul", jazyk), popis: t(texty, "kurzy.popis", jazyk), telo });
 }
 
-/* ---------- o mně ---------- */
+/* ---------- about me ---------- */
 
-/* Výstavy se neopisují do textu: berou se z albumů a z kalendáře, aby
-   nevznikly dva seznamy, které si po roce přestanou odpovídat. */
+/* The exhibitions are not copied into the text: they are taken from the
+   albums and from the calendar, so that two lists cannot come apart after a
+   year. */
 export function bioStranka(o) {
   const { site, texty, jazyk, dnes } = o;
-  const portret = site.dila.find((d) => d.slug === "portret-m") || site.dila[0];
-  const vystavy = [...site.albumy]
+  const portrait = site.dila.find((d) => d.slug === "portret-m") || site.dila[0];
+  const exhibitions = [...site.albumy]
     .sort((a, b) => (b.rok || 0) - (a.rok || 0))
     .map((a) => `<li><strong>${a.rok}</strong> — ${e(pole(a.nazev, jazyk))}${a.misto ? `, ${e(pole(a.misto, jazyk))}` : ""}</li>`)
     .join("");
-  const vzdelani = (site.bio && site.bio.vzdelani || [])
+  const education = (site.bio && site.bio.vzdelani || [])
     .map((r) => `<li><strong>${e(String(r.rok || ""))}</strong> — ${e(pole(r.text, jazyk))}</li>`)
     .join("");
   const telo = `
 <section class="bio">
-<div class="portret">${obrazek((site.bio && site.bio.portret) || portret.obrazek, pole(site.web["ateliér"].nazev, jazyk) + " — " + site.web.jmeno, { sloupcu: 1, prednost: true, pomer: 4 / 5 })}</div>
+<div class="portret">${obrazek((site.bio && site.bio.portret) || portrait.obrazek, t(texty, "bio.portret-alt", jazyk), { sloupcu: 1, prednost: true, pomer: 4 / 5 })}</div>
 <div class="text">
 <h1>${e(t(texty, "bio.titul", jazyk))}</h1>
 <p>${e(t(texty, "bio.text", jazyk))}</p>
-${vzdelani ? `<h2 class="verzalky">${e(t(texty, "bio.vzdelani", jazyk))}</h2><ul>${vzdelani}</ul>` : ""}
-${vystavy ? `<h2 class="verzalky">${e(t(texty, "bio.vystavy", jazyk))}</h2><ul>${vystavy}</ul>` : ""}
+${education ? `<h2 class="verzalky">${e(t(texty, "bio.vzdelani", jazyk))}</h2><ul>${education}</ul>` : ""}
+${exhibitions ? `<h2 class="verzalky">${e(t(texty, "bio.vystavy", jazyk))}</h2><ul>${exhibitions}</ul>` : ""}
 <p><a href="${cesta("kontakt", jazyk)}">${e(t(texty, "nav.kontakt", jazyk))} →</a></p>
 </div>
 </section>
@@ -479,16 +485,16 @@ ${vystavy ? `<h2 class="verzalky">${e(t(texty, "bio.vystavy", jazyk))}</h2><ul>$
   return layout({ ...o, aktivni: "bio", adresa: cesta("bio", jazyk), titul: t(texty, "bio.titul", jazyk), popis: t(texty, "bio.text", jazyk).slice(0, 160), telo });
 }
 
-/* ---------- kontakt ---------- */
+/* ---------- contact ---------- */
 
-/* Mapa je OpenStreetMap v <iframe>: bez klíče, bez účtu, bez skriptu třetí
-   strany, který by si vedl o návštěvníkovi vlastní záznamy. */
-function mapa(site, texty, jazyk) {
+/* The map is OpenStreetMap in an <iframe>: no key, no account, no
+   third-party script keeping records of its own about a visitor. */
+function map(site, texty, jazyk) {
   const a = site.web["ateliér"];
   const d = 0.004;
   const box = [a.lon - d, a.lat - d / 2, a.lon + d, a.lat + d / 2].map((x) => x.toFixed(4)).join("%2C");
-  const adresa = `https://www.openstreetmap.org/export/embed.html?bbox=${box}&amp;layer=mapnik&amp;marker=${a.lat}%2C${a.lon}`;
-  return `<iframe class="mapa" src="${adresa}" title="${e(t(texty, "kontakt.mapa", jazyk))}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+  const address = `https://www.openstreetmap.org/export/embed.html?bbox=${box}&amp;layer=mapnik&amp;marker=${a.lat}%2C${a.lon}`;
+  return `<iframe class="mapa" src="${address}" title="${e(t(texty, "kontakt.mapa", jazyk))}" loading="lazy" referrerpolicy="no-referrer"></iframe>
 <p><a href="https://www.openstreetmap.org/?mlat=${a.lat}&amp;mlon=${a.lon}#map=${a.zoom}/${a.lat}/${a.lon}" rel="noopener">${e(t(texty, "kontakt.mapa", jazyk))} →</a></p>`;
 }
 
@@ -511,10 +517,10 @@ ${ukazka(texty, "ukazka.formular", jazyk)}
 <select id="pole-duvod" name="duvod">${duvody}</select>
 </div>
 <input type="hidden" name="kDilu" value="">
-${polePformulare("jmeno", t(texty, "kontakt.jmeno", jazyk))}
-${polePformulare("email", t(texty, "kontakt.email", jazyk))}
-${polePformulare("telefon", t(texty, "kontakt.telefon", jazyk))}
-${polePformulareZprava(t(texty, "kontakt.zprava", jazyk))}
+${formFields("jmeno", t(texty, "kontakt.jmeno", jazyk))}
+${formFields("email", t(texty, "kontakt.email", jazyk))}
+${formFields("telefon", t(texty, "kontakt.telefon", jazyk))}
+${formFieldsMessage(t(texty, "kontakt.zprava", jazyk))}
 <p><button class="tlacitko" type="submit">${e(t(texty, "kontakt.odeslat", jazyk))}</button></p>
 <p class="ukazka" data-hotovo hidden>${e(t(texty, "kontakt.hotovo", jazyk))}</p>
 </form>
@@ -529,7 +535,11 @@ ${polePformulareZprava(t(texty, "kontakt.zprava", jazyk))}
 <span class="verzalky">${e(t(texty, "kontakt.telefon", jazyk))}</span><br>
 <a href="tel:${e(site.web.telefon.replace(/\s/g, ""))}">${e(site.web.telefon)}</a>
 </p>
-${mapa(site, texty, jazyk)}
+<p class="site">
+<a href="${e(site.web.instagram)}" rel="noopener">Instagram</a>
+<a href="${e(site.web.facebook)}" rel="noopener">Facebook</a>
+</p>
+${map(site, texty, jazyk)}
 </div>
 </section>
 `;
@@ -538,12 +548,12 @@ ${mapa(site, texty, jazyk)}
 
 /* ---------- 404 ---------- */
 
-/* Čtyřistačtyřka má být k něčemu dobrá: prázdný rám na zdi, který se
-   sám nakreslí a pak se nepatrně houpe, a tři odkazy, kam dál. Kresba je
-   inline SVG, takže nepotřebuje žádný obrázek ani skript — animaci dělá
-   CSS a při omezeném pohybu se rám prostě nehýbe. */
-function ramNaZdi(popis) {
-  return `<svg class="ram-na-zdi" viewBox="0 0 320 300" role="img" aria-label="${e(popis)}">
+/* A 404 should be good for something: an empty frame on the wall that draws
+   itself and then sways a little, and three links onwards. The drawing is
+   inline SVG, so it needs no image and no script -- CSS does the animation,
+   and under reduced motion the frame simply holds still. */
+function frameOnWall(description) {
+  return `<svg class="ram-na-zdi" viewBox="0 0 320 300" role="img" aria-label="${e(description)}">
 <g class="hrebik"><circle cx="160" cy="26" r="3.2" /></g>
 <g class="zaves"><path d="M160 29 L118 72 M160 29 L202 72" /></g>
 <g class="obraz">
@@ -559,7 +569,7 @@ export function chyba404(o) {
   const { texty, jazyk } = o;
   const telo = `
 <section class="ctyristactyrka">
-${ramNaZdi(t(texty, "404.obrazek-alt", jazyk))}
+${frameOnWall(t(texty, "404.obrazek-alt", jazyk))}
 <div class="ctyristactyrka-text">
 <p class="cislo verzalky">404</p>
 <h1>${e(t(texty, "404.titul", jazyk))}</h1>

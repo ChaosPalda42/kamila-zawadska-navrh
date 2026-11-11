@@ -1,8 +1,8 @@
-"""Brána nad hotovým webem: ukázkové hlášky, alt texty, odkazy, ceny, jazykové dvojice.
+"""A gate over the finished site: sample wording, alt texts, links, prices, language pairs.
 
-Spustitelné jako ``python -m tools.kontrola_webu <adresar>``. Čte hotové HTML
-(výstup ``node build.mjs``) a kontroluje VIDITELNÝ text, ne šablony.
-Jen standardní knihovna.
+Runnable as ``python -m tools.kontrola_webu <directory>``. Reads the finished
+HTML (the output of ``node build.mjs``) and checks the VISIBLE text, not the
+templates. Standard library only.
 """
 from __future__ import annotations
 
@@ -21,35 +21,35 @@ VOID_TAGS = {
 SKIP_TAGS = {"script", "style", "template", "noscript"}
 TEXT_ATTRS = ("alt", "title", "aria-label", "placeholder")
 
-VYCHOZI_VZORKY = [
+DEFAULT_SAMPLES = [
     "ukázka", "ukazka", "demo", "smyšlen", "smyslen",
     "nikam se neodesílá", "nikam se neodesila", "jen ukázka", "jen ukazka",
 ]
 
 
-# --- normalizace bez diakritiky --------------------------------------------
+# --- normalization without diacritics --------------------------------------
 
-def _bez_diakritiky(text: str) -> str:
-    rozlozene = unicodedata.normalize("NFD", text)
-    return "".join(c for c in rozlozene if unicodedata.category(c) != "Mn")
+def _without_diacritics(text: str) -> str:
+    spread = unicodedata.normalize("NFD", text)
+    return "".join(c for c in spread if unicodedata.category(c) != "Mn")
 
 
-def _normalizovany_s_mapou(text: str) -> tuple[str, list[int]]:
-    """Normalizovaný text (malá písmena, bez diakritiky) a mapa indexů na původní text."""
-    norm: list[str] = []
+def _normalized_with_map(text: str) -> tuple[str, list[int]]:
+    """Normalized text (lower case, no diacritics) and a map of indexes onto the original."""
+    normalize: list[str] = []
     mapa: list[int] = []
     for i, c in enumerate(text):
-        n = _bez_diakritiky(c).lower()
+        n = _without_diacritics(c).lower()
         if not n:
             continue
-        norm.extend(n)
+        normalize.extend(n)
         mapa.extend([i] * len(n))
-    return "".join(norm), mapa
+    return "".join(normalize), mapa
 
 
-# --- viditelný text ---------------------------------------------------------
+# --- the visible text -------------------------------------------------------
 
-class _SbiracTextu(HTMLParser):
+class _TextCollector(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.kusky: list[str] = []
@@ -61,16 +61,16 @@ class _SbiracTextu(HTMLParser):
             return
         if self._skok:
             return
-        for jmeno, hodnota in attrs:
-            if jmeno in TEXT_ATTRS and hodnota:
-                self.kusky.append(hodnota)
+        for name, value in attrs:
+            if name in TEXT_ATTRS and value:
+                self.kusky.append(value)
 
     def handle_startendtag(self, tag, attrs):
         if self._skok or tag in SKIP_TAGS:
             return
-        for jmeno, hodnota in attrs:
-            if jmeno in TEXT_ATTRS and hodnota:
-                self.kusky.append(hodnota)
+        for name, value in attrs:
+            if name in TEXT_ATTRS and value:
+                self.kusky.append(value)
 
     def handle_endtag(self, tag):
         if tag in SKIP_TAGS and self._skok:
@@ -82,136 +82,137 @@ class _SbiracTextu(HTMLParser):
 
 
 def viditelny_text(html: str) -> str:
-    """Viditelný text stránky: bez skriptů, stylů, šablon, noscript a komentářů.
+    """The visible text of a page: no scripts, styles, templates, noscript or comments.
 
-    Rozbalí entity, srazí vícenásobné bílé znaky na jednu mezeru. Hodnoty
-    atributů patří do textu jen u alt, title, aria-label a placeholder.
+    Expands the entities and squeezes runs of whitespace into a single space.
+    Attribute values belong to the text only for alt, title, aria-label and
+    placeholder.
     """
-    sbirac = _SbiracTextu()
-    sbirac.feed(html)
-    sbirac.close()
-    text = " ".join(sbirac.kusky)
+    collector = _TextCollector()
+    collector.feed(html)
+    collector.close()
+    text = " ".join(collector.kusky)
     return re.sub(r"\s+", " ", text).strip()
 
 
-# --- sběr HTML souborů ------------------------------------------------------
+# --- collecting the HTML files ----------------------------------------------
 
-def _html_soubory(koren) -> list[Path]:
+def _html_files(koren) -> list[Path]:
     koren = Path(koren)
     return sorted(koren.rglob("*.html"), key=lambda p: p.relative_to(koren).as_posix())
 
 
-# --- hledání vzorků ---------------------------------------------------------
+# --- looking for the samples ------------------------------------------------
 
-def _slovni_pozice(text: str) -> list[tuple[str, int, int]]:
-    """Seznam (slovo, zacatek, konec) pro každé slovo v textu (normalizované)."""
+def _word_positions(text: str) -> list[tuple[str, int, int]]:
+    """A list of (word, begin, end) for every word in the text (normalized)."""
     slova = []
     for m in re.finditer(r"\S+", text):
-        norm = _bez_diakritiky(m.group()).lower()
-        if norm:
-            slova.append((norm, m.start(), m.end()))
+        normalize = _without_diacritics(m.group()).lower()
+        if normalize:
+            slova.append((normalize, m.start(), m.end()))
     return slova
 
 
-def _slovo_sedi(vzorek_slovo: str, text_slovo: str) -> bool:
-    """Slovo sedí, pokud je identické nebo sdílí dostatečně dlouhý kmen."""
-    if vzorek_slovo == text_slovo:
+def _word_matches(sample_word: str, text_word: str) -> bool:
+    """A word fits when it is identical or shares a long enough stem."""
+    if sample_word == text_word:
         return True
-    delka = 0
-    for a, b in zip(vzorek_slovo, text_slovo):
+    length = 0
+    for a, b in zip(sample_word, text_word):
         if a != b:
             break
-        delka += 1
-    kratse = min(len(vzorek_slovo), len(text_slovo))
-    return delka >= 4 and delka * 10 >= kratse * 6
+        length += 1
+    shorter = min(len(sample_word), len(text_word))
+    return length >= 4 and length * 10 >= shorter * 6
 
 
-def _najdi_v_textu(text: str, vzorek: str) -> list[tuple[int, int]]:
-    """Najde pozice (zacatek, konec) kde vzorek fuzzy sedí v textu."""
-    norm_vzorek = _bez_diakritiky(vzorek).lower()
-    if not norm_vzorek:
+def _find_in_text(text: str, sample: str) -> list[tuple[int, int]]:
+    """The positions (begin, end) where the sample fits the text fuzzily."""
+    normalize_sample = _without_diacritics(sample).lower()
+    if not normalize_sample:
         return []
-    # 1) Přímé podřetězcové hledání
-    norm_text, mapa = _normalizovany_s_mapou(text)
-    pozice = 0
+    # 1) A plain substring search
+    normalize_text, mapa = _normalized_with_map(text)
+    position = 0
     while True:
-        i = norm_text.find(norm_vzorek, pozice)
+        i = normalize_text.find(normalize_sample, position)
         if i < 0:
             break
-        zacatek = mapa[i]
-        konec = mapa[i + len(norm_vzorek) - 1] + 1
-        yield zacatek, konec
-        pozice = i + 1
-    # 2) Fuzzy: slova vzorku v pořadí jako podřetězec slov textu (mezi slovy
-    #    smí být mezery), každé slovo sedí přesně nebo po kmenech.
-    vzorek_slova = norm_vzorek.split()
-    text_slova = _slovni_pozice(text)
-    if len(vzorek_slova) == 1:
-        for slovo, zacatek, konec in text_slova:
-            if _slovo_sedi(vzorek_slova[0], slovo):
-                yield zacatek, konec
+        begin = mapa[i]
+        end = mapa[i + len(normalize_sample) - 1] + 1
+        yield begin, end
+        position = i + 1
+    # 2) Fuzzy: the sample's words in order as a substring of the text's words
+    #    (spaces allowed between them), each word fitting exactly or by its stem.
+    sample_words = normalize_sample.split()
+    text_slova = _word_positions(text)
+    if len(sample_words) == 1:
+        for word, begin, end in text_slova:
+            if _word_matches(sample_words[0], word):
+                yield begin, end
         return
     m = len(text_slova)
     for start in range(m):
         j = 0
         for k in range(start, m):
-            if _slovo_sedi(vzorek_slova[j], text_slova[k][0]):
+            if _word_matches(sample_words[j], text_slova[k][0]):
                 j += 1
-                if j == len(vzorek_slova):
+                if j == len(sample_words):
                     yield text_slova[start][1], text_slova[k][2]
                     break
 
 
 def najdi(koren, vzorky) -> list[dict]:
-    """Nálezy vzorků ve viditelném textu, bez ohledu na velikost a diakritiku."""
+    """Findings of the samples in the visible text, whatever the case and diacritics."""
     koren = Path(koren)
-    nalezy: list[tuple[str, int, str, str]] = []
-    for soubor in _html_soubory(koren):
-        relativni = soubor.relative_to(koren).as_posix()
-        text = viditelny_text(soubor.read_text(encoding="utf-8"))
-        # jedna pozice = jeden nález; vzorky s diakritikou mají přednost
-        obsazene: set[int] = set()
+    findings: list[tuple[str, int, str, str]] = []
+    for file_path in _html_files(koren):
+        relative = file_path.relative_to(koren).as_posix()
+        text = viditelny_text(file_path.read_text(encoding="utf-8"))
+        # one position = one finding; samples with diacritics come first
+        booked: set[int] = set()
         for diakriticky in (True, False):
-            for vzorek in vzorky:
-                ma_diakritiku = _bez_diakritiky(vzorek) != vzorek.lower()
+            for sample in vzorky:
+                ma_diakritiku = _without_diacritics(sample) != sample.lower()
                 if diakriticky != ma_diakritiku:
                     continue
-                for zacatek, konec in _najdi_v_textu(text, vzorek):
-                    if zacatek in obsazene:
+                for begin, end in _find_in_text(text, sample):
+                    if begin in booked:
                         continue
-                    vyrez = text[max(0, zacatek - 30):min(len(text), konec + 30)]
-                    nalezy.append((relativni, zacatek, vzorek, vyrez))
-                    obsazene.add(zacatek)
-    nalezy.sort(key=lambda n: (n[0], n[1]))
+                    crop = text[max(0, begin - 30):min(len(text), end + 30)]
+                    findings.append((relative, begin, sample, crop))
+                    booked.add(begin)
+    findings.sort(key=lambda n: (n[0], n[1]))
     return [
-        {"soubor": s, "vzorek": v, "vyrez": vyrez}
-        for s, _p, v, vyrez in nalezy
+        {"soubor": s, "vzorek": v, "vyrez": crop}
+        for s, _p, v, crop in findings
     ]
 
 
-# --- alt texty --------------------------------------------------------------
+# --- alt texts --------------------------------------------------------------
 
-class _SbiracObrazu(HTMLParser):
+class _ImageCollector(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.nalezy: list[str] = []
         self._skryty: int = 0
 
     def handle_starttag(self, tag, attrs):
-        atributy = dict(attrs)
-        if atributy.get("aria-hidden", "").strip().lower() == "true":
+        attributes = dict(attrs)
+        if attributes.get("aria-hidden", "").strip().lower() == "true":
             self._skryty += 1
         if tag == "img" and self._skryty == 0:
-            alt = atributy.get("alt")
+            alt = attributes.get("alt")
             if alt is None or not alt.strip():
-                self.nalezy.append(atributy.get("src", ""))
+                self.nalezy.append(attributes.get("src", ""))
 
     def handle_startendtag(self, tag, attrs):
-        atributy = dict(attrs)
+        attributes = dict(attrs)
         if tag == "img" and self._skryty == 0:
-            alt = atributy.get("alt")
+            alt = attributes.get("alt")
             if alt is None or not alt.strip():
-                self.nalezy.append(atributy.get("src", ""))
+                self.nalezy.append(attributes.get("src", ""))
 
     def handle_endtag(self, tag):
         if self._skryty and tag not in VOID_TAGS:
@@ -219,20 +220,20 @@ class _SbiracObrazu(HTMLParser):
 
 
 def alt_texty(koren) -> list[dict]:
-    """<img> bez alt nebo s prázdným alt (kromě ozdob v aria-hidden)."""
+    """<img> with no alt or an empty one (decorations in aria-hidden aside)."""
     koren = Path(koren)
-    nalezy: list[dict] = []
-    for soubor in _html_soubory(koren):
-        relativni = soubor.relative_to(koren).as_posix()
-        sbirac = _SbiracObrazu()
-        sbirac.feed(soubor.read_text(encoding="utf-8"))
-        sbirac.close()
-        for src in sbirac.nalezy:
-            nalezy.append({"soubor": relativni, "src": src})
-    return nalezy
+    findings: list[dict] = []
+    for file_path in _html_files(koren):
+        relative = file_path.relative_to(koren).as_posix()
+        collector = _ImageCollector()
+        collector.feed(file_path.read_text(encoding="utf-8"))
+        collector.close()
+        for src in collector.nalezy:
+            findings.append({"soubor": relative, "src": src})
+    return findings
 
 
-# --- vnitřní odkazy ---------------------------------------------------------
+# --- internal links ---------------------------------------------------------
 
 def _je_vnitrni(href: str) -> bool:
     if href.startswith("/"):
@@ -244,34 +245,34 @@ def _je_vnitrni(href: str) -> bool:
     return True
 
 
-def _cile_odkazu(koren: Path, soubor: Path, href: str) -> Path:
-    cesta = href.split("#", 1)[0].split("?", 1)[0]
-    if cesta.endswith("/"):
-        cesta += "index.html"
-    if cesta.startswith("/"):
-        return koren / cesta.lstrip("/")
-    return (soubor.parent / cesta)
+def _link_targets(koren: Path, file_path: Path, href: str) -> Path:
+    path = href.split("#", 1)[0].split("?", 1)[0]
+    if path.endswith("/"):
+        path += "index.html"
+    if path.startswith("/"):
+        return koren / path.lstrip("/")
+    return (file_path.parent / path)
 
 
 def odkazy(koren) -> list[dict]:
-    """Vnitřní odkazy, které nevedou na existující soubor."""
+    """Internal links that do not lead to an existing file."""
     koren = Path(koren)
-    nalezy: list[dict] = []
-    for soubor in _html_soubory(koren):
-        relativni = soubor.relative_to(koren).as_posix()
-        parser = _SbiracOdkazu()
-        parser.feed(soubor.read_text(encoding="utf-8"))
+    findings: list[dict] = []
+    for file_path in _html_files(koren):
+        relative = file_path.relative_to(koren).as_posix()
+        parser = _LinkCollector()
+        parser.feed(file_path.read_text(encoding="utf-8"))
         parser.close()
         for href in parser.odkazy:
             if not _je_vnitrni(href):
                 continue
-            cil = _cile_odkazu(koren, soubor, href)
-            if not cil.exists():
-                nalezy.append({"soubor": relativni, "href": href})
-    return nalezy
+            target = _link_targets(koren, file_path, href)
+            if not target.exists():
+                findings.append({"soubor": relative, "href": href})
+    return findings
 
 
-class _SbiracOdkazu(HTMLParser):
+class _LinkCollector(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.odkazy: list[str] = []
@@ -285,9 +286,9 @@ class _SbiracOdkazu(HTMLParser):
     handle_startendtag = handle_starttag
 
 
-# --- jazykové dvojice -------------------------------------------------------
+# --- language pairs ---------------------------------------------------------
 
-class _SbiracHreflang(HTMLParser):
+class _HreflangCollector(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.hreflang: set[str] = set()
@@ -295,92 +296,92 @@ class _SbiracHreflang(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag != "link":
             return
-        atributy = dict(attrs)
-        if atributy.get("rel", "").strip().lower() != "alternate":
+        attributes = dict(attrs)
+        if attributes.get("rel", "").strip().lower() != "alternate":
             return
-        jazyk = atributy.get("hreflang", "").strip().lower()
-        if jazyk:
-            self.hreflang.add(jazyk)
+        language = attributes.get("hreflang", "").strip().lower()
+        if language:
+            self.hreflang.add(language)
 
     handle_startendtag = handle_starttag
 
 
-def _protispolny_kandidat(relativni: str) -> str | None:
-    """Cesta k protějšku v druhém jazyce, nebo None pro kořenové indexy."""
-    if relativni.startswith("en/"):
-        return relativni[3:]
-    if relativni == "index.html":
+def _cross_origin_candidate(relative: str) -> str | None:
+    """The path to the counterpart in the other language, or None for the root indexes."""
+    if relative.startswith("en/"):
+        return relative[3:]
+    if relative == "index.html":
         return None
-    return "en/" + relativni
+    return "en/" + relative
 
 
 def jazykove_dvojice(koren) -> list[dict]:
-    """Chybějící protějšek v druhém jazyce a chybějící hreflang odkazy."""
+    """A missing counterpart in the other language and missing hreflang links."""
     koren = Path(koren)
-    soubory = _html_soubory(koren)
-    relativni_cesty = {s.relative_to(koren).as_posix() for s in soubory}
-    nalezy: list[dict] = []
-    for soubor in soubory:
-        relativni = soubor.relative_to(koren).as_posix()
-        obsah = soubor.read_text(encoding="utf-8")
-        # protějšek
-        kandidat = _protispolny_kandidat(relativni)
-        if kandidat is not None and kandidat not in relativni_cesty:
-            nalezy.append({"soubor": relativni, "chybi": "protejsek"})
-        # hreflang pro oba jazyky
-        sbirac = _SbiracHreflang()
-        sbirac.feed(obsah)
-        sbirac.close()
-        if not {"cs", "en"} <= sbirac.hreflang:
-            nalezy.append({"soubor": relativni, "chybi": "hreflang"})
-    return nalezy
+    files = _html_files(koren)
+    relative_paths = {s.relative_to(koren).as_posix() for s in files}
+    findings: list[dict] = []
+    for file_path in files:
+        relative = file_path.relative_to(koren).as_posix()
+        content = file_path.read_text(encoding="utf-8")
+        # the counterpart
+        candidate = _cross_origin_candidate(relative)
+        if candidate is not None and candidate not in relative_paths:
+            findings.append({"soubor": relative, "chybi": "protejsek"})
+        # hreflang for both languages
+        collector = _HreflangCollector()
+        collector.feed(content)
+        collector.close()
+        if not {"cs", "en"} <= collector.hreflang:
+            findings.append({"soubor": relative, "chybi": "hreflang"})
+    return findings
 
 
 def ceny(koren) -> list[dict]:
-    """Stránky e-shopu bez viditelné ceny (Kč / CZK)."""
+    """Shop pages with no visible price (``Kč`` / CZK)."""
     koren = Path(koren)
-    nalezy: list[dict] = []
-    for soubor in _html_soubory(koren):
-        relativni = soubor.relative_to(koren).as_posix()
-        if "obrazy-k-prodeji" not in relativni and "works-for-sale" not in relativni:
+    findings: list[dict] = []
+    for file_path in _html_files(koren):
+        relative = file_path.relative_to(koren).as_posix()
+        if "obrazy-k-prodeji" not in relative and "works-for-sale" not in relative:
             continue
-        text = viditelny_text(soubor.read_text(encoding="utf-8"))
+        text = viditelny_text(file_path.read_text(encoding="utf-8"))
         if "Kč" not in text and "CZK" not in text.upper():
-            nalezy.append({"soubor": relativni, "chybi": "cena"})
-    return nalezy
+            findings.append({"soubor": relative, "chybi": "cena"})
+    return findings
 
 
 # --- celek ------------------------------------------------------------------
 
 def kontrola(koren, ostry: bool, vzorky=None) -> dict:
-    """Všechny kontroly dohromady."""
+    """All the checks together."""
     koren = Path(koren)
-    soubory = _html_soubory(koren)
-    ukazka = najdi(koren, vzorky if vzorky is not None else VYCHOZI_VZORKY) if ostry else []
-    vysledek = {
-        "soubory": len(soubory),
-        "ukazka": ukazka,
+    files = _html_files(koren)
+    demo = najdi(koren, vzorky if vzorky is not None else DEFAULT_SAMPLES) if ostry else []
+    result = {
+        "soubory": len(files),
+        "ukazka": demo,
         "alt": alt_texty(koren),
         "odkazy": odkazy(koren),
         "dvojice": jazykove_dvojice(koren),
         "ceny": ceny(koren),
     }
-    vysledek["nalezu"] = sum(
-        len(vysledek[k]) for k in ("ukazka", "alt", "odkazy", "dvojice", "ceny")
+    result["nalezu"] = sum(
+        len(result[k]) for k in ("ukazka", "alt", "odkazy", "dvojice", "ceny")
     )
-    return vysledek
+    return result
 
 
 # --- CLI --------------------------------------------------------------------
 
-def _popis_nalezu(kategorie: str, nalez: dict) -> str:
-    if kategorie == "ukazka":
-        return f"  {nalez['soubor']}: vzorek {nalez['vzorek']!r} — …{nalez['vyrez']}…"
-    if kategorie == "alt":
-        return f"  {nalez['soubor']}: <img src={nalez['src']!r}> bez alt"
-    if kategorie == "odkazy":
-        return f"  {nalez['soubor']}: slepý odkaz {nalez['href']!r}"
-    return f"  {nalez['soubor']}: chybí {nalez['chybi']}"
+def _describe_finding(category: str, finding: dict) -> str:
+    if category == "ukazka":
+        return f"  {finding['soubor']}: vzorek {finding['vzorek']!r} — …{finding['vyrez']}…"
+    if category == "alt":
+        return f"  {finding['soubor']}: <img src={finding['src']!r}> bez alt"
+    if category == "odkazy":
+        return f"  {finding['soubor']}: slepý odkaz {finding['href']!r}"
+    return f"  {finding['soubor']}: chybí {finding['chybi']}"
 
 
 def main(argv=None) -> int:
@@ -398,16 +399,16 @@ def main(argv=None) -> int:
         print(f"adresář neexistuje: {args.adresar}", file=sys.stderr)
         return 2
 
-    vysledek = kontrola(koren, ostry=args.ostry)
+    result = kontrola(koren, ostry=args.ostry)
     if args.json:
-        print(json.dumps(vysledek, ensure_ascii=False, indent=2))
+        print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
-        for kategorie in ("ukazka", "alt", "odkazy", "dvojice", "ceny"):
-            print(f"{kategorie}: {len(vysledek[kategorie])}")
-        for kategorie in ("ukazka", "alt", "odkazy", "dvojice", "ceny"):
-            for nalez in vysledek[kategorie]:
-                print(_popis_nalezu(kategorie, nalez))
-    return 0 if vysledek["nalezu"] == 0 else 1
+        for category in ("ukazka", "alt", "odkazy", "dvojice", "ceny"):
+            print(f"{category}: {len(result[category])}")
+        for category in ("ukazka", "alt", "odkazy", "dvojice", "ceny"):
+            for finding in result[category]:
+                print(_describe_finding(category, finding))
+    return 0 if result["nalezu"] == 0 else 1
 
 
 if __name__ == "__main__":

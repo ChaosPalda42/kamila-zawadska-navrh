@@ -1,5 +1,7 @@
-"""Akceptační test C-007 — src/lib/administrace.mjs (správa obsahu)."""
+"""Acceptance test C-007 -- `src/lib/administrace.mjs` (keeping the content)."""
 from __future__ import annotations
+
+import pathlib
 
 import pytest
 
@@ -23,13 +25,13 @@ SITE = {
         {"id": "pyro", "nazev": {"cs": "Pyrografie"}, "kapacita": 6, "cena": 2400},
     ],
 }
-TEXTY = {"nav.galerie": {"cs": "Galerie", "en": "Gallery"}}
+TEXTS = {"nav.galerie": {"cs": "Galerie", "en": "Gallery"}}
 
 
 @pytest.fixture()
 def js():
     def call(body, **args):
-        return run_js("administrace.mjs", body, args={"s": SITE, "t": TEXTY, **args})
+        return run_js("administrace.mjs", body, args={"s": SITE, "t": TEXTS, **args})
     return call
 
 
@@ -257,10 +259,45 @@ def test_na_kod_a_zpatky(js):
 
 
 def test_z_kodu_se_nezlomi_a_u_jine_verze_vrati_null(js):
-    for vstup in ['null', '""', '"nic"', '"12"', '"[]"', '"{}"', 'undefined']:
-        assert js(f"out(m.zKodu({vstup}));") is None, vstup
+    for incoming in ['null', '""', '"nic"', '"12"', '"[]"', '"{}"', 'undefined']:
+        assert js(f"out(m.zKodu({incoming}));") is None, incoming
     assert js('out(m.zKodu(JSON.stringify({ dila: [], udalosti: [], kurzy: [], '
               'texty: {}, verze: 99 })));') is None
     assert js('out(m.zKodu(JSON.stringify({ dila: [], udalosti: [], verze: 1 })));') is None
     assert js('out(m.zKodu(JSON.stringify({ dila: [], udalosti: [], kurzy: [], '
               'texty: {}, verze: 1 })).verze);') == 1
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "src/lib/administrace.mjs"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "src/lib/administrace.mjs"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

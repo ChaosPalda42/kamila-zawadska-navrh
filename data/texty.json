@@ -89,12 +89,12 @@
     "en": "Technique"
   },
   "galerie.filtr.styl": {
-    "cs": "Styl",
-    "en": "Style"
+    "cs": "Motiv",
+    "en": "Motif"
   },
   "galerie.filtr.udalost": {
-    "cs": "Událost",
-    "en": "Event"
+    "cs": "Akce",
+    "en": "Events"
   },
   "galerie.filtr.zrusit": {
     "cs": "Zrušit filtry",
@@ -519,5 +519,13 @@
   "404.obrazek-alt": {
     "cs": "Kresba prázdného obrazového rámu na hřebíku",
     "en": "Drawing of an empty picture frame on a nail"
+  },
+  "patka.jazyky": {
+    "cs": "Jazyk",
+    "en": "Language"
+  },
+  "bio.portret-alt": {
+    "cs": "Kamila Zawadská ve svém ateliéru před stěnou s vypalovanými pracemi",
+    "en": "Kamila Zawadská in her studio in front of a wall of pyrography works"
   }
 }

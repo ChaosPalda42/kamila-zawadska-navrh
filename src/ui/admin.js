@@ -1,22 +1,23 @@
-/* Administrace v prohlížeči.
+/* The admin in the browser.
 
-   Rozhodování je v knihovnách (KZ.administrace, KZ.nahrani, KZ.udalost,
-   KZ["texty-sekce"]) a prošlo akceptačními testy; tady je jen DOM: vyplnit
-   formulář, přečíst ho, vykreslit seznam, uložit do localStorage.
+   The deciding is in the libraries (`KZ.administrace`, `KZ.nahrani`,
+   `KZ.udalost`, `KZ["texty-sekce"]`) and has been through the acceptance
+   tests; here there is only DOM: fill a form, read it, draw a list, save to
+   localStorage.
 
-   V ukázce stojí administrace za ukázkovou vrátnicí a všechno žije v
-   prohlížeči jednoho člověka. Nahrané fotky se drží jen v paměti karty
-   (objectURL) — data URL by úložiště prohlížeče rozfoukaly. Na ostrém webu
-   jde obojí na server; v administraci je to napsané, ať klientka neví jen
-   od nás.
+   In the demo the admin stands behind a demonstration door and everything
+   lives in one person's browser. An uploaded photo is held in the tab's
+   memory alone (objectURL) -- data URLs would blow the browser's storage
+   apart. On the live site both go to a server; the admin says so, so the
+   client does not have it from us only.
 
-   Nic se tu nerozbije do té míry, aby se nedalo pokračovat: každé uložení
-   projde kontrolou z C-007 a chyby se vypisují k políčkům. */
+   Nothing here breaks so far that one cannot carry on: every save goes
+   through the check from C-007 and the errors are printed by the fields. */
 (function () {
   "use strict";
   var doc = document;
-  var koren = doc.querySelector("[data-admin]");
-  if (!koren) return;
+  var root = doc.querySelector("[data-admin]");
+  if (!root) return;
 
   var A = KZ.administrace;
   var N = KZ.nahrani;
@@ -25,21 +26,22 @@
   var D = KZ.dila;
   var P = KZ.preklad;
 
-  var KLIC = "kz-administrace";
-  var jazyk = (doc.documentElement.lang || "cs").indexOf("en") === 0 ? "en" : "cs";
+  var KEY = "kz-administrace";
+  var language = (doc.documentElement.lang || "cs").indexOf("en") === 0 ? "en" : "cs";
 
-  function json(volba, zaloha) {
-    var prvek = doc.querySelector(volba);
-    if (!prvek) return zaloha;
-    try { return JSON.parse(prvek.textContent); } catch (e) { return zaloha; }
+  function json(volba, backup) {
+    var element = doc.querySelector(volba);
+    if (!element) return backup;
+    try { return JSON.parse(element.textContent); } catch (e) { return backup; }
   }
   var site = json("script[data-site]", { dila: [], udalosti: [], kurzy: [] });
-  var puvodniTexty = json("script[data-texty]", {});
+  var originalTexts = json("script[data-texty]", {});
   var L = json("script[data-popisky]", {});
 
-  /* Hlášky ke kontrolám z C-007 a C-013. Popisky dílny nepatří do
-     data/texty.json — v editoru textů by jen překážely. */
-  var CHYBY = {
+  /* The messages for the checks from C-007 and C-013. The workshop's own
+     labels do not belong in `data/texty.json` -- in the text editor they
+     would only be in the way. */
+  var ERRORS = {
     cs: {
       slug: "Adresa (slug) nesmí být prázdná.",
       nazev: "Název česky je povinný.",
@@ -73,186 +75,188 @@
       ulozeno: "Saved.",
     },
   };
-  function ch(klic) { return (CHYBY[jazyk] || CHYBY.cs)[klic] || klic; }
+  function ch(klic) { return (ERRORS[language] || ERRORS.cs)[klic] || klic; }
   function p(klic) { return L[klic] || klic; }
 
-  var SEKCE_NAZVY = {
+  var SECTION_NAMES = {
     cs: { uvod: "Úvod", galerie: "Galerie", eshop: "E-shop", kalendar: "Kalendář", kurzy: "Kurzy", bio: "O mně", kontakt: "Kontakt", navigace: "Navigace", ostatni: "Ostatní" },
     en: { uvod: "Home", galerie: "Gallery", eshop: "Shop", kalendar: "Calendar", kurzy: "Courses", bio: "About", kontakt: "Contact", navigace: "Navigation", ostatni: "Other" },
   };
 
-  var stav = nacti() || A.zaloz(site, puvodniTexty);
-  /* Náhledy nahraných fotek. Klíč je slug díla, hodnota je galerie z
-     C-013. Do localStorage nejde — objectURL po zavření karty nežije. */
-  var fotky = {};
+  var stav = nacti() || A.zaloz(site, originalTexts);
+  /* Previews of the uploaded photographs. The key is the work's slug, the
+     value is the gallery from C-013. It does not go to localStorage -- an
+     objectURL does not outlive the tab. */
+  var photos = {};
   var upravuje = { dilo: null, udalost: null, kurz: null };
-  var vybranaSekce = "uvod";
+  var selectedSection = "uvod";
 
   function nacti() {
     try {
-      var text = window.localStorage.getItem(KLIC);
+      var text = window.localStorage.getItem(KEY);
       return text ? A.zKodu(text) : null;
     } catch (e) { return null; }
   }
   function uloz() {
-    try { window.localStorage.setItem(KLIC, A.naKod(stav)); } catch (e) { /* soukromé okno */ }
+    try { window.localStorage.setItem(KEY, A.naKod(stav)); } catch (e) { /* a private window */ }
   }
-  function zahod() {
-    try { window.localStorage.removeItem(KLIC); } catch (e) { /* nic */ }
+  function discard() {
+    try { window.localStorage.removeItem(KEY); } catch (e) { /* nothing */ }
   }
 
-  function v(volba, kde) { return (kde || koren).querySelector(volba); }
-  function vse(volba, kde) {
-    return Array.prototype.slice.call((kde || koren).querySelectorAll(volba));
+  function v(volba, scope) { return (scope || root).querySelector(volba); }
+  function all(volba, scope) {
+    return Array.prototype.slice.call((scope || root).querySelectorAll(volba));
   }
-  function text(hodnota) {
-    var prvek = doc.createElement("span");
-    prvek.textContent = hodnota == null ? "" : String(hodnota);
-    return prvek.innerHTML;
+  function text(value) {
+    var element = doc.createElement("span");
+    element.textContent = value == null ? "" : String(value);
+    return element.innerHTML;
   }
-  function jazykem(hodnota) { return P.pole(hodnota, jazyk); }
-  function cs(hodnota) {
-    if (hodnota == null) return "";
-    return typeof hodnota === "string" ? hodnota : (hodnota.cs || "");
+  function jazykem(value) { return P.pole(value, language); }
+  function cs(value) {
+    if (value == null) return "";
+    return typeof value === "string" ? value : (value.cs || "");
   }
-  function en(hodnota) {
-    if (hodnota == null || typeof hodnota === "string") return "";
-    return hodnota.en || "";
+  function en(value) {
+    if (value == null || typeof value === "string") return "";
+    return value.en || "";
   }
   function dvojjazycne(textCs, textEn) {
-    var hodnota = { cs: textCs };
-    if (textEn) hodnota.en = textEn;
-    return hodnota;
+    var value = { cs: textCs };
+    if (textEn) value.en = textEn;
+    return value;
   }
-  function cislo(hodnota) {
-    var n = parseInt(String(hodnota).replace(/\s/g, ""), 10);
+  function number(value) {
+    var n = parseInt(String(value).replace(/\s/g, ""), 10);
     return Number.isFinite(n) ? n : null;
   }
 
-  /* ---------- vrátnice ---------- */
+  /* ---------- the door ---------- */
 
   function vratnice() {
     var clona = doc.querySelector("[data-vratnice]");
     var form = doc.querySelector("[data-vratnice-form]");
-    if (!clona || !form) { koren.hidden = false; return; }
+    if (!clona || !form) { root.hidden = false; return; }
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       clona.classList.add("pryc");
-      koren.hidden = false;
+      root.hidden = false;
       window.setTimeout(function () {
         if (clona.parentNode) clona.parentNode.removeChild(clona);
       }, 500);
-      var prvni = v('[data-zalozka="dila"]');
-      if (prvni) prvni.focus();
+      var first = v('[data-zalozka="dila"]');
+      if (first) first.focus();
     });
   }
 
-  /* ---------- oddíly ---------- */
+  /* ---------- the sections ---------- */
 
-  function oddily() {
-    var tlacitka = vse("[data-zalozka]");
-    tlacitka.forEach(function (tl) {
+  function sections() {
+    var buttons = all("[data-zalozka]");
+    buttons.forEach(function (tl) {
       tl.addEventListener("click", function () {
         var id = tl.getAttribute("data-zalozka");
-        tlacitka.forEach(function (x) {
+        buttons.forEach(function (x) {
           x.setAttribute("aria-selected", x === tl ? "true" : "false");
         });
-        vse("[data-panel]").forEach(function (panel) {
+        all("[data-panel]").forEach(function (panel) {
           panel.hidden = panel.getAttribute("data-panel") !== id;
         });
       });
     });
   }
 
-  /* Čeština má u počtů tři tvary: 1 obraz, 2–4 obrazy, 5 obrazů. „3 kurzů"
-     je přesně to, čeho si člověk na cizí administraci všimne první. */
-  function mnozstvi(kolik, tvary) {
-    var tvar = kolik === 1 ? tvary[0] : (kolik >= 2 && kolik <= 4 ? tvary[1] : tvary[2]);
-    return kolik + " " + tvar;
+  /* Czech has three forms for counts: 1 `obraz`, 2-4 `obrazy`, 5 `obrazu`.
+     "3 `kurzu`" is exactly what one notices first in somebody else's
+     admin. */
+  function quantity(howMany, forms) {
+    var shape = howMany === 1 ? forms[0] : (howMany >= 2 && howMany <= 4 ? forms[1] : forms[2]);
+    return howMany + " " + shape;
   }
 
   function prehled() {
-    var prvek = v("[data-pocty]");
-    if (!prvek) return;
+    var element = v("[data-pocty]");
+    if (!element) return;
     var po = A.pocty(stav);
-    var radky = jazyk === "en"
-      ? [mnozstvi(po.dila, ["work", "works", "works"]), po.vGalerii + " in the gallery",
-         po.vEshopu + " for sale", mnozstvi(po.udalosti, ["event", "events", "events"]),
-         mnozstvi(po.kurzy, ["course", "courses", "courses"])]
-      : [mnozstvi(po.dila, ["obraz", "obrazy", "obrazů"]), po.vGalerii + " v galerii",
-         po.vEshopu + " k prodeji", mnozstvi(po.udalosti, ["akce", "akce", "akcí"]),
-         mnozstvi(po.kurzy, ["kurz", "kurzy", "kurzů"])];
-    prvek.textContent = radky.join(" · ");
+    var lines = language === "en"
+      ? [quantity(po.dila, ["work", "works", "works"]), po.vGalerii + " in the gallery",
+         po.vEshopu + " for sale", quantity(po.udalosti, ["event", "events", "events"]),
+         quantity(po.kurzy, ["course", "courses", "courses"])]
+      : [quantity(po.dila, ["obraz", "obrazy", "obrazů"]), po.vGalerii + " v galerii",
+         po.vEshopu + " k prodeji", quantity(po.udalosti, ["akce", "akce", "akcí"]),
+         quantity(po.kurzy, ["kurz", "kurzy", "kurzů"])];
+    element.textContent = lines.join(" · ");
   }
 
-  /* ---------- chyby u políček ---------- */
+  /* ---------- errors by the fields ---------- */
 
-  function vycistiChyby(form) {
-    vse("[data-chyba]", form).forEach(function (prvek) {
-      prvek.hidden = true;
-      prvek.textContent = "";
+  function clearErrors(form) {
+    all("[data-chyba]", form).forEach(function (element) {
+      element.hidden = true;
+      element.textContent = "";
     });
-    vse(".pole", form).forEach(function (prvek) { prvek.classList.remove("spatne"); });
+    all(".pole", form).forEach(function (element) { element.classList.remove("spatne"); });
   }
-  function ukazChyby(form, klice, prekryv) {
-    vycistiChyby(form);
-    // Adresa se dopočítá z názvu, takže u prázdného formuláře by svítily dvě
-    // chyby za jednu nevyplněnou věc. Stačí ta o názvu.
+  function showErrors(form, klice, overlay) {
+    clearErrors(form);
+    // The address is worked out from the name, so an empty form would light up
+    // two errors for one thing left blank. The one about the name is enough.
     if (klice.indexOf("nazev") >= 0) {
       klice = klice.filter(function (k) { return k !== "slug" && k !== "id"; });
     }
     klice.forEach(function (klic) {
-      var kam = (prekryv && prekryv[klic]) || klic;
-      var pole = v('[data-pole="' + kam + '"]', form);
-      if (!pole) return;
-      pole.classList.add("spatne");
-      var hlaska = v("[data-chyba]", pole);
-      if (hlaska) {
-        hlaska.textContent = ch(klic);
-        hlaska.hidden = false;
+      var destination = (overlay && overlay[klic]) || klic;
+      var field = v('[data-pole="' + destination + '"]', form);
+      if (!field) return;
+      field.classList.add("spatne");
+      var message = v("[data-chyba]", field);
+      if (message) {
+        message.textContent = ch(klic);
+        message.hidden = false;
       }
-      var detaily = pole.closest("details");
+      var detaily = field.closest("details");
       if (detaily) detaily.open = true;
     });
     if (klice.length) {
-      var prvni = v(".pole.spatne input, .pole.spatne select, .pole.spatne textarea", form);
-      if (prvni) prvni.focus();
+      var first = v(".pole.spatne input, .pole.spatne select, .pole.spatne textarea", form);
+      if (first) first.focus();
     }
   }
-  function hotovo(form) {
-    var znacka = v("[data-ulozeno]", form);
-    if (!znacka) return;
-    znacka.textContent = ch("ulozeno");
-    znacka.hidden = false;
-    window.setTimeout(function () { znacka.hidden = true; }, 2200);
+  function done(form) {
+    var tag = v("[data-ulozeno]", form);
+    if (!tag) return;
+    tag.textContent = ch("ulozeno");
+    tag.hidden = false;
+    window.setTimeout(function () { tag.hidden = true; }, 2200);
   }
 
   /* ---------- obrazy ---------- */
 
-  var formDilo = v("[data-form-dilo]");
+  var formWork = v("[data-form-dilo]");
 
-  function galerieDila(dilo) {
-    if (!dilo) return { hlavni: "", obrazky: [] };
-    if (!fotky[dilo.slug]) fotky[dilo.slug] = N.zaloz(dilo);
-    return fotky[dilo.slug];
+  function galleryWorks(work) {
+    if (!work) return { hlavni: "", obrazky: [] };
+    if (!photos[work.slug]) photos[work.slug] = N.zaloz(work);
+    return photos[work.slug];
   }
 
-  function vykresliFotky() {
-    var seznam = v("[data-seznam-fotek]", formDilo);
-    if (!seznam) return;
-    var galerie = aktualniGalerie();
-    seznam.innerHTML = galerie.obrazky.map(function (o) {
-      var jeHlavni = o.klic === galerie.hlavni;
-      var nahled = o.data
+  function renderPhotos() {
+    var items = v("[data-seznam-fotek]", formWork);
+    if (!items) return;
+    var gallery = currentGallery();
+    items.innerHTML = gallery.obrazky.map(function (o) {
+      var isMain = o.klic === gallery.hlavni;
+      var preview = o.data
         ? '<img src="' + text(o.data) + '" alt="">'
         : '<span class="bez-nahledu" aria-hidden="true"></span>';
-      return '<li' + (jeHlavni ? ' class="hlavni"' : "") + ' data-fotka="' + text(o.klic) + '">' +
-        '<span class="nahled">' + nahled + "</span>" +
+      return '<li' + (isMain ? ' class="hlavni"' : "") + ' data-fotka="' + text(o.klic) + '">' +
+        '<span class="nahled">' + preview + "</span>" +
         '<span class="o-fotce"><strong>' + text(o.nazev) + "</strong>" +
         (o.velikost ? '<span class="napoveda">' + text(N.lidskaVelikost(o.velikost)) + "</span>" : "") +
-        (jeHlavni ? '<span class="odznak">' + text(p("hlavni")) + "</span>" : "") + "</span>" +
+        (isMain ? '<span class="odznak">' + text(p("hlavni")) + "</span>" : "") + "</span>" +
         '<span class="s-fotkou">' +
-        (jeHlavni ? "" : '<button type="button" data-fotka-hlavni title="' + text(p("dejHlavni")) + '">' + text(p("dejHlavni")) + "</button>") +
+        (isMain ? "" : '<button type="button" data-fotka-hlavni title="' + text(p("dejHlavni")) + '">' + text(p("dejHlavni")) + "</button>") +
         '<button type="button" data-fotka-nahoru title="' + text(p("nahoru")) + '" aria-label="' + text(p("nahoru")) + '">↑</button>' +
         '<button type="button" data-fotka-dolu title="' + text(p("dolu")) + '" aria-label="' + text(p("dolu")) + '">↓</button>' +
         '<button type="button" data-fotka-smaz title="' + text(p("smazat")) + '" aria-label="' + text(p("smazat")) + '">×</button>' +
@@ -260,77 +264,77 @@
     }).join("");
   }
 
-  function klicGalerie() { return upravuje.dilo || "#novy"; }
-  function nastavGalerii(galerie) { fotky[klicGalerie()] = galerie; vykresliFotky(); }
-  function aktualniGalerie() {
-    var klic = klicGalerie();
-    if (!fotky[klic]) fotky[klic] = { hlavni: "", obrazky: [] };
-    return fotky[klic];
+  function galleryKey() { return upravuje.dilo || "#novy"; }
+  function nastavGalerii(gallery) { photos[galleryKey()] = gallery; renderPhotos(); }
+  function currentGallery() {
+    var klic = galleryKey();
+    if (!photos[klic]) photos[klic] = { hlavni: "", obrazky: [] };
+    return photos[klic];
   }
 
-  function pridejSoubory(seznam) {
-    var chyby = [];
-    Array.prototype.slice.call(seznam).forEach(function (soubor) {
-      var popis = {
-        klic: soubor.name + ":" + soubor.size,
-        nazev: soubor.name,
-        typ: soubor.type,
-        velikost: soubor.size,
+  function addFiles(items) {
+    var errors = [];
+    Array.prototype.slice.call(items).forEach(function (file) {
+      var description = {
+        klic: file.name + ":" + file.size,
+        nazev: file.name,
+        typ: file.type,
+        velikost: file.size,
         data: "",
       };
-      var spatne = N.zkontroluj(popis);
-      if (spatne.length) {
-        spatne.forEach(function (k) {
-          var hlaska = ch(k === "typ" ? "typSouboru" : k);
-          if (chyby.indexOf(hlaska) === -1) chyby.push(hlaska);
+      var wrong = N.zkontroluj(description);
+      if (wrong.length) {
+        wrong.forEach(function (k) {
+          var message = ch(k === "typ" ? "typSouboru" : k);
+          if (errors.indexOf(message) === -1) errors.push(message);
         });
         return;
       }
-      popis.data = window.URL ? window.URL.createObjectURL(soubor) : "";
-      var vysledek = N.pridej(aktualniGalerie(), popis);
-      fotky[klicGalerie()] = vysledek.galerie;
+      description.data = window.URL ? window.URL.createObjectURL(file) : "";
+      var result = N.pridej(currentGallery(), description);
+      photos[galleryKey()] = result.galerie;
     });
-    vykresliFotky();
-    var hlaska = v("[data-chyba-fotky]", formDilo);
-    if (hlaska) {
-      hlaska.textContent = chyby.join(" ");
-      hlaska.hidden = chyby.length === 0;
+    renderPhotos();
+    var message = v("[data-chyba-fotky]", formWork);
+    if (message) {
+      message.textContent = errors.join(" ");
+      message.hidden = errors.length === 0;
     }
   }
 
-  function fotkyObsluha() {
-    var vstup = v("[data-vstup-fotky]", formDilo);
-    var pustit = v("[data-pustit]", formDilo);
-    var seznam = v("[data-seznam-fotek]", formDilo);
-    if (vstup) {
-      vstup.addEventListener("change", function () {
-        pridejSoubory(vstup.files);
-        vstup.value = "";
+  function photoHandler() {
+    var incoming = v("[data-vstup-fotky]", formWork);
+    var pustit = v("[data-pustit]", formWork);
+    var items = v("[data-seznam-fotek]", formWork);
+    if (incoming) {
+      incoming.addEventListener("change", function () {
+        addFiles(incoming.files);
+        incoming.value = "";
       });
     }
     if (pustit) {
-      ["dragenter", "dragover"].forEach(function (jmeno) {
-        pustit.addEventListener(jmeno, function (e) {
+      ["dragenter", "dragover"].forEach(function (name) {
+        pustit.addEventListener(name, function (e) {
           e.preventDefault();
           pustit.classList.add("nad");
         });
       });
-      ["dragleave", "drop"].forEach(function (jmeno) {
-        pustit.addEventListener(jmeno, function () { pustit.classList.remove("nad"); });
+      ["dragleave", "drop"].forEach(function (name) {
+        pustit.addEventListener(name, function () { pustit.classList.remove("nad"); });
       });
       pustit.addEventListener("drop", function (e) {
         e.preventDefault();
-        if (e.dataTransfer && e.dataTransfer.files) pridejSoubory(e.dataTransfer.files);
+        if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
       });
     }
-    if (seznam) {
-      seznam.addEventListener("click", function (e) {
+    if (items) {
+      items.addEventListener("click", function (e) {
         var tl = e.target.closest("button");
         if (!tl) return;
         var li = tl.closest("[data-fotka]");
         if (!li) return;
         var klic = li.getAttribute("data-fotka");
-        var g = aktualniGalerie();
+        var g = currentGallery();
         if (tl.hasAttribute("data-fotka-hlavni")) nastavGalerii(N.nastavHlavni(g, klic));
         else if (tl.hasAttribute("data-fotka-nahoru")) nastavGalerii(N.posun(g, klic, -1));
         else if (tl.hasAttribute("data-fotka-dolu")) nastavGalerii(N.posun(g, klic, 1));
@@ -339,56 +343,56 @@
     }
   }
 
-  function hledejDilo(slug) {
+  function findWork(slug) {
     for (var i = 0; i < stav.dila.length; i += 1) {
       if (stav.dila[i].slug === slug) return stav.dila[i];
     }
     return null;
   }
 
-  function vyplnDilo(dilo) {
-    var f = formDilo.elements;
-    f.nazev.value = cs(dilo && dilo.nazev);
-    f.nazevEn.value = en(dilo && dilo.nazev);
-    f.rok.value = dilo && dilo.rok ? dilo.rok : "";
-    f.rozmer.value = (dilo && dilo.rozmer) || "";
-    f.cena.value = dilo && typeof dilo.cena === "number" ? dilo.cena : "";
-    f.stav.value = (dilo && dilo.stav) || "v-prodeji";
-    f.technika.value = (dilo && dilo.technika) || "";
-    f.styl.value = (dilo && dilo.styl) || "";
-    f.album.value = (dilo && dilo.album) || "";
-    f.popis.value = cs(dilo && dilo.popis);
-    f.popisEn.value = en(dilo && dilo.popis);
-    f.vGalerii.checked = dilo ? dilo.vGalerii === true : true;
-    f.vEshopu.checked = dilo ? dilo.vEshopu === true : false;
-    f.slug.value = (dilo && dilo.slug) || "";
-    upravuje.dilo = dilo ? dilo.slug : null;
-    if (dilo) galerieDila(dilo); else fotky["#novy"] = { hlavni: "", obrazky: [] };
-    v("[data-rezim-dilo]").textContent = dilo
-      ? p("upravujete") + ": " + jazykem(dilo.nazev)
+  function fillWork(work) {
+    var f = formWork.elements;
+    f.nazev.value = cs(work && work.nazev);
+    f.nazevEn.value = en(work && work.nazev);
+    f.rok.value = work && work.rok ? work.rok : "";
+    f.rozmer.value = (work && work.rozmer) || "";
+    f.cena.value = work && typeof work.cena === "number" ? work.cena : "";
+    f.stav.value = (work && work.stav) || "v-prodeji";
+    f.technika.value = (work && work.technika) || "";
+    f.styl.value = (work && work.styl) || "";
+    f.album.value = (work && work.album) || "";
+    f.popis.value = cs(work && work.popis);
+    f.popisEn.value = en(work && work.popis);
+    f.vGalerii.checked = work ? work.vGalerii === true : true;
+    f.vEshopu.checked = work ? work.vEshopu === true : false;
+    f.slug.value = (work && work.slug) || "";
+    upravuje.dilo = work ? work.slug : null;
+    if (work) galleryWorks(work); else photos["#novy"] = { hlavni: "", obrazky: [] };
+    v("[data-rezim-dilo]").textContent = work
+      ? p("upravujete") + ": " + jazykem(work.nazev)
       : p("novy");
-    v("[data-zrus-dilo]").hidden = !dilo;
-    vycistiChyby(formDilo);
-    vykresliFotky();
+    v("[data-zrus-dilo]").hidden = !work;
+    clearErrors(formWork);
+    renderPhotos();
   }
 
-  function seznamDel() {
-    var kam = v("[data-seznam-dila]");
-    if (!kam) return;
+  function workList() {
+    var destination = v("[data-seznam-dila]");
+    if (!destination) return;
     if (!stav.dila.length) {
-      kam.innerHTML = '<tr><td colspan="3">' + text(p("prazdno")) + "</td></tr>";
+      destination.innerHTML = '<tr><td colspan="3">' + text(p("prazdno")) + "</td></tr>";
       return;
     }
-    kam.innerHTML = stav.dila.map(function (d) {
-      var kde = [];
-      if (d.vGalerii === true) kde.push(p("vGalerii"));
-      if (d.vEshopu === true) kde.push(p("vEshopu"));
-      var pocetFotek = fotky[d.slug] ? fotky[d.slug].obrazky.length : (d.obrazek ? 1 : 0);
+    destination.innerHTML = stav.dila.map(function (d) {
+      var scope = [];
+      if (d.vGalerii === true) scope.push(p("vGalerii"));
+      if (d.vEshopu === true) scope.push(p("vEshopu"));
+      var photoCount = photos[d.slug] ? photos[d.slug].obrazky.length : (d.obrazek ? 1 : 0);
       return '<tr data-dilo="' + text(d.slug) + '">' +
         "<td><strong>" + text(jazykem(d.nazev)) + "</strong>" +
         '<span class="napoveda">' + text(d.slug) + "</span></td>" +
-        "<td>" + text(P.t(stav.texty, "stav." + d.stav, jazyk)) + '<span class="napoveda">' +
-        text(kde.join(" · ")) + " · " + pocetFotek + "×</span></td>" +
+        "<td>" + text(P.t(stav.texty, "stav." + d.stav, language)) + '<span class="napoveda">' +
+        text(scope.join(" · ")) + " · " + photoCount + "×</span></td>" +
         '<td class="akce-radku">' +
         '<button type="button" data-uprav-dilo>' + text(p("upravit")) + "</button> " +
         '<button type="button" data-smaz-dilo>' + text(p("smazat")) + "</button>" +
@@ -396,84 +400,84 @@
     }).join("");
   }
 
-  function potvrzeniSmazani(radek, akce) {
-    var cil = v(".akce-radku", radek);
-    if (!cil) return;
-    cil.innerHTML = '<span class="potvrzeni">' + text(p("opravduSmazat")) +
+  function potvrzeniSmazani(line, event) {
+    var target = v(".akce-radku", line);
+    if (!target) return;
+    target.innerHTML = '<span class="potvrzeni">' + text(p("opravduSmazat")) +
       ' <button type="button" data-ano>' + text(p("ano")) + "</button> " +
       '<button type="button" data-ne>' + text(p("ne")) + "</button></span>";
-    v("[data-ano]", cil).focus();
-    v("[data-ano]", cil).addEventListener("click", akce);
-    v("[data-ne]", cil).addEventListener("click", function () { prekresli(); });
+    v("[data-ano]", target).focus();
+    v("[data-ano]", target).addEventListener("click", event);
+    v("[data-ne]", target).addEventListener("click", function () { redraw(); });
   }
 
-  if (formDilo) {
-    formDilo.addEventListener("submit", function (e) {
+  if (formWork) {
+    formWork.addEventListener("submit", function (e) {
       e.preventDefault();
-      var f = formDilo.elements;
-      var nazevCs = f.nazev.value.trim();
-      var slug = f.slug.value.trim() || D.slug(nazevCs);
-      var galerie = aktualniGalerie();
-      var dilo = {
+      var f = formWork.elements;
+      var nameCs = f.nazev.value.trim();
+      var slug = f.slug.value.trim() || D.slug(nameCs);
+      var gallery = currentGallery();
+      var work = {
         slug: slug,
-        nazev: dvojjazycne(nazevCs, f.nazevEn.value.trim()),
+        nazev: dvojjazycne(nameCs, f.nazevEn.value.trim()),
         technika: f.technika.value,
         styl: f.styl.value,
         album: f.album.value,
-        rok: cislo(f.rok.value),
+        rok: number(f.rok.value),
         rozmer: f.rozmer.value.trim(),
-        cena: cislo(f.cena.value),
+        cena: number(f.cena.value),
         stav: f.stav.value,
         vGalerii: f.vGalerii.checked,
         vEshopu: f.vEshopu.checked,
         popis: dvojjazycne(f.popis.value.trim(), f.popisEn.value.trim()),
       };
-      var stary = upravuje.dilo ? hledejDilo(upravuje.dilo) : null;
-      dilo.obrazek = galerie.hlavni || (stary ? stary.obrazek : "") || "";
-      dilo.fotky = galerie.obrazky.map(function (o) { return o.nazev; });
-      if (stary && stary.alt) dilo.alt = stary.alt;
-      if (dilo.cena === null) delete dilo.cena;
-      if (dilo.rok === null) delete dilo.rok;
-      var vysledek = A.ulozDilo(stav, dilo);
-      if (vysledek.chyby.length) {
-        ukazChyby(formDilo, vysledek.chyby, { nikde: "kde" });
+      var old = upravuje.dilo ? findWork(upravuje.dilo) : null;
+      work.obrazek = gallery.hlavni || (old ? old.obrazek : "") || "";
+      work.fotky = gallery.obrazky.map(function (o) { return o.nazev; });
+      if (old && old.alt) work.alt = old.alt;
+      if (work.cena === null) delete work.cena;
+      if (work.rok === null) delete work.rok;
+      var result = A.ulozDilo(stav, work);
+      if (result.chyby.length) {
+        showErrors(formWork, result.chyby, { nikde: "kde" });
         return;
       }
-      // Fotky se vedou pod slugem; po přejmenování je přesuneme k novému.
+      // The photographs are kept under the slug; after a rename we move them to the new one.
       if (upravuje.dilo && upravuje.dilo !== slug) {
-        fotky[slug] = galerie;
-        delete fotky[upravuje.dilo];
+        photos[slug] = gallery;
+        delete photos[upravuje.dilo];
       } else if (!upravuje.dilo) {
-        fotky[slug] = galerie;
-        delete fotky["#novy"];
+        photos[slug] = gallery;
+        delete photos["#novy"];
       }
-      stav = vysledek.stav;
+      stav = result.stav;
       uloz();
-      vyplnDilo(null);
-      prekresli();
+      fillWork(null);
+      redraw();
     });
-    v("[data-zrus-dilo]").addEventListener("click", function () { vyplnDilo(null); });
-    var seznamDilTelo = v("[data-seznam-dila]");
-    seznamDilTelo.addEventListener("click", function (e) {
-      var radek = e.target.closest("[data-dilo]");
-      if (!radek) return;
-      var slug = radek.getAttribute("data-dilo");
+    v("[data-zrus-dilo]").addEventListener("click", function () { fillWork(null); });
+    var workListBody = v("[data-seznam-dila]");
+    workListBody.addEventListener("click", function (e) {
+      var line = e.target.closest("[data-dilo]");
+      if (!line) return;
+      var slug = line.getAttribute("data-dilo");
       if (e.target.closest("[data-uprav-dilo]")) {
-        vyplnDilo(hledejDilo(slug));
-        formDilo.scrollIntoView({ block: "start" });
+        fillWork(findWork(slug));
+        formWork.scrollIntoView({ block: "start" });
       } else if (e.target.closest("[data-smaz-dilo]")) {
-        potvrzeniSmazani(radek, function () {
+        potvrzeniSmazani(line, function () {
           stav = A.smazDilo(stav, slug);
-          if (upravuje.dilo === slug) vyplnDilo(null);
+          if (upravuje.dilo === slug) fillWork(null);
           uloz();
-          prekresli();
+          redraw();
         });
       }
     });
-    fotkyObsluha();
+    photoHandler();
   }
 
-  /* ---------- akce v kalendáři ---------- */
+  /* ---------- events in the calendar ---------- */
 
   var formUdalost = v("[data-form-udalost]");
 
@@ -496,27 +500,27 @@
       ? p("upravujete") + ": " + jazykem(u.nazev)
       : p("novaAkce");
     v("[data-zrus-udalost]").hidden = !u;
-    vycistiChyby(formUdalost);
+    clearErrors(formUdalost);
   }
 
-  function seznamUdalosti() {
-    var kam = v("[data-seznam-udalosti]");
-    if (!kam) return;
-    var dnes = new Date().toISOString().slice(0, 10);
-    var serazene = U.poradi(stav.udalosti, dnes);
-    if (!serazene.length) {
-      kam.innerHTML = '<tr><td colspan="3">' + text(p("prazdno")) + "</td></tr>";
+  function eventList() {
+    var destination = v("[data-seznam-udalosti]");
+    if (!destination) return;
+    var today = new Date().toISOString().slice(0, 10);
+    var sorted = U.poradi(stav.udalosti, today);
+    if (!sorted.length) {
+      destination.innerHTML = '<tr><td colspan="3">' + text(p("prazdno")) + "</td></tr>";
       return;
     }
-    kam.innerHTML = serazene.map(function (id) {
+    destination.innerHTML = sorted.map(function (id) {
       var u = U.podleId(stav.udalosti, id);
-      var kdy = u.od + (u.do ? " – " + u.do : "");
-      var stavAkce = U.stav(u, dnes);
+      var when = u.od + (u.do ? " – " + u.do : "");
+      var eventState = U.stav(u, today);
       return '<tr data-udalost="' + text(u.id) + '">' +
         "<td><strong>" + text(jazykem(u.nazev)) + "</strong>" +
         '<span class="napoveda">' + text(u.id) + "</span></td>" +
-        "<td>" + text(kdy) + '<span class="napoveda">' +
-        text(P.t(stav.texty, "kalendar.typ." + u.typ, jazyk)) + " · " + text(p("stavAkce." + stavAkce)) +
+        "<td>" + text(when) + '<span class="napoveda">' +
+        text(P.t(stav.texty, "kalendar.typ." + u.typ, language)) + " · " + text(p("stavAkce." + eventState)) +
         (u.aktualita === true ? " · " + text(p("aktualita")) : "") + "</span></td>" +
         '<td class="akce-radku">' +
         '<button type="button" data-uprav-udalost>' + text(p("upravit")) + "</button> " +
@@ -529,66 +533,66 @@
     formUdalost.addEventListener("submit", function (e) {
       e.preventDefault();
       var f = formUdalost.elements;
-      var nazevCs = f.nazev.value.trim();
-      var id = f.id.value.trim() || D.slug(nazevCs);
-      var stary = upravuje.udalost ? U.podleId(stav.udalosti, upravuje.udalost) : null;
-      var mistoCs = f.misto.value.trim();
+      var nameCs = f.nazev.value.trim();
+      var id = f.id.value.trim() || D.slug(nameCs);
+      var old = upravuje.udalost ? U.podleId(stav.udalosti, upravuje.udalost) : null;
+      var placeCs = f.misto.value.trim();
       var u = {
         id: id,
         typ: f.typ.value,
         album: f.album.value,
-        nazev: dvojjazycne(nazevCs, f.nazevEn.value.trim()),
+        nazev: dvojjazycne(nameCs, f.nazevEn.value.trim()),
         od: f.od.value,
         do: f.do.value,
         cas: f.cas.value,
-        // Místo se zadává česky; anglické zůstane, dokud ho někdo nepřepíše.
-        misto: { cs: mistoCs, en: (stary && en(stary.misto)) || mistoCs },
+        // The place is entered in Czech; the English one stays until somebody rewrites it.
+        misto: { cs: placeCs, en: (old && en(old.misto)) || placeCs },
         popis: dvojjazycne(f.popis.value.trim(), f.popisEn.value.trim()),
         aktualita: f.aktualita.checked,
       };
-      if (stary && stary.obrazek) u.obrazek = stary.obrazek;
-      var vysledek = A.ulozUdalost(stav, u);
-      if (vysledek.chyby.length) {
-        ukazChyby(formUdalost, vysledek.chyby);
+      if (old && old.obrazek) u.obrazek = old.obrazek;
+      var result = A.ulozUdalost(stav, u);
+      if (result.chyby.length) {
+        showErrors(formUdalost, result.chyby);
         return;
       }
-      stav = vysledek.stav;
+      stav = result.stav;
       uloz();
       vyplnUdalost(null);
-      prekresli();
+      redraw();
     });
     v("[data-zrus-udalost]").addEventListener("click", function () { vyplnUdalost(null); });
     v("[data-seznam-udalosti]").addEventListener("click", function (e) {
-      var radek = e.target.closest("[data-udalost]");
-      if (!radek) return;
-      var id = radek.getAttribute("data-udalost");
+      var line = e.target.closest("[data-udalost]");
+      if (!line) return;
+      var id = line.getAttribute("data-udalost");
       if (e.target.closest("[data-uprav-udalost]")) {
         vyplnUdalost(U.podleId(stav.udalosti, id));
         formUdalost.scrollIntoView({ block: "start" });
       } else if (e.target.closest("[data-smaz-udalost]")) {
-        potvrzeniSmazani(radek, function () {
+        potvrzeniSmazani(line, function () {
           stav = A.smazUdalost(stav, id);
           if (upravuje.udalost === id) vyplnUdalost(null);
           uloz();
-          prekresli();
+          redraw();
         });
       }
     });
   }
 
-  /* ---------- kurzy ---------- */
+  /* ---------- the courses ---------- */
 
-  var formKurz = v("[data-form-kurz]");
+  var formCourse = v("[data-form-kurz]");
 
-  function hledejKurz(id) {
+  function findCourse(id) {
     for (var i = 0; i < stav.kurzy.length; i += 1) {
       if (stav.kurzy[i].id === id) return stav.kurzy[i];
     }
     return null;
   }
 
-  function vyplnKurz(k) {
-    var f = formKurz.elements;
+  function fillCourse(k) {
+    var f = formCourse.elements;
     f.nazev.value = cs(k && k.nazev);
     f.nazevEn.value = en(k && k.nazev);
     f.kapacita.value = k && k.kapacita ? k.kapacita : "";
@@ -600,17 +604,17 @@
       ? p("upravujete") + ": " + jazykem(k.nazev)
       : p("novyKurz");
     v("[data-zrus-kurz]").hidden = !k;
-    vycistiChyby(formKurz);
+    clearErrors(formCourse);
   }
 
-  function seznamKurzu() {
-    var kam = v("[data-seznam-kurzy]");
-    if (!kam) return;
+  function courseList() {
+    var destination = v("[data-seznam-kurzy]");
+    if (!destination) return;
     if (!stav.kurzy.length) {
-      kam.innerHTML = '<tr><td colspan="3">' + text(p("prazdno")) + "</td></tr>";
+      destination.innerHTML = '<tr><td colspan="3">' + text(p("prazdno")) + "</td></tr>";
       return;
     }
-    kam.innerHTML = stav.kurzy.map(function (k) {
+    destination.innerHTML = stav.kurzy.map(function (k) {
       return '<tr data-kurz="' + text(k.id) + '">' +
         "<td><strong>" + text(jazykem(k.nazev)) + "</strong>" +
         '<span class="napoveda">' + text(k.id) + "</span></td>" +
@@ -622,58 +626,58 @@
     }).join("");
   }
 
-  if (formKurz) {
-    formKurz.addEventListener("submit", function (e) {
+  if (formCourse) {
+    formCourse.addEventListener("submit", function (e) {
       e.preventDefault();
-      var f = formKurz.elements;
-      var nazevCs = f.nazev.value.trim();
-      var stary = upravuje.kurz ? hledejKurz(upravuje.kurz) : null;
-      var kurz = {
-        id: f.id.value.trim() || D.slug(nazevCs),
-        nazev: dvojjazycne(nazevCs, f.nazevEn.value.trim()),
-        popis: dvojjazycne(f.popis.value.trim(), stary ? en(stary.popis) : ""),
-        kapacita: cislo(f.kapacita.value),
-        cena: cislo(f.cena.value),
+      var f = formCourse.elements;
+      var nameCs = f.nazev.value.trim();
+      var old = upravuje.kurz ? findCourse(upravuje.kurz) : null;
+      var course = {
+        id: f.id.value.trim() || D.slug(nameCs),
+        nazev: dvojjazycne(nameCs, f.nazevEn.value.trim()),
+        popis: dvojjazycne(f.popis.value.trim(), old ? en(old.popis) : ""),
+        kapacita: number(f.kapacita.value),
+        cena: number(f.cena.value),
       };
-      if (stary) {
-        if (stary.delka) kurz.delka = stary.delka;
-        if (stary.terminy) kurz.terminy = stary.terminy;
+      if (old) {
+        if (old.delka) course.delka = old.delka;
+        if (old.terminy) course.terminy = old.terminy;
       }
-      var vysledek = A.ulozKurz(stav, kurz);
-      if (vysledek.chyby.length) {
-        ukazChyby(formKurz, vysledek.chyby);
+      var result = A.ulozKurz(stav, course);
+      if (result.chyby.length) {
+        showErrors(formCourse, result.chyby);
         return;
       }
-      stav = vysledek.stav;
+      stav = result.stav;
       uloz();
-      vyplnKurz(null);
-      prekresli();
+      fillCourse(null);
+      redraw();
     });
-    v("[data-zrus-kurz]").addEventListener("click", function () { vyplnKurz(null); });
+    v("[data-zrus-kurz]").addEventListener("click", function () { fillCourse(null); });
     v("[data-seznam-kurzy]").addEventListener("click", function (e) {
-      var radek = e.target.closest("[data-kurz]");
-      if (!radek) return;
-      var id = radek.getAttribute("data-kurz");
+      var line = e.target.closest("[data-kurz]");
+      if (!line) return;
+      var id = line.getAttribute("data-kurz");
       if (e.target.closest("[data-uprav-kurz]")) {
-        vyplnKurz(hledejKurz(id));
-        formKurz.scrollIntoView({ block: "start" });
+        fillCourse(findCourse(id));
+        formCourse.scrollIntoView({ block: "start" });
       } else if (e.target.closest("[data-smaz-kurz]")) {
-        potvrzeniSmazani(radek, function () {
-          // Mazání kurzu nemá v C-007 vlastní přechod; seznam je prosté pole.
+        potvrzeniSmazani(line, function () {
+          // Deleting a course has no step of its own in C-007; the list is a plain array.
           stav = { ...stav, kurzy: stav.kurzy.filter(function (k) { return k.id !== id; }) };
-          if (upravuje.kurz === id) vyplnKurz(null);
+          if (upravuje.kurz === id) fillCourse(null);
           uloz();
-          prekresli();
+          redraw();
         });
       }
     });
   }
 
-  /* ---------- texty webu ---------- */
+  /* ---------- the site's texts ---------- */
 
-  function viditelneTexty() {
-    /* Hlášky ukázky ("tohle je jen ukázka") na ostrém webu nebudou, tak se
-       v editoru textů nenabízejí. */
+  function visibleTexts() {
+    /* The demo's notices ("this is only a demonstration") will not be on the
+       live site, so the text editor does not offer them. */
     var out = {};
     Object.keys(stav.texty).forEach(function (klic) {
       if (klic.indexOf("ukazka.") === 0 || klic.indexOf("_") === 0) return;
@@ -682,146 +686,146 @@
     return out;
   }
 
-  function sekceTextu() {
-    var kam = v("[data-sekce-textu]");
-    if (!kam) return;
-    var viditelne = viditelneTexty();
-    var nazvy = SEKCE_NAZVY[jazyk] || SEKCE_NAZVY.cs;
-    kam.innerHTML = TS.sekce(viditelne).map(function (s) {
+  function textSection() {
+    var destination = v("[data-sekce-textu]");
+    if (!destination) return;
+    var visible = visibleTexts();
+    var names = SECTION_NAMES[language] || SECTION_NAMES.cs;
+    destination.innerHTML = TS.sekce(visible).map(function (s) {
       return '<button type="button" role="tab" data-sekce="' + text(s.id) + '"' +
-        (s.id === vybranaSekce ? ' aria-selected="true"' : ' aria-selected="false"') +
+        (s.id === selectedSection ? ' aria-selected="true"' : ' aria-selected="false"') +
         (s.klice.length ? "" : " disabled") + ">" +
-        text(nazvy[s.id] || s.id) + " <span>" + s.klice.length + "</span></button>";
+        text(names[s.id] || s.id) + " <span>" + s.klice.length + "</span></button>";
     }).join("");
   }
 
-  var sekceTlacitka = v("[data-sekce-textu]");
-  if (sekceTlacitka) {
-    // Posluchač je tady, ne v sekceTextu(): ta se volá při každém překreslení
-    // a přidávala by ho znovu.
-    sekceTlacitka.addEventListener("click", function (e) {
+  var sectionButtons = v("[data-sekce-textu]");
+  if (sectionButtons) {
+    // The listener is here, not in `sekceTextu()`: that one is called on every
+    // redraw and would keep adding it again.
+    sectionButtons.addEventListener("click", function (e) {
       var tl = e.target.closest("[data-sekce]");
       if (!tl) return;
-      vybranaSekce = tl.getAttribute("data-sekce");
-      var hledat = v("[data-hledat]");
-      if (hledat) hledat.value = "";
-      sekceTextu();
-      seznamTextu();
+      selectedSection = tl.getAttribute("data-sekce");
+      var search = v("[data-hledat]");
+      if (search) search.value = "";
+      textSection();
+      textList();
     });
   }
 
-  function klicePodleVyberu() {
-    var viditelne = viditelneTexty();
-    var hledat = v("[data-hledat]");
-    var dotaz = hledat ? hledat.value.trim() : "";
-    if (dotaz) return TS.hledej(viditelne, dotaz);
-    var nalezena = TS.sekce(viditelne).filter(function (s) { return s.id === vybranaSekce; });
+  function keysBySelection() {
+    var visible = visibleTexts();
+    var search = v("[data-hledat]");
+    var query = search ? search.value.trim() : "";
+    if (query) return TS.hledej(visible, query);
+    var nalezena = TS.sekce(visible).filter(function (s) { return s.id === selectedSection; });
     return nalezena.length ? nalezena[0].klice : [];
   }
 
-  function seznamTextu() {
-    var kam = v("[data-seznam-texty]");
-    if (!kam) return;
-    var klice = klicePodleVyberu();
-    var chybi = TS.chybejici(viditelneTexty());
-    var zmenene = TS.rozdil(puvodniTexty, stav.texty);
+  function textList() {
+    var destination = v("[data-seznam-texty]");
+    if (!destination) return;
+    var klice = keysBySelection();
+    var missing = TS.chybejici(visibleTexts());
+    var zmenene = TS.rozdil(originalTexts, stav.texty);
     v("[data-texty-prazdno]").hidden = klice.length > 0;
-    kam.innerHTML = klice.map(function (klic) {
-      var hodnota = stav.texty[klic] || {};
-      var znacky = "";
-      if (chybi.indexOf(klic) >= 0) znacky += '<span class="znacka chybi">' + text(p("chybi")) + "</span>";
-      if (zmenene.indexOf(klic) >= 0) znacky += '<span class="znacka zmeneno">' + text(p("zmeneno")) + "</span>";
+    destination.innerHTML = klice.map(function (klic) {
+      var value = stav.texty[klic] || {};
+      var tags = "";
+      if (missing.indexOf(klic) >= 0) tags += '<span class="znacka chybi">' + text(p("chybi")) + "</span>";
+      if (zmenene.indexOf(klic) >= 0) tags += '<span class="znacka zmeneno">' + text(p("zmeneno")) + "</span>";
       return '<div class="text-radek" data-klic="' + text(klic) + '">' +
-        '<p class="klic"><code>' + text(klic) + "</code>" + znacky + "</p>" +
+        '<p class="klic"><code>' + text(klic) + "</code>" + tags + "</p>" +
         '<div class="dvojice-rovnou">' +
-        '<label><span>' + text(p("cesky")) + "</span><textarea data-jazyk=\"cs\" rows=\"2\">" + text(hodnota.cs || "") + "</textarea></label>" +
-        '<label><span>' + text(p("anglicky")) + "</span><textarea data-jazyk=\"en\" rows=\"2\">" + text(hodnota.en || "") + "</textarea></label>" +
+        '<label><span>' + text(p("cesky")) + "</span><textarea data-jazyk=\"cs\" rows=\"2\">" + text(value.cs || "") + "</textarea></label>" +
+        '<label><span>' + text(p("anglicky")) + "</span><textarea data-jazyk=\"en\" rows=\"2\">" + text(value.en || "") + "</textarea></label>" +
         "</div></div>";
     }).join("");
   }
 
-  var seznamTextuTelo = v("[data-seznam-texty]");
-  if (seznamTextuTelo) {
-    seznamTextuTelo.addEventListener("change", function (e) {
-      var pole = e.target.closest("textarea[data-jazyk]");
-      if (!pole) return;
-      var radek = pole.closest("[data-klic]");
-      stav = A.ulozText(stav, radek.getAttribute("data-klic"), pole.getAttribute("data-jazyk"), pole.value);
+  var textListBody = v("[data-seznam-texty]");
+  if (textListBody) {
+    textListBody.addEventListener("change", function (e) {
+      var field = e.target.closest("textarea[data-jazyk]");
+      if (!field) return;
+      var line = field.closest("[data-klic]");
+      stav = A.ulozText(stav, line.getAttribute("data-klic"), field.getAttribute("data-jazyk"), field.value);
       uloz();
-      seznamTextu();
+      textList();
     });
-    var hledat = v("[data-hledat]");
-    if (hledat) {
-      hledat.addEventListener("input", function () { seznamTextu(); });
+    var search = v("[data-hledat]");
+    if (search) {
+      search.addEventListener("input", function () { textList(); });
     }
   }
 
-  /* ---------- kontakty ---------- */
+  /* ---------- the contacts ---------- */
 
-  var KLIC_KONTAKTY = "kz-kontakty";
-  var formKontakty = v("[data-form-kontakty]");
-  if (formKontakty) {
-    /* Kontakty nejsou součástí stavu z C-007 (zKodu cizí klíče zahodí), tak
-       mají vlastní řádek v úložišti. */
+  var KEY_CONTACTS = "kz-kontakty";
+  var formContacts = v("[data-form-kontakty]");
+  if (formContacts) {
+    /* The contacts are not part of the state from C-007 (`zKodu` throws foreign
+       keys away), so they have a row of their own in the storage. */
     var ulozene = null;
     try {
-      var surove = window.localStorage.getItem(KLIC_KONTAKTY);
+      var surove = window.localStorage.getItem(KEY_CONTACTS);
       ulozene = surove ? JSON.parse(surove) : null;
     } catch (e) { ulozene = null; }
     var web = ulozene || site.web || {};
     var atelier = web["ateliér"] || {};
-    formKontakty.elements.email.value = web.email || "";
-    formKontakty.elements.telefon.value = web.telefon || "";
-    formKontakty.elements.instagram.value = web.instagram || "";
-    formKontakty.elements.facebook.value = web.facebook || "";
-    formKontakty.elements.atelierNazev.value = jazykem(atelier.nazev) || "";
-    formKontakty.elements.atelierAdresa.value = atelier.adresa || "";
-    formKontakty.addEventListener("submit", function (e) {
+    formContacts.elements.email.value = web.email || "";
+    formContacts.elements.telefon.value = web.telefon || "";
+    formContacts.elements.instagram.value = web.instagram || "";
+    formContacts.elements.facebook.value = web.facebook || "";
+    formContacts.elements.atelierNazev.value = jazykem(atelier.nazev) || "";
+    formContacts.elements.atelierAdresa.value = atelier.adresa || "";
+    formContacts.addEventListener("submit", function (e) {
       e.preventDefault();
-      var f = formKontakty.elements;
-      var novy = JSON.parse(JSON.stringify(web));
-      novy.email = f.email.value.trim();
-      novy.telefon = f.telefon.value.trim();
-      novy.instagram = f.instagram.value.trim();
-      novy.facebook = f.facebook.value.trim();
-      novy["ateliér"] = novy["ateliér"] || {};
-      novy["ateliér"].nazev = { cs: f.atelierNazev.value.trim(), en: f.atelierNazev.value.trim() };
-      novy["ateliér"].adresa = f.atelierAdresa.value.trim();
-      web = novy;
-      try { window.localStorage.setItem(KLIC_KONTAKTY, JSON.stringify(novy)); } catch (e2) { /* soukromé okno */ }
-      hotovo(formKontakty);
+      var f = formContacts.elements;
+      var updated = JSON.parse(JSON.stringify(web));
+      updated.email = f.email.value.trim();
+      updated.telefon = f.telefon.value.trim();
+      updated.instagram = f.instagram.value.trim();
+      updated.facebook = f.facebook.value.trim();
+      updated["ateliér"] = updated["ateliér"] || {};
+      updated["ateliér"].nazev = { cs: f.atelierNazev.value.trim(), en: f.atelierNazev.value.trim() };
+      updated["ateliér"].adresa = f.atelierAdresa.value.trim();
+      web = updated;
+      try { window.localStorage.setItem(KEY_CONTACTS, JSON.stringify(updated)); } catch (e2) { /* a private window */ }
+      done(formContacts);
     });
   }
 
   /* ---------- dohromady ---------- */
 
-  function prekresli() {
+  function redraw() {
     prehled();
-    seznamDel();
-    seznamUdalosti();
-    seznamKurzu();
-    sekceTextu();
-    seznamTextu();
+    workList();
+    eventList();
+    courseList();
+    textSection();
+    textList();
   }
 
   var reset = v("[data-reset-stav]");
   if (reset) {
     reset.addEventListener("click", function () {
-      zahod();
-      try { window.localStorage.removeItem(KLIC_KONTAKTY); } catch (e2) { /* nic */ }
-      stav = A.zaloz(site, puvodniTexty);
-      fotky = {};
-      if (formDilo) vyplnDilo(null);
+      discard();
+      try { window.localStorage.removeItem(KEY_CONTACTS); } catch (e2) { /* nothing */ }
+      stav = A.zaloz(site, originalTexts);
+      photos = {};
+      if (formWork) fillWork(null);
       if (formUdalost) vyplnUdalost(null);
-      if (formKurz) vyplnKurz(null);
-      prekresli();
+      if (formCourse) fillCourse(null);
+      redraw();
     });
   }
 
   vratnice();
-  oddily();
-  if (formDilo) vyplnDilo(null);
+  sections();
+  if (formWork) fillWork(null);
   if (formUdalost) vyplnUdalost(null);
-  if (formKurz) vyplnKurz(null);
-  prekresli();
+  if (formCourse) fillCourse(null);
+  redraw();
 })();

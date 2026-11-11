@@ -1,26 +1,29 @@
-/* Administrace — ukázka, jak se obsah spravuje.
+/* The admin -- a demonstration of how the content is kept.
 
-   Zápis ze schůzky: dílo se zadává JEDNOU a zaškrtátka rozhodnou, kde se
-   objeví. Proto je tu u díla galerie i e-shop jako dvě zaškrtátka a stav
-   jako rozbalovátko; prodané dílo z e-shopu zmizí samo pravidlem, příznak
-   se nepřepisuje.
+   From the meeting notes: a work is entered ONCE and the checkboxes decide
+   where it shows up. That is why gallery and shop are two checkboxes on a
+   work and the state is a dropdown; a sold work leaves the shop by that rule
+   on its own, and the flag is never overwritten.
 
-   Administrace je rozdělená na oddíly (obrazy, kalendář, kurzy, texty,
-   kontakty) a stojí za vrátnicí: na ostrém webu se sem bez přihlášení
-   nikdo nedostane. V ukázce je vrátnice jen ukázková a stránka vůbec
-   nevznikne při OSTRY=1 — do veřejného webu administrace nepatří.
+   The admin is split into sections (paintings, calendar, courses, texts,
+   contacts) and stands behind a door: on the live site nobody gets here
+   without signing in. In the demo the door is a demonstration too, and the
+   page is not built at all under `OSTRY=1` -- an admin has no place in a public
+   site.
 
-   Popisky administrace jsou tady, ne v data/texty.json: jsou to texty
-   dílny, ne texty webu, a v editoru textů by jen překážely.
+   The admin's own labels live here, not in `data/texty.json`: they are the
+   workshop's words, not the site's, and in the text editor they would only be
+   in the way.
 
-   V ukázce se všechno ukládá do prohlížeče (localStorage) a nahrané fotky
-   žijí jen do zavření karty. Na ostrém webu půjde obojí na server. */
+   In the demo everything is kept in the browser (localStorage) and an
+   uploaded photo lives until the tab closes. On the live site both will go to
+   a server. */
 
 import { layout, e, ukazka } from "./layout.mjs";
 import { t, pole, cesta } from "../lib/preklad.mjs";
 import { STAVY } from "../lib/dila.mjs";
 
-const POPISKY = {
+const CAPTIONS = {
   cs: {
     vratnice: "Administrace je na ostrém webu schovaná za přihlášením. V ukázce stačí kliknout — nic se nikam neodesílá.",
     jmeno: "Přihlašovací jméno", heslo: "Heslo", prihlasit: "Přihlásit se",
@@ -101,43 +104,43 @@ const POPISKY = {
   },
 };
 
-function p(jazyk, klic) { return (POPISKY[jazyk] || POPISKY.cs)[klic] || klic; }
+function p(jazyk, key) { return (CAPTIONS[jazyk] || CAPTIONS.cs)[key] || key; }
 
-function policko(klic, titulek, typ = "text", volby = {}) {
-  const atributy = [`id="a-${e(klic)}"`, `name="${e(klic)}"`, `type="${e(typ)}"`];
-  if (typ === "number") atributy.push('min="0"', 'step="1"');
-  if (volby.placeholder) atributy.push(`placeholder="${e(volby.placeholder)}"`);
+function policko(key, titulek, typ = "text", volby = {}) {
+  const attributes = [`id="a-${e(key)}"`, `name="${e(key)}"`, `type="${e(typ)}"`];
+  if (typ === "number") attributes.push('min="0"', 'step="1"');
+  if (volby.placeholder) attributes.push(`placeholder="${e(volby.placeholder)}"`);
   const napoveda = volby.napoveda
-    ? `<span class="napoveda" id="n-${e(klic)}">${e(volby.napoveda)}</span>` : "";
-  if (napoveda) atributy.push(`aria-describedby="n-${e(klic)}"`);
-  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
-<input ${atributy.join(" ")}>${napoveda}<span class="chyba" data-chyba hidden></span></div>`;
+    ? `<span class="napoveda" id="n-${e(key)}">${e(volby.napoveda)}</span>` : "";
+  if (napoveda) attributes.push(`aria-describedby="n-${e(key)}"`);
+  return `<div class="pole" data-pole="${e(key)}"><label for="a-${e(key)}">${e(titulek)}</label>
+<input ${attributes.join(" ")}>${napoveda}<span class="chyba" data-chyba hidden></span></div>`;
 }
 
-function textovePole(klic, titulek) {
-  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
-<textarea id="a-${e(klic)}" name="${e(klic)}" rows="3"></textarea><span class="chyba" data-chyba hidden></span></div>`;
+function textField(key, titulek) {
+  return `<div class="pole" data-pole="${e(key)}"><label for="a-${e(key)}">${e(titulek)}</label>
+<textarea id="a-${e(key)}" name="${e(key)}" rows="3"></textarea><span class="chyba" data-chyba hidden></span></div>`;
 }
 
-function vyber(klic, titulek, moznosti) {
-  return `<div class="pole" data-pole="${e(klic)}"><label for="a-${e(klic)}">${e(titulek)}</label>
-<select id="a-${e(klic)}" name="${e(klic)}">${moznosti}</select><span class="chyba" data-chyba hidden></span></div>`;
+function selection(key, titulek, moznosti) {
+  return `<div class="pole" data-pole="${e(key)}"><label for="a-${e(key)}">${e(titulek)}</label>
+<select id="a-${e(key)}" name="${e(key)}">${moznosti}</select><span class="chyba" data-chyba hidden></span></div>`;
 }
 
-function zaskrtavatko(klic, titulek, zaskrtnuto = false) {
-  return `<label class="volba"><input type="checkbox" name="${e(klic)}"${zaskrtnuto ? " checked" : ""}> <span>${e(titulek)}</span></label>`;
+function checkbox(key, titulek, zaskrtnuto = false) {
+  return `<label class="volba"><input type="checkbox" name="${e(key)}"${zaskrtnuto ? " checked" : ""}> <span>${e(titulek)}</span></label>`;
 }
 
-function oddil(id, titulek, prvni) {
-  return `<button type="button" role="tab" data-zalozka="${e(id)}" aria-selected="${prvni ? "true" : "false"}">${e(titulek)}</button>`;
+function section(id, titulek, first) {
+  return `<button type="button" role="tab" data-zalozka="${e(id)}" aria-selected="${first ? "true" : "false"}">${e(titulek)}</button>`;
 }
 
 export function administraceStranka(o) {
   const { site, texty, jazyk } = o;
-  const L = (klic) => p(jazyk, klic);
-  const stavy = STAVY.map((s) => `<option value="${e(s)}">${e(t(texty, "stav." + s, jazyk))}</option>`).join("");
-  const techniky = site.techniky.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
-  const styly = site.styly.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
+  const L = (key) => p(jazyk, key);
+  const states = STAVY.map((s) => `<option value="${e(s)}">${e(t(texty, "stav." + s, jazyk))}</option>`).join("");
+  const techniques = site.techniky.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
+  const styles = site.styly.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
   const albumy = site.albumy.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
   const typy = ["vystava", "vernisaz", "atelier", "kurz"]
     .map((x) => `<option value="${x}">${e(t(texty, "kalendar.typ." + x, jazyk))}</option>`).join("");
@@ -181,22 +184,22 @@ ${policko("rok", L("rok"), "number")}
 ${policko("rozmer", L("rozmer"))}
 </div>
 <div class="dvojice-rovnou">
-${vyber("stav", L("stav"), stavy)}
+${selection("stav", L("stav"), states)}
 ${policko("cena", L("cena"), "number")}
 </div>
 <div class="dvojice-rovnou">
-${vyber("technika", L("technika"), `<option value=""></option>${techniky}`)}
-${vyber("styl", L("styl"), `<option value=""></option>${styly}`)}
+${selection("technika", L("technika"), `<option value=""></option>${techniques}`)}
+${selection("styl", L("styl"), `<option value=""></option>${styles}`)}
 </div>
-${vyber("album", L("album"), `<option value=""></option>${albumy}`)}
+${selection("album", L("album"), `<option value=""></option>${albumy}`)}
 <div class="dvojice-rovnou">
-${textovePole("popis", L("popisCs"))}
-${textovePole("popisEn", L("popisEn"))}
+${textField("popis", L("popisCs"))}
+${textField("popisEn", L("popisEn"))}
 </div>
 <div class="pole" data-pole="kde"><span class="popisek">${e(L("kde"))}</span>
 <div class="volby">
-${zaskrtavatko("vGalerii", L("vGalerii"), true)}
-${zaskrtavatko("vEshopu", L("vEshopu"))}
+${checkbox("vGalerii", L("vGalerii"), true)}
+${checkbox("vEshopu", L("vEshopu"))}
 </div>
 <span class="chyba" data-chyba hidden></span></div>
 <details class="pokrocile">
@@ -208,7 +211,7 @@ ${policko("slug", L("slug"), "text", { napoveda: L("slugProc") })}
 <table class="ucet seznam"><tbody data-seznam-dila></tbody></table>
 </section>`;
 
-  const kalendar = `
+  const calendar = `
 <section data-panel="udalosti" hidden>
 <h2>${e(L("kalendar"))}</h2>
 <form class="formular sirsi" data-form-udalost novalidate>
@@ -219,8 +222,8 @@ ${policko("nazev", L("nazevCs"))}
 ${policko("nazevEn", L("nazevEn"))}
 </div>
 <div class="dvojice-rovnou">
-${vyber("typ", L("typ"), typy)}
-${vyber("album", L("albumAkce"), `<option value=""></option>${albumy}`)}
+${selection("typ", L("typ"), typy)}
+${selection("album", L("albumAkce"), `<option value=""></option>${albumy}`)}
 </div>
 <div class="dvojice-rovnou">
 ${policko("od", L("od"), "date")}
@@ -231,10 +234,10 @@ ${policko("cas", L("cas"), "time")}
 ${policko("misto", L("misto"))}
 </div>
 <div class="dvojice-rovnou">
-${textovePole("popis", L("popisCs"))}
-${textovePole("popisEn", L("popisEn"))}
+${textField("popis", L("popisCs"))}
+${textField("popisEn", L("popisEn"))}
 </div>
-<div class="pole" data-pole="aktualita"><div class="volby">${zaskrtavatko("aktualita", L("aktualita"))}</div></div>
+<div class="pole" data-pole="aktualita"><div class="volby">${checkbox("aktualita", L("aktualita"))}</div></div>
 <details class="pokrocile">
 <summary>${e(L("pokrocile"))}</summary>
 ${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
@@ -244,7 +247,7 @@ ${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
 <table class="ucet seznam"><tbody data-seznam-udalosti></tbody></table>
 </section>`;
 
-  const kurzy = `
+  const courses = `
 <section data-panel="kurzy" hidden>
 <h2>${e(L("kurzy"))}</h2>
 <form class="formular sirsi" data-form-kurz novalidate>
@@ -258,7 +261,7 @@ ${policko("nazevEn", L("nazevEn"))}
 ${policko("kapacita", L("kapacita"), "number")}
 ${policko("cena", L("cena"), "number")}
 </div>
-${textovePole("popis", L("popisCs"))}
+${textField("popis", L("popisCs"))}
 <details class="pokrocile">
 <summary>${e(L("pokrocile"))}</summary>
 ${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
@@ -268,7 +271,7 @@ ${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
 <table class="ucet seznam"><tbody data-seznam-kurzy></tbody></table>
 </section>`;
 
-  const textyPanel = `
+  const textsPanel = `
 <section data-panel="texty" hidden>
 <h2>${e(L("texty"))}</h2>
 <div class="pole hledani">
@@ -281,7 +284,7 @@ ${policko("id", L("slug"), "text", { napoveda: L("slugProc") })}
 <p data-texty-prazdno hidden>${e(L("bezVysledku"))}</p>
 </section>`;
 
-  const kontakty = `
+  const contacts = `
 <section data-panel="kontakty" hidden>
 <h2>${e(L("kontakty"))}</h2>
 <p>${e(L("kontaktyPopis"))}</p>
@@ -313,18 +316,18 @@ ${ukazka(texty, "ukazka.administrace", jazyk)}
 </section>
 <div class="admin-telo">
 <nav class="admin-menu" role="tablist" aria-label="${e(L("oddily"))}">
-${oddil("dila", L("obrazy"), true)}
-${oddil("udalosti", L("kalendar"), false)}
-${oddil("kurzy", L("kurzy"), false)}
-${oddil("texty", L("texty"), false)}
-${oddil("kontakty", L("kontakty"), false)}
+${section("dila", L("obrazy"), true)}
+${section("udalosti", L("kalendar"), false)}
+${section("kurzy", L("kurzy"), false)}
+${section("texty", L("texty"), false)}
+${section("kontakty", L("kontakty"), false)}
 </nav>
 <div class="admin-panely">
 ${obrazy}
-${kalendar}
-${kurzy}
-${textyPanel}
-${kontakty}
+${calendar}
+${courses}
+${textsPanel}
+${contacts}
 </div>
 </div>
 <section>
@@ -334,7 +337,7 @@ ${kontakty}
 </div>
 <script type="application/json" data-site>${JSON.stringify(site).replace(/</g, "\\u003c")}</script>
 <script type="application/json" data-texty>${JSON.stringify(texty).replace(/</g, "\\u003c")}</script>
-<script type="application/json" data-popisky>${JSON.stringify(POPISKY[jazyk] || POPISKY.cs).replace(/</g, "\\u003c")}</script>
+<script type="application/json" data-popisky>${JSON.stringify(CAPTIONS[jazyk] || CAPTIONS.cs).replace(/</g, "\\u003c")}</script>
 `;
   return layout({ ...o, admin: true, aktivni: "", adresa: cesta("administrace", jazyk), titul: t(texty, "patka.administrace", jazyk), popis: "", telo });
 }

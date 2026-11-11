@@ -9,19 +9,32 @@
    stane rozbalovací lišta, protože sloupec 220 px by na telefonu sežral
    polovinu obrazovky. */
 
-/* Barvy a písmo jsou odečtené z karolinasramkova.com, který si klientka
-   vybrala jako vzor „čistého designu": Montserrat na všechno, nadpisy skoro
-   černé s širokým prostrkáním, běžný text šedomodrý, nikde ani jeden stín.
-   Jediné, co jsme k tomu přidali, je tichý okrový akcent pro odkazy —
-   vzor tam má modrou od šablony, ta sem nepatří. */
+/* Písmo je z karolinasramkova.com, který si klientka vybrala jako vzor
+   „čistého designu": Montserrat na všechno, nadpisy lehké a prostrkané,
+   nikde ani jeden stín.
+
+   Barvy jsou od klientky. Na schůzce řekla, že šedý text splývá s pozadím a
+   že web má působit hřejivě, v přírodních materiálech (dřevo, kámen) —
+   a poslala k tomu svůj dokument, kde je veškerý text #663300. Odtud má
+   stránka svou barvu písma; šedá zmizela úplně. Podklad zůstává bílý, to je
+   ta čistá varianta, na které jsme se dohodli (odvážnější varianta
+   s dřevěným vodoznakem v pozadí je samostatné zadání).
+
+   Kontrast proti bílé: běžný text 10,3:1, nadpisy 13,4:1, popisky 4,9:1 —
+   všechno nad 4,5:1, které chce WCAG AA. */
 :root {
   --papir: #ffffff;
-  --inkoust: #212934;      /* nadpisy — měřeno rgb(33,41,52) */
-  --text: #4a4e57;         /* běžný text — měřeno rgb(74,78,87) */
-  --tichy: #83878f;        /* popisky, roky, rozměry */
-  --linka: #e6e7e9;
+  --inkoust: #4a2600;      /* nadpisy — tmavší hnědá než běžný text */
+  --text: #663300;         /* běžný text — barva z podkladu klientky */
+  --tichy: #7d5f45;        /* popisky, roky, rozměry — 5,8:1 na bílé, 5,1:1 na --odznak */
+  --linka: #e3d9cd;        /* teplá linka místo studené šedé */
   --zvyraz: #8a5a2b;       /* okr, jediný akcent — odkazy a aktivní filtr */
-  --odznak: #f2f2f3;
+  --odznak: #f5f0e9;
+  /* Štítky u děl zůstávají, jak byly: „prodáno" a „zamluveno" skoro černě,
+     „neprodejné" světleji. Klientka si u nich výslovně přála současnou
+     barevnost, takže je hnědé přebarvení textu míjí. */
+  --stitek: #212934;
+  --stitek-tichy: #6b7078;
 
   --pismo: Montserrat, "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
   --pismo-text: Montserrat, "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
@@ -113,6 +126,10 @@ p:last-child { margin-bottom: 0; }
   overscroll-behavior: contain;
   overflow-x: hidden;
   scrollbar-width: none;
+  /* Mírné oddělení levého sloupce od obsahu — klientka ho chtěla hnědou
+     linkou nebo podbarvením; linka drží stránku čistou. */
+  border-right: 1px solid var(--linka);
+  padding-right: calc(var(--vzduch) / 2);
 }
 
 .logo {
@@ -171,9 +188,24 @@ p:last-child { margin-bottom: 0; }
 .bok-cast { border-top: 1px solid var(--linka); padding-top: 1rem; margin-bottom: 1.6rem; }
 .bok-cast p { font-size: 0.85rem; color: var(--tichy); margin-bottom: 0.4em; }
 
-.jazyky { display: flex; gap: 0.5rem; font-family: var(--pismo); font-size: 0.78rem; }
-.jazyky a { text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tichy); }
-.jazyky a[aria-current="true"] { color: var(--inkoust); }
+/* Přepínač jazyků je vpravo nahoře. Dole v bočním sloupci klientce
+   „narušoval vzhled" a nahoře vpravo ho člověk hledá; jsou to dvě zkratky
+   „cz / eng", aktivní podtržená okrem. */
+.jazyky {
+  grid-column: 1 / -1;
+  justify-self: end;
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: -0.4rem;
+  font-family: var(--pismo);
+  font-size: 0.78rem;
+}
+.jazyky a {
+  text-decoration: none; letter-spacing: 0.1em; color: var(--tichy);
+  padding-bottom: 0.15rem; border-bottom: 1px solid transparent;
+}
+.jazyky a:hover { color: var(--zvyraz); }
+.jazyky a[aria-current="true"] { color: var(--inkoust); border-bottom-color: var(--zvyraz); }
 
 .site { display: flex; gap: 0.9rem; font-family: var(--pismo); font-size: 0.78rem; }
 
@@ -288,16 +320,17 @@ p:last-child { margin-bottom: 0; }
 
 .odznak {
   position: absolute; left: 0.5rem; top: 0.5rem;
-  background: var(--papir); color: var(--inkoust);
+  background: var(--papir); color: var(--stitek);
   font: 500 0.66rem/1 var(--pismo);
   text-transform: uppercase; letter-spacing: 0.1em;
   padding: 0.35rem 0.5rem;
 }
-.odznak.prodano { background: var(--inkoust); color: var(--papir); }
+.odznak.prodano { background: var(--stitek); color: var(--papir); }
 /* Reprodukce se při načtení prolíná, a průhledný obrázek se kreslí ve stejné
    vrstvě jako odznak — bez z-indexu by se „PRODÁNO" schovalo za obraz. */
 .odznak { z-index: 2; }
 .odznak.zamluveno { background: var(--odznak); }
+.odznak.neprodejne { color: var(--stitek-tichy); }
 
 .cena { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
@@ -512,7 +545,8 @@ table.kalendar .akce:hover { background: var(--odznak); color: var(--inkoust); }
 
 @media (max-width: 60rem) {
   .stranka { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
-  .bok { position: static; max-height: none; overflow: visible; border-bottom: 1px solid var(--linka); padding-bottom: 1rem; }
+  .bok { position: static; max-height: none; overflow: visible; border-right: 0; padding-right: 0; border-bottom: 1px solid var(--linka); padding-bottom: 1rem; }
+  .jazyky { gap: 0.5rem; margin-bottom: 0; }
   .logo { margin-bottom: 1rem; }
   .menu-prepinac {
     display: inline-block; border: 1px solid var(--linka); background: none; cursor: pointer;

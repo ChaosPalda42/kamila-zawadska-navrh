@@ -1,23 +1,25 @@
-"""Akceptační test C-002 — src/lib/kosik.mjs (košík, doprava)."""
+"""Acceptance test C-002 -- `src/lib/kosik.mjs` (the basket, delivery)."""
 from __future__ import annotations
+
+import pathlib
 
 import pytest
 
 from tests.jsmod import run_js
 
-DILA = [
+WORKS = [
     {"slug": "most", "cena": 54000, "stav": "v-prodeji"},
     {"slug": "sova", "cena": 8900, "stav": "v-prodeji"},
     {"slug": "horizont-i", "cena": 36000, "stav": "zamluveno"},
     {"slug": "dve-ruce", "cena": 28000, "stav": "prodano"},
 ]
-DOPRAVA = [{"id": "dobirka", "cena": 390}, {"id": "osobne", "cena": 0}]
+SHIPPING = [{"id": "dobirka", "cena": 390}, {"id": "osobne", "cena": 0}]
 
 
 @pytest.fixture()
 def js():
     def call(body, **args):
-        return run_js("kosik.mjs", body, args={"d": DILA, "z": DOPRAVA, **args})
+        return run_js("kosik.mjs", body, args={"d": WORKS, "z": SHIPPING, **args})
     return call
 
 
@@ -94,7 +96,7 @@ def test_soucet(js):
 
 
 def test_prober_vyhodi_to_co_se_mezitim_prodalo(js):
-    # v košíku leží tři díla; dvě z nich se mezitím změnila
+    # three works lie in the basket; two of them have changed meanwhile
     assert js("""
         const k = { polozky: [
             { slug: "most", cena: 54000 },
@@ -133,9 +135,44 @@ def test_na_kod_a_zpatky(js):
 
 
 def test_z_kodu_se_nezlomi_na_smeti(js):
-    for vstup in ['null', '""', '"[]"', '"{}"', '"12"', '"nic"', '"{\\"polozky\\":5}"', 'undefined']:
-        assert js(f"out(m.zKodu({vstup}));") == {"polozky": [], "doprava": ""}, vstup
+    for incoming in ['null', '""', '"[]"', '"{}"', '"12"', '"nic"', '"{\\"polozky\\":5}"', 'undefined']:
+        assert js(f"out(m.zKodu({incoming}));") == {"polozky": [], "doprava": ""}, incoming
     assert js('out(m.zKodu(JSON.stringify({ polozky: [{ slug: "", cena: 5 }, { slug: "x" }, '
               '{ slug: "ok", cena: 10 }], doprava: "dobirka" })));') == {
         "polozky": [{"slug": "ok", "cena": 10}], "doprava": "dobirka",
     }
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "src/lib/kosik.mjs"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "src/lib/kosik.mjs"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

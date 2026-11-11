@@ -1,23 +1,25 @@
-"""Akceptační test C-008 — src/lib/prohlizec.mjs (celá obrazovka)."""
+"""Acceptance test C-008 -- `src/lib/prohlizec.mjs` (the full screen)."""
 from __future__ import annotations
+
+import pathlib
 
 import pytest
 
 from tests.jsmod import run_js
 
-SLUGY = ["most", "sova", "horizont-i", "velka-vlna"]
+SLUGS = ["most", "sova", "horizont-i", "velka-vlna"]
 
 
 @pytest.fixture()
 def js():
     def call(body, **args):
-        return run_js("prohlizec.mjs", body, args={"s": SLUGY, **args})
+        return run_js("prohlizec.mjs", body, args={"s": SLUGS, **args})
     return call
 
 
 def test_zaloz(js):
     assert js('out(m.zaloz(A.s, "horizont-i"));') == {
-        "slugy": SLUGY, "index": 2, "otevreno": False,
+        "slugy": SLUGS, "index": 2, "otevreno": False,
     }
     assert js('out(m.zaloz(A.s, "neni").index);') == 0
     assert js("out(m.zaloz([], \"x\"));") == {"slugy": [], "index": 0, "otevreno": False}
@@ -32,12 +34,12 @@ def test_zaloz(js):
 
 def test_otevri_a_zavri(js):
     assert js('out(m.otevri(m.zaloz(A.s, "most"), "sova"));') == {
-        "slugy": SLUGY, "index": 1, "otevreno": True,
+        "slugy": SLUGS, "index": 1, "otevreno": True,
     }
     assert js('out(m.otevri(m.zaloz(A.s, "most"), "neni").otevreno);') is False
     assert js('out(m.otevri(m.zaloz([], ""), "x").otevreno);') is False
     assert js('out(m.zavri(m.otevri(m.zaloz(A.s, "most"), "sova")));') == {
-        "slugy": SLUGY, "index": 1, "otevreno": False,
+        "slugy": SLUGS, "index": 1, "otevreno": False,
     }
 
 
@@ -99,3 +101,38 @@ def test_pozice(js):
     assert js('out(m.pozice(m.zaloz(A.s, "horizont-i")));') == {"cislo": 3, "celkem": 4}
     assert js('out(m.pozice(m.zaloz(A.s, "most")));') == {"cislo": 1, "celkem": 4}
     assert js('out(m.pozice(m.zaloz([], "")));') == {"cislo": 0, "celkem": 0}
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "src/lib/prohlizec.mjs"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "src/lib/prohlizec.mjs"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

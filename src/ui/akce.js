@@ -1,123 +1,127 @@
-/* Detail akce. Klik na akci — v mřížce měsíce, v seznamech „co se chystá"
-   a „co už bylo" i v liště aktualit — stránku NEOPOUŠTÍ: detail se vyzvedne
-   z místa, na které se kliklo, a zvětší se přes stránku.
+/* The event detail. A click on an event -- in the month's grid, in the "what
+   is coming" and "what has been" lists and in the news bar -- DOES NOT LEAVE
+   the page: the detail is picked up from the spot that was clicked and grows
+   over the page.
 
-   Bez JavaScriptu zůstávají všechny ty akce obyčejnými odkazy na kotvu
-   v kalendáři, takže se k popisu akce dostane i prohlížeč bez skriptu.
+   Without JavaScript all those events stay ordinary links to an anchor in the
+   calendar, so a browser with no script reaches the description too.
 
-   Co je akce zač, počítá KZ.udalost (kontrakt C-012): stav v čase, kolik
-   dnů zbývá, sousedi na časové ose. Tady se jen kreslí. */
+   What an event is at a given moment is worked out by `KZ.udalost` (contract
+   C-012): its state in time, how many days are left, the neighbours on the
+   timeline. Here it is only drawn. */
 (function () {
   "use strict";
   var KZ = window.KZ || {};
   var doc = document;
   var html = doc.documentElement;
-  function v(volba, koren) { return (koren || doc).querySelector(volba); }
-  function vse(volba, koren) { return Array.prototype.slice.call((koren || doc).querySelectorAll(volba)); }
+  function v(volba, root) { return (root || doc).querySelector(volba); }
+  function all(volba, root) { return Array.prototype.slice.call((root || doc).querySelectorAll(volba)); }
 
-  function jsonZe(volba, nahrada) {
-    var znacka = v(volba);
-    if (!znacka) return nahrada;
-    try { return JSON.parse(znacka.textContent); } catch (chyba) { return nahrada; }
+  function jsonZe(volba, replacement) {
+    var tag = v(volba);
+    if (!tag) return replacement;
+    try { return JSON.parse(tag.textContent); } catch (error) { return replacement; }
   }
 
   window.KZakce = function () {
-    var prvek = v("[data-detail-akce]");
-    if (!prvek || !KZ.udalost) return;
+    var element = v("[data-detail-akce]");
+    if (!element || !KZ.udalost) return;
     var udalosti = jsonZe("script[data-udalosti-detail]", []);
     if (!udalosti.length) return;
 
-    var panel = v("[data-detail-panel]", prvek);
-    var telo = v("[data-detail-telo]", prvek);
-    var naKurzy = v("[data-detail-kurzy]", prvek);
-    var kurzyZaklad = naKurzy ? naKurzy.getAttribute("href") : "";
-    var tamZpet = v("[data-detail-predchozi]", prvek);
-    var tamVpred = v("[data-detail-dalsi]", prvek);
-    var otevreno = null;
-    var kamSeVratit = null;
+    var panel = v("[data-detail-panel]", element);
+    var body = v("[data-detail-telo]", element);
+    var toCourses = v("[data-detail-kurzy]", element);
+    var coursesBase = toCourses ? toCourses.getAttribute("href") : "";
+    var thereAndBack = v("[data-detail-predchozi]", element);
+    var tamVpred = v("[data-detail-dalsi]", element);
+    var openId = null;
+    var whereToReturn = null;
 
-    function s(klic) { return prvek.getAttribute("data-" + klic) || ""; }
-    function dnes() { return new Date().toISOString().slice(0, 10); }
-    function podleId(id) { return KZ.udalost.podleId(udalosti, id); }
+    function s(key) { return element.getAttribute("data-" + key) || ""; }
+    function today() { return new Date().toISOString().slice(0, 10); }
+    function byId(id) { return KZ.udalost.podleId(udalosti, id); }
 
-    /* „Za 3 dny" má v češtině tři tvary a ta čísla jsou to první, co na
-       detailu padne do oka — proto je sem šablona posílá všechny tři. */
-    function kdyVetou(u) {
-      var stav = KZ.udalost.stav(u, dnes());
-      if (stav === "probiha") return s("stav-probiha");
-      if (stav === "bylo") return s("stav-bylo");
-      var kolik = KZ.udalost.dnuDo(u, dnes());
-      if (kolik === 0) return s("dnes");
-      if (kolik === 1) return s("zitra");
+    /* "In 3 days" has three forms in Czech and those numbers are the first
+       thing the eye catches on the detail -- which is why the template sends
+       all three. */
+    function whenInWords(u) {
+      var state = KZ.udalost.stav(u, today());
+      if (state === "probiha") return s("stav-probiha");
+      if (state === "bylo") return s("stav-bylo");
+      var howMany = KZ.udalost.dnuDo(u, today());
+      if (howMany === 0) return s("dnes");
+      if (howMany === 1) return s("zitra");
       var tvary = [];
-      try { tvary = JSON.parse(s("za") || "[]"); } catch (chyba) { tvary = []; }
-      if (tvary.length !== 3 || kolik === null || kolik < 0) return s("stav-chysta");
-      var tvar = kolik >= 2 && kolik <= 4 ? tvary[1] : tvary[2];
-      return tvar.replace("%s", String(kolik));
+      try { tvary = JSON.parse(s("za") || "[]"); } catch (error) { tvary = []; }
+      if (tvary.length !== 3 || howMany === null || howMany < 0) return s("stav-chysta");
+      var form = howMany >= 2 && howMany <= 4 ? tvary[1] : tvary[2];
+      return form.replace("%s", String(howMany));
     }
 
-    function prvekZe(znacka, trida, text) {
-      var p = doc.createElement(znacka);
+    function elementFrom(tag, trida, text) {
+      var p = doc.createElement(tag);
       if (trida) p.className = trida;
       if (text) p.textContent = text;
       return p;
     }
 
     function vykresli(id) {
-      var u = podleId(id);
+      var u = byId(id);
       if (!u) return;
-      otevreno = id;
-      telo.innerHTML = "";
+      openId = id;
+      body.innerHTML = "";
 
-      var hlava = prvekZe("div", "detail-hlava");
-      hlava.appendChild(prvekZe("span", "chip " + (u.typ || ""), u.typNazev || ""));
-      hlava.appendChild(prvekZe("span", "detail-stav " + KZ.udalost.stav(u, dnes()), kdyVetou(u)));
-      telo.appendChild(hlava);
+      var head = elementFrom("div", "detail-hlava");
+      head.appendChild(elementFrom("span", "chip " + (u.typ || ""), u.typNazev || ""));
+      head.appendChild(elementFrom("span", "detail-stav " + KZ.udalost.stav(u, today()), whenInWords(u)));
+      body.appendChild(head);
 
-      var nadpis = prvekZe("h2", "", u.nazev || "");
-      nadpis.id = "detail-akce-nazev";
-      telo.appendChild(nadpis);
+      var heading = elementFrom("h2", "", u.nazev || "");
+      heading.id = "detail-akce-nazev";
+      body.appendChild(heading);
 
-      telo.appendChild(prvekZe("p", "detail-kdy", u.kdy + (u.cas ? ", " + u.cas : "")));
+      body.appendChild(elementFrom("p", "detail-kdy", u.kdy + (u.cas ? ", " + u.cas : "")));
       if (u.misto) {
-        var kde = prvekZe("p", "detail-kde");
-        kde.appendChild(prvekZe("span", "verzalky", s("kde")));
-        kde.appendChild(doc.createTextNode(" " + u.misto));
-        telo.appendChild(kde);
+        var placeLine = elementFrom("p", "detail-kde");
+        placeLine.appendChild(elementFrom("span", "verzalky", s("kde")));
+        placeLine.appendChild(doc.createTextNode(" " + u.misto));
+        body.appendChild(placeLine);
       }
-      if (u.popis) telo.appendChild(prvekZe("p", "", u.popis));
+      if (u.popis) body.appendChild(elementFrom("p", "", u.popis));
 
-      // Díla, která na té akci visela, čekají hotová v <template> vedle
-      // detailu: srcsety zná jen build a cesty musí projít předvolbou pro
-      // GitHub Pages, což umí jen atributy v HTML, ne řetězce v JSON.
-      var sablona = v('template[data-dila-akce="' + id.replace(/"/g, '\\"') + '"]', prvek);
-      if (sablona && sablona.content) {
-        telo.appendChild(prvekZe("p", "verzalky detail-nadpis", s("dila")));
-        telo.appendChild(sablona.content.cloneNode(true));
-      }
-
-      /* U kurzu musí být po ruce odkaz, kde se na něj dá přihlásit —
-         jinak si člověk přečte, že kurz je, a dál neví co. */
-      if (naKurzy) {
-        naKurzy.hidden = u.typ !== "kurz";
-        naKurzy.href = kurzyZaklad + (u.kurz ? "#" + encodeURIComponent(u.kurz) : "");
+      // The works that hung at the event wait finished in a <template> beside
+      // the detail: only the build knows the srcsets, and the paths must go through
+      // the prefix for GitHub Pages, which reaches HTML attributes, not JSON strings.
+      var template = v('template[data-dila-akce="' + id.replace(/"/g, '\\"') + '"]', element);
+      if (template && template.content) {
+        body.appendChild(elementFrom("p", "verzalky detail-nadpis", s("dila")));
+        body.appendChild(template.content.cloneNode(true));
       }
 
-      var okolo = KZ.udalost.sousedi(udalosti, dnes(), id);
-      tamZpet.disabled = !okolo.predchozi;
+      /* A course needs a link to where it can be signed up for close at hand --
+         otherwise a visitor reads that the course exists and is none the
+         wiser. */
+      if (toCourses) {
+        toCourses.hidden = u.typ !== "kurz";
+        toCourses.href = coursesBase + (u.kurz ? "#" + encodeURIComponent(u.kurz) : "");
+      }
+
+      var okolo = KZ.udalost.sousedi(udalosti, today(), id);
+      thereAndBack.disabled = !okolo.predchozi;
       tamVpred.disabled = !okolo.dalsi;
-      tamZpet.setAttribute("data-kam", okolo.predchozi || "");
+      thereAndBack.setAttribute("data-kam", okolo.predchozi || "");
       tamVpred.setAttribute("data-kam", okolo.dalsi || "");
       panel.setAttribute("aria-labelledby", "detail-akce-nazev");
       panel.scrollTop = 0;
     }
 
-    /* Panel se vyzvedne z dlaždice, na kterou se kliklo: spočítá se, kde
-       ta dlaždice leží, panel se tam na chvíli zmenší a pak dojede na své
-       místo. Bez povoleného pohybu se jen objeví. */
-    function vyzvedni(odkud) {
-      if (!panel.animate || !html.classList.contains("pohyb") || !odkud) return;
-      var r = odkud.getBoundingClientRect();
+    /* The panel is picked up from the tile that was clicked: where that tile
+       lies is worked out, the panel shrinks there for a moment and then
+       travels to its place. With motion not allowed it simply appears. */
+    function vyzvedni(origin) {
+      if (!panel.animate || !html.classList.contains("pohyb") || !origin) return;
+      var r = origin.getBoundingClientRect();
       var p = panel.getBoundingClientRect();
       if (!r.width || !p.width) return;
       var sx = Math.max(0.25, Math.min(1, r.width / p.width));
@@ -130,61 +134,61 @@
       ], { duration: 420, easing: "cubic-bezier(0.22, 0.7, 0.2, 1)" });
     }
 
-    function otevri(id, odkud) {
-      if (!podleId(id)) return false;
-      if (prvek.hidden) kamSeVratit = doc.activeElement;
+    function open(id, origin) {
+      if (!byId(id)) return false;
+      if (element.hidden) whereToReturn = doc.activeElement;
       vykresli(id);
-      prvek.hidden = false;
+      element.hidden = false;
       doc.body.style.overflow = "hidden";
-      vyzvedni(odkud);
-      var zavri = v("[data-detail-zavri]", prvek);
-      if (zavri) zavri.focus();
+      vyzvedni(origin);
+      var close = v("[data-detail-zavri]", element);
+      if (close) close.focus();
       return true;
     }
 
-    function zavri() {
-      if (prvek.hidden) return;
-      prvek.hidden = true;
-      otevreno = null;
+    function close() {
+      if (element.hidden) return;
+      element.hidden = true;
+      openId = null;
       doc.body.style.overflow = "";
-      if (kamSeVratit && kamSeVratit.focus) kamSeVratit.focus();
+      if (whereToReturn && whereToReturn.focus) whereToReturn.focus();
     }
 
-    /* Klik se odchytává na dokumentu, ne na jednotlivých akcích: mřížka
-       měsíce se při přepnutí měsíce překresluje a nové odkazy by o svého
-       posluchače přišly. */
+    /* The click is caught on the document, not on the individual events: the
+       month's grid is redrawn when the month changes and new links would lose
+       their listener. */
     doc.addEventListener("click", function (udalost) {
       if (udalost.metaKey || udalost.ctrlKey || udalost.shiftKey || udalost.button !== 0) return;
       if (udalost.target.closest("[data-detail-akce]")) return;
-      var spoust = udalost.target.closest("[data-akce]");
-      if (!spoust) return;
-      if (otevri(spoust.getAttribute("data-akce"), spoust)) udalost.preventDefault();
+      var trigger = udalost.target.closest("[data-akce]");
+      if (!trigger) return;
+      if (open(trigger.getAttribute("data-akce"), trigger)) udalost.preventDefault();
     });
 
-    // Tlačítko „detail" u akce v seznamu má smysl jen se skriptem.
-    vse("[data-vic]").forEach(function (tlacitko) { tlacitko.hidden = false; });
+    // The "detail" button on an event in a list makes sense only with the script.
+    all("[data-vic]").forEach(function (button) { button.hidden = false; });
 
-    [tamZpet, tamVpred].forEach(function (tlacitko) {
-      tlacitko.addEventListener("click", function () {
-        var kam = tlacitko.getAttribute("data-kam");
-        if (kam) otevri(kam, panel);
+    [thereAndBack, tamVpred].forEach(function (button) {
+      button.addEventListener("click", function () {
+        var target = button.getAttribute("data-kam");
+        if (target) open(target, panel);
       });
     });
-    vse("[data-detail-zavri], [data-detail-plachta]", prvek).forEach(function (co) {
-      co.addEventListener("click", zavri);
+    all("[data-detail-zavri], [data-detail-plachta]", element).forEach(function (co) {
+      co.addEventListener("click", close);
     });
     doc.addEventListener("keydown", function (udalost) {
-      if (prvek.hidden) return;
-      if (udalost.key === "Escape") { udalost.preventDefault(); zavri(); return; }
-      if (udalost.key === "ArrowLeft" && !tamZpet.disabled) { udalost.preventDefault(); tamZpet.click(); }
+      if (element.hidden) return;
+      if (udalost.key === "Escape") { udalost.preventDefault(); close(); return; }
+      if (udalost.key === "ArrowLeft" && !thereAndBack.disabled) { udalost.preventDefault(); thereAndBack.click(); }
       if (udalost.key === "ArrowRight" && !tamVpred.disabled) { udalost.preventDefault(); tamVpred.click(); }
     });
 
-    // Odkaz na kotvu akce (třeba z lišty aktualit z jiné stránky) detail
-    // rovnou otevře — jinak by člověk skočil doprostřed seznamu a nevěděl proč.
+    // A link to an event's anchor (from the news bar on another page, say) opens
+    // the detail at once -- otherwise one lands mid-list and cannot tell why.
     if (window.location.hash.length > 1) {
       var zHashe = decodeURIComponent(window.location.hash.slice(1));
-      if (podleId(zHashe)) otevri(zHashe, v('[data-akce="' + zHashe.replace(/"/g, '\\"') + '"]'));
+      if (byId(zHashe)) open(zHashe, v('[data-akce="' + zHashe.replace(/"/g, '\\"') + '"]'));
     }
   };
 })();

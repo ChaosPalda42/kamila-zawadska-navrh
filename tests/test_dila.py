@@ -1,11 +1,13 @@
-"""Akceptační test C-001 — src/lib/dila.mjs (díla, stavy, viditelnost)."""
+"""Acceptance test C-001 -- `src/lib/dila.mjs` (works, states, visibility)."""
 from __future__ import annotations
+
+import pathlib
 
 import pytest
 
 from tests.jsmod import run_js
 
-DILA = [
+WORKS = [
     {"slug": "a-prodej", "nazev": {"cs": "Alfa"}, "technika": "olej", "styl": "krajina",
      "album": "x", "rok": 2026, "cena": 1000, "stav": "v-prodeji", "vGalerii": True, "vEshopu": True},
     {"slug": "b-zamluveno", "nazev": {"cs": "Beta"}, "technika": "olej", "styl": "zatisi",
@@ -22,7 +24,7 @@ DILA = [
 @pytest.fixture()
 def js():
     def call(body, **args):
-        return run_js("dila.mjs", body, args={"d": DILA, **args})
+        return run_js("dila.mjs", body, args={"d": WORKS, **args})
     return call
 
 
@@ -139,3 +141,38 @@ def test_cena(js):
     assert js("out(m.cena({ cena: -5 }));") == 0
     assert js('out(m.cena({ cena: "nic" }));') == 0
     assert js("out(m.cena({ cena: 1999.6 }));") == 1999
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "src/lib/dila.mjs"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "src/lib/dila.mjs"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

@@ -1,38 +1,24 @@
 {
-  "_poznamka": "Ukázková data. Fotky jsou vygenerované, díla, ceny, termíny i texty vymyšlené. Kontakty jsou ZÁSTUPNÉ: telefon je samé nuly a odkazy na sítě vedou na úvodní stránku Instagramu a Facebooku, aby vymyšlený údaj netrefil cizího člověka. Před spuštěním ostrého webu je vyplní klientka.",
+  "_poznamka": "Ukázková data. Díla, ceny, termíny a texty jsou vymyšlené a reprodukce vygenerované. Skutečné od klientky: e-mail, Instagram, adresa ateliéru a portrét. ZÁSTUPNÉ zůstává: telefon (samé nuly) a odkaz na Facebook (vede na úvodní stránku FB) — klientka dodá číslo a adresu profilu.",
   "web": {
     "jmeno": "Kamila Zawadská",
     "domena": "kamilazawadska.com",
-    "email": "ahoj@kamilazawadska.com",
+    "email": "Kamila.Zawadska@gmail.com",
     "telefon": "+420 000 000 000",
     "ateliér": {
       "nazev": {
         "cs": "Ateliér Zawadská",
         "en": "Zawadská Studio"
       },
-      "adresa": "Pragovka Art District, Kolbenova 923/34a, 190 00 Praha 9",
+      "adresa": "Pragovka Art District, Strojírna, Kolbenova 923, 190 00 Praha 9 – Vysočany",
       "lat": 50.1106,
       "lon": 14.5133,
       "zoom": 15
     },
-    "instagram": "https://www.instagram.com/",
+    "instagram": "https://www.instagram.com/kamila.zawadska/",
     "facebook": "https://www.facebook.com/"
   },
   "techniky": [
-    {
-      "id": "olej",
-      "nazev": {
-        "cs": "Olej na plátně",
-        "en": "Oil on canvas"
-      }
-    },
-    {
-      "id": "akryl",
-      "nazev": {
-        "cs": "Akryl na plátně",
-        "en": "Acrylic on canvas"
-      }
-    },
     {
       "id": "pyrografie",
       "nazev": {
@@ -41,10 +27,10 @@
       }
     },
     {
-      "id": "kombinovana",
+      "id": "malba",
       "nazev": {
-        "cs": "Kombinovaná technika",
-        "en": "Mixed media"
+        "cs": "Malba",
+        "en": "Painting"
       }
     },
     {
@@ -53,9 +39,30 @@
         "cs": "Kresba",
         "en": "Drawing"
       }
+    },
+    {
+      "id": "grafika",
+      "nazev": {
+        "cs": "Grafika",
+        "en": "Printmaking"
+      }
+    },
+    {
+      "id": "keramika",
+      "nazev": {
+        "cs": "Keramika",
+        "en": "Ceramics"
+      }
     }
   ],
   "styly": [
+    {
+      "id": "symbolika",
+      "nazev": {
+        "cs": "Symbolika",
+        "en": "Symbolism"
+      }
+    },
     {
       "id": "abstrakce",
       "nazev": {
@@ -64,31 +71,31 @@
       }
     },
     {
-      "id": "krajina",
+      "id": "clovek",
       "nazev": {
-        "cs": "Krajina",
-        "en": "Landscape"
+        "cs": "Člověk",
+        "en": "Human figure"
       }
     },
     {
-      "id": "zatisi",
+      "id": "zvire",
       "nazev": {
-        "cs": "Zátiší",
-        "en": "Still life"
+        "cs": "Zvíře",
+        "en": "Animal"
       }
     },
     {
-      "id": "figura",
+      "id": "priroda",
       "nazev": {
-        "cs": "Figura",
-        "en": "Figure"
+        "cs": "Příroda",
+        "en": "Nature"
       }
     },
     {
-      "id": "portret",
+      "id": "kvetina",
       "nazev": {
-        "cs": "Portrét",
-        "en": "Portrait"
+        "cs": "Květina",
+        "en": "Flower"
       }
     }
   ],
@@ -149,8 +156,8 @@
         "cs": "Ráno nad Vltavou",
         "en": "Morning over the Vltava"
       },
-      "technika": "olej",
-      "styl": "krajina",
+      "technika": "malba",
+      "styl": "priroda",
       "album": "pragovka-2026",
       "rok": 2026,
       "rozmer": "120 × 80 cm",
@@ -174,8 +181,8 @@
         "cs": "Dvě ruce",
         "en": "Two Hands"
       },
-      "technika": "olej",
-      "styl": "figura",
+      "technika": "malba",
+      "styl": "clovek",
       "album": "ruce-2024",
       "rok": 2024,
       "rozmer": "70 × 50 cm",
@@ -199,8 +206,8 @@
         "cs": "Květina v okně",
         "en": "Flower in the Window"
       },
-      "technika": "akryl",
-      "styl": "zatisi",
+      "technika": "malba",
+      "styl": "kvetina",
       "album": "chvalsky-zamek-2025",
       "rok": 2025,
       "rozmer": "60 × 60 cm",
@@ -224,7 +231,7 @@
         "cs": "Horizont I",
         "en": "Horizon I"
       },
-      "technika": "akryl",
+      "technika": "malba",
       "styl": "abstrakce",
       "album": "pragovka-2026",
       "rok": 2026,
@@ -249,7 +256,7 @@
         "cs": "Horizont II",
         "en": "Horizon II"
       },
-      "technika": "akryl",
+      "technika": "malba",
       "styl": "abstrakce",
       "album": "pragovka-2026",
       "rok": 2026,
@@ -275,7 +282,7 @@
         "en": "Owl"
       },
       "technika": "pyrografie",
-      "styl": "zatisi",
+      "styl": "zvire",
       "album": "atelier",
       "rok": 2026,
       "rozmer": "40 × 30 cm",
@@ -300,7 +307,7 @@
         "en": "Forest after Rain"
       },
       "technika": "pyrografie",
-      "styl": "krajina",
+      "styl": "priroda",
       "album": "atelier",
       "rok": 2025,
       "rozmer": "50 × 35 cm",
@@ -325,7 +332,7 @@
         "en": "Portrait of M."
       },
       "technika": "kresba",
-      "styl": "portret",
+      "styl": "clovek",
       "album": "ruce-2024",
       "rok": 2024,
       "rozmer": "42 × 30 cm",
@@ -349,8 +356,8 @@
         "cs": "Zátiší s hrnky",
         "en": "Still Life with Mugs"
       },
-      "technika": "olej",
-      "styl": "zatisi",
+      "technika": "malba",
+      "styl": "symbolika",
       "album": "chvalsky-zamek-2025",
       "rok": 2025,
       "rozmer": "50 × 40 cm",
@@ -374,8 +381,8 @@
         "cs": "Most",
         "en": "Bridge"
       },
-      "technika": "kombinovana",
-      "styl": "krajina",
+      "technika": "malba",
+      "styl": "priroda",
       "album": "pragovka-2026",
       "rok": 2026,
       "rozmer": "140 × 90 cm",
@@ -399,7 +406,7 @@
         "cs": "Noc v ateliéru",
         "en": "Night in the Studio"
       },
-      "technika": "olej",
+      "technika": "malba",
       "styl": "abstrakce",
       "album": "atelier",
       "rok": 2026,
@@ -424,8 +431,8 @@
         "cs": "Ruka s jablkem",
         "en": "Hand with an Apple"
       },
-      "technika": "olej",
-      "styl": "figura",
+      "technika": "malba",
+      "styl": "clovek",
       "album": "ruce-2024",
       "rok": 2024,
       "rozmer": "60 × 45 cm",
@@ -449,8 +456,8 @@
         "cs": "Pole v lednu",
         "en": "Field in January"
       },
-      "technika": "akryl",
-      "styl": "krajina",
+      "technika": "malba",
+      "styl": "priroda",
       "album": "chvalsky-zamek-2025",
       "rok": 2025,
       "rozmer": "90 × 70 cm",
@@ -475,7 +482,7 @@
         "en": "Drapery Study"
       },
       "technika": "kresba",
-      "styl": "zatisi",
+      "styl": "symbolika",
       "album": "atelier",
       "rok": 2026,
       "rozmer": "50 × 35 cm",
@@ -550,7 +557,7 @@
         "en": "Hand Drawing I"
       },
       "technika": "kresba",
-      "styl": "figura",
+      "styl": "clovek",
       "album": "ruce-2024",
       "rok": 2024,
       "rozmer": "30 × 21 cm",
@@ -574,7 +581,7 @@
         "cs": "Velká vlna",
         "en": "The Big Wave"
       },
-      "technika": "kombinovana",
+      "technika": "malba",
       "styl": "abstrakce",
       "album": "atelier",
       "rok": 2026,
@@ -842,7 +849,7 @@
     "foto": "atelier"
   },
   "bio": {
-    "portret": "atelier",
+    "portret": "portret-kamila",
     "vzdelani": [
       {
         "rok": "2014—2020",

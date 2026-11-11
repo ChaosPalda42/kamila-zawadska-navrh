@@ -1,110 +1,110 @@
-// Fotky díla v administraci — kontrola souboru, pořadí a hlavní fotka.
-// Čistý ES modul, bez závislostí a bez DOM. Nic nenahrává: dostane POPIS
-// souboru a vrací NOVÝ stav. Soubor je { klic, nazev, typ, velikost, data }.
+// Photos of a work in the administration -- checking the file, the ordering and the main photo.
+// A plain ES module, no dependencies and no DOM. It uploads nothing: it is handed a
+// DESCRIPTION of a file and returns a NEW state. A file is `{ klic, nazev, typ, velikost, data }`.
 
 export const TYPY = Object.freeze(["image/jpeg", "image/png", "image/webp"]);
 
 export const MAX_BAJTU = 6291456; // 6 MB
 
-const PRIPONY = {
+const EXTENSIONS = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
 };
 
-function jePlatnaVelikost(velikost) {
-  return typeof velikost === "number" && Number.isFinite(velikost) && velikost > 0;
+function isValidSize(size) {
+  return typeof size === "number" && Number.isFinite(size) && size > 0;
 }
 
-export function zkontroluj(soubor) {
-  if (soubor === null || typeof soubor !== "object") return ["prazdny"];
+export function zkontroluj(file) {
+  if (file === null || typeof file !== "object") return ["prazdny"];
   const chyby = [];
-  if (!jePlatnaVelikost(soubor.velikost)) {
+  if (!isValidSize(file.velikost)) {
     chyby.push("prazdny");
   }
-  const typ = typeof soubor.typ === "string" ? soubor.typ.toLowerCase() : "";
-  if (!TYPY.includes(typ)) {
+  const type = typeof file.typ === "string" ? file.typ.toLowerCase() : "";
+  if (!TYPY.includes(type)) {
     chyby.push("typ");
   }
-  if (jePlatnaVelikost(soubor.velikost) && soubor.velikost > MAX_BAJTU) {
+  if (isValidSize(file.velikost) && file.velikost > MAX_BAJTU) {
     chyby.push("velikost");
   }
   return chyby;
 }
 
-export function pripona(typ) {
-  if (typeof typ !== "string") return "";
-  return PRIPONY[typ.toLowerCase()] ?? "";
+export function pripona(type) {
+  if (typeof type !== "string") return "";
+  return EXTENSIONS[type.toLowerCase()] ?? "";
 }
 
-export function navrhniNazev(slug, typ) {
+export function navrhniNazev(slug, type) {
   if (typeof slug !== "string" || slug.length === 0) return "";
-  const p = pripona(typ);
+  const p = pripona(type);
   if (!p) return "";
   return `${slug}.${p}`;
 }
 
-export function zaloz(dilo) {
-  const obrazek = dilo && typeof dilo.obrazek === "string" ? dilo.obrazek : "";
-  if (!obrazek) return { hlavni: "", obrazky: [] };
+export function zaloz(work) {
+  const image = work && typeof work.obrazek === "string" ? work.obrazek : "";
+  if (!image) return { hlavni: "", obrazky: [] };
   return {
-    hlavni: obrazek,
-    obrazky: [{ klic: obrazek, nazev: obrazek, typ: "", velikost: 0, data: "" }],
+    hlavni: image,
+    obrazky: [{ klic: image, nazev: image, typ: "", velikost: 0, data: "" }],
   };
 }
 
-function novyObrazek(soubor) {
+function newImage(file) {
   return {
-    klic: soubor.klic,
-    nazev: soubor.nazev,
-    typ: soubor.typ,
-    velikost: soubor.velikost,
-    data: soubor.data,
+    klic: file.klic,
+    nazev: file.nazev,
+    typ: file.typ,
+    velikost: file.velikost,
+    data: file.data,
   };
 }
 
-export function pridej(galerie, soubor) {
-  const chyby = zkontroluj(soubor);
+export function pridej(gallery, file) {
+  const chyby = zkontroluj(file);
   if (chyby.length > 0) {
-    return { galerie: { hlavni: galerie?.hlavni ?? "", obrazky: [...(galerie?.obrazky ?? [])] }, chyby };
+    return { galerie: { hlavni: gallery?.hlavni ?? "", obrazky: [...(gallery?.obrazky ?? [])] }, chyby };
   }
-  const obrazky = [...(galerie?.obrazky ?? [])];
-  const index = obrazky.findIndex((o) => o.klic === soubor.klic);
+  const obrazky = [...(gallery?.obrazky ?? [])];
+  const index = obrazky.findIndex((o) => o.klic === file.klic);
   if (index >= 0) {
-    obrazky[index] = novyObrazek(soubor);
+    obrazky[index] = newImage(file);
   } else {
-    obrazky.push(novyObrazek(soubor));
+    obrazky.push(newImage(file));
   }
-  const hlavni = obrazky.length > 0 && !obrazky.some((o) => o.klic === (galerie?.hlavni ?? ""))
+  const hlavni = obrazky.length > 0 && !obrazky.some((o) => o.klic === (gallery?.hlavni ?? ""))
     ? obrazky[0].klic
-    : (galerie?.hlavni ?? "");
+    : (gallery?.hlavni ?? "");
   return { galerie: { hlavni, obrazky }, chyby: [] };
 }
 
-export function odeber(galerie, klic) {
-  const obrazky = (galerie?.obrazky ?? []).filter((o) => o.klic !== klic);
-  const hlavni = obrazky.length > 0 ? (galerie?.hlavni === klic ? obrazky[0].klic : galerie.hlavni) : "";
+export function odeber(gallery, klic) {
+  const obrazky = (gallery?.obrazky ?? []).filter((o) => o.klic !== klic);
+  const hlavni = obrazky.length > 0 ? (gallery?.hlavni === klic ? obrazky[0].klic : gallery.hlavni) : "";
   return { hlavni, obrazky };
 }
 
-export function nastavHlavni(galerie, klic) {
-  const obrazky = [...(galerie?.obrazky ?? [])];
+export function nastavHlavni(gallery, klic) {
+  const obrazky = [...(gallery?.obrazky ?? [])];
   if (!obrazky.some((o) => o.klic === klic)) {
-    return { hlavni: galerie?.hlavni ?? "", obrazky };
+    return { hlavni: gallery?.hlavni ?? "", obrazky };
   }
   return { hlavni: klic, obrazky };
 }
 
-export function posun(galerie, klic, o) {
-  const obrazky = [...(galerie?.obrazky ?? [])];
-  if (o !== -1 && o !== 1) return { hlavni: galerie?.hlavni ?? "", obrazky };
+export function posun(gallery, klic, o) {
+  const obrazky = [...(gallery?.obrazky ?? [])];
+  if (o !== -1 && o !== 1) return { hlavni: gallery?.hlavni ?? "", obrazky };
   const index = obrazky.findIndex((o2) => o2.klic === klic);
-  const cil = index + o;
-  if (index < 0 || cil < 0 || cil >= obrazky.length) {
-    return { hlavni: galerie?.hlavni ?? "", obrazky };
+  const target = index + o;
+  if (index < 0 || target < 0 || target >= obrazky.length) {
+    return { hlavni: gallery?.hlavni ?? "", obrazky };
   }
-  [obrazky[index], obrazky[cil]] = [obrazky[cil], obrazky[index]];
-  return { hlavni: galerie?.hlavni ?? "", obrazky };
+  [obrazky[index], obrazky[target]] = [obrazky[target], obrazky[index]];
+  return { hlavni: gallery?.hlavni ?? "", obrazky };
 }
 
 export function lidskaVelikost(bajtu) {

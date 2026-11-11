@@ -1,5 +1,5 @@
-// C-014 — texty webu rozdělené do sekcí, hledání bez diakritiky a co se změnilo.
-// Čistý ES modul bez závislostí a bez DOM.
+// C-014 -- the site texts split into sections, searching without diacritics and what changed.
+// A plain ES module with no dependencies and no DOM.
 
 const ZAMRAZENY = (obj) => Object.freeze(obj);
 
@@ -15,64 +15,64 @@ export const SEKCE = ZAMRAZENY([
   { id: "ostatni", predpony: [] },
 ].map(ZAMRAZENY));
 
-const JAZYKY_VYCHOZI = ["cs", "en"];
+const LANGUAGES_DEFAULT = ["cs", "en"];
 
-const slovnik = (texty) => (texty && typeof texty === "object" ? texty : {});
+const dictionary = (texts) => (texts && typeof texts === "object" ? texts : {});
 
-const kliceAbecedne = (klice) => [...klice].sort();
+const keysAlphabetical = (keys) => [...keys].sort();
 
-// Normalizace pro hledání: bez diakritiky a bez ohledu na velikost písmen.
-const bezDiakritiky = (text) =>
+// Normalization for searching: without diacritics and regardless of letter case.
+const withoutDiacritics = (text) =>
   String(text)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-export function sekce(texty) {
-  const t = slovnik(texty);
-  const skupiny = new Map(SEKCE.map((s) => [s.id, []]));
-  for (const klic of Object.keys(t)) {
+export function sekce(texts) {
+  const t = dictionary(texts);
+  const groups = new Map(SEKCE.map((s) => [s.id, []]));
+  for (const key of Object.keys(t)) {
     let id = "ostatni";
     for (const s of SEKCE) {
-      if (s.predpony.some((p) => klic.startsWith(p))) {
+      if (s.predpony.some((p) => key.startsWith(p))) {
         id = s.id;
         break;
       }
     }
-    skupiny.get(id).push(klic);
+    groups.get(id).push(key);
   }
-  return SEKCE.map((s) => ({ id: s.id, klice: kliceAbecedne(skupiny.get(s.id)) }));
+  return SEKCE.map((s) => ({ id: s.id, klice: keysAlphabetical(groups.get(s.id)) }));
 }
 
-export function hledej(texty, dotaz, jazyky = JAZYKY_VYCHOZI) {
-  const t = slovnik(texty);
-  const klice = Object.keys(t);
-  const dotazNorm = bezDiakritiky(dotaz ?? "");
-  if (dotazNorm.trim() === "") {
-    return kliceAbecedne(klice);
+export function hledej(texts, dotaz, jazyky = LANGUAGES_DEFAULT) {
+  const t = dictionary(texts);
+  const keys = Object.keys(t);
+  const queryNormalize = withoutDiacritics(dotaz ?? "");
+  if (queryNormalize.trim() === "") {
+    return keysAlphabetical(keys);
   }
-  const jazykyPouzit = Array.isArray(jazyky) ? jazyky : JAZYKY_VYCHOZI;
-  const sedi = (klic) => {
-    if (bezDiakritiky(klic).includes(dotazNorm)) {
+  const languagesUsed = Array.isArray(jazyky) ? jazyky : LANGUAGES_DEFAULT;
+  const sedi = (key) => {
+    if (withoutDiacritics(key).includes(queryNormalize)) {
       return true;
     }
-    const hodnota = t[klic];
-    return jazykyPouzit.some((j) => {
-      const text = hodnota && typeof hodnota === "object" ? hodnota[j] : null;
-      return typeof text === "string" && bezDiakritiky(text).includes(dotazNorm);
+    const value = t[key];
+    return languagesUsed.some((j) => {
+      const text = value && typeof value === "object" ? value[j] : null;
+      return typeof text === "string" && withoutDiacritics(text).includes(queryNormalize);
     });
   };
-  return kliceAbecedne(klice.filter(sedi));
+  return keysAlphabetical(keys.filter(sedi));
 }
 
 export function rozdil(puvodni, upravene) {
-  const a = slovnik(puvodni);
-  const b = slovnik(upravene);
-  const klice = new Set([...Object.keys(a), ...Object.keys(b)]);
-  const seLisi = (klic) => {
-    const va = a[klic];
-    const vb = b[klic];
-    if (!(klic in a) || !(klic in b)) {
+  const a = dictionary(puvodni);
+  const b = dictionary(upravene);
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  const seLisi = (key) => {
+    const va = a[key];
+    const vb = b[key];
+    if (!(key in a) || !(key in b)) {
       return true;
     }
     const jazyky = new Set([
@@ -86,18 +86,18 @@ export function rozdil(puvodni, upravene) {
     }
     return false;
   };
-  return kliceAbecedne([...klice].filter(seLisi));
+  return keysAlphabetical([...keys].filter(seLisi));
 }
 
-export function chybejici(texty, jazyky = JAZYKY_VYCHOZI) {
-  const t = slovnik(texty);
-  const jazykyPouzit = Array.isArray(jazyky) ? jazyky : JAZYKY_VYCHOZI;
-  const isMissing = (klic) => {
-    const hodnota = t[klic];
-    return jazykyPouzit.some((j) => {
-      const text = hodnota && typeof hodnota === "object" ? hodnota[j] : null;
+export function chybejici(texts, jazyky = LANGUAGES_DEFAULT) {
+  const t = dictionary(texts);
+  const languagesUsed = Array.isArray(jazyky) ? jazyky : LANGUAGES_DEFAULT;
+  const isMissing = (key) => {
+    const value = t[key];
+    return languagesUsed.some((j) => {
+      const text = value && typeof value === "object" ? value[j] : null;
       return typeof text !== "string" || text.trim() === "";
     });
   };
-  return kliceAbecedne(Object.keys(t).filter(isMissing));
+  return keysAlphabetical(Object.keys(t).filter(isMissing));
 }

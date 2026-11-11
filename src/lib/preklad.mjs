@@ -1,36 +1,36 @@
-// C-003 — Dvojjazyčnost: slovník, záložní jazyk a cesty /en/.
-// Čistý ES modul bez závislostí a bez DOM.
+// C-003 -- two languages: the dictionary, the fallback language and the /en/ paths.
+// A plain ES module with no dependencies and no DOM.
 
 export const JAZYKY = Object.freeze(["cs", "en"]);
 
-export function jazykOk(jazyk) {
-  return jazyk === "cs" || jazyk === "en";
+export function jazykOk(language) {
+  return language === "cs" || language === "en";
 }
 
-export function t(slovnik, klic, jazyk) {
-  const polozka = slovnik ? slovnik[klic] : undefined;
-  if (typeof polozka === "string") return polozka;
-  if (polozka && typeof polozka === "object") {
-    const hodnota = polozka[jazyk];
-    if (typeof hodnota === "string" && hodnota !== "") return hodnota;
-    const cs = polozka["cs"];
+export function t(dictionary, klic, language) {
+  const item = dictionary ? dictionary[klic] : undefined;
+  if (typeof item === "string") return item;
+  if (item && typeof item === "object") {
+    const value = item[language];
+    if (typeof value === "string" && value !== "") return value;
+    const cs = item["cs"];
     if (typeof cs === "string" && cs !== "") return cs;
   }
   return klic;
 }
 
-export function pole(hodnota, jazyk) {
-  if (typeof hodnota === "string") return hodnota;
-  if (hodnota && typeof hodnota === "object") {
-    const hodnotaJazyk = hodnota[jazyk];
-    if (typeof hodnotaJazyk === "string" && hodnotaJazyk !== "") return hodnotaJazyk;
-    const cs = hodnota["cs"];
+export function pole(value, language) {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const valueLanguage = value[language];
+    if (typeof valueLanguage === "string" && valueLanguage !== "") return valueLanguage;
+    const cs = value["cs"];
     if (typeof cs === "string" && cs !== "") return cs;
   }
   return "";
 }
 
-const CESTY = {
+const PATHS = {
   domu: "/",
   galerie: "/galerie/",
   eshop: "/obrazy-k-prodeji/",
@@ -42,32 +42,32 @@ const CESTY = {
   administrace: "/administrace/",
 };
 
-function sPrefixem(cesta, jazyk) {
-  if (jazyk !== "en") return cesta;
+function sPrefixem(cesta, language) {
+  if (language !== "en") return cesta;
   if (cesta === "/") return "/en/";
   return "/en" + cesta;
 }
 
-export function cesta(klic, jazyk) {
-  return sPrefixem(CESTY[klic] ?? "/", jazyk);
+export function cesta(klic, language) {
+  return sPrefixem(PATHS[klic] ?? "/", language);
 }
 
-export function cestaDila(slug, jazyk) {
-  if (!slug) return cesta("galerie", jazyk);
-  return sPrefixem("/galerie/" + slug + "/", jazyk);
+export function cestaDila(slug, language) {
+  if (!slug) return cesta("galerie", language);
+  return sPrefixem("/galerie/" + slug + "/", language);
 }
 
-export function druhyJazyk(jazyk) {
-  return jazyk === "cs" ? "en" : jazyk === "en" ? "cs" : "en";
+export function druhyJazyk(language) {
+  return language === "cs" ? "en" : language === "en" ? "cs" : "en";
 }
 
-export function prepni(cesta, jazyk) {
+export function prepni(cesta, language) {
   let c = typeof cesta === "string" ? cesta : "";
   if (c === "/en" || c.startsWith("/en/")) c = c.slice(3);
   if (c === "") c = "/";
   if (!c.startsWith("/")) c = "/" + c;
   if (c.length > 1 && !c.endsWith("/")) c += "/";
-  return sPrefixem(c, jazyk);
+  return sPrefixem(c, language);
 }
 
 export function jazykZCesty(cesta) {

@@ -1,11 +1,13 @@
-"""Akceptační test C-003 — src/lib/preklad.mjs (dvojjazyčnost)."""
+"""Acceptance test C-003 -- `src/lib/preklad.mjs` (the two languages)."""
 from __future__ import annotations
+
+import pathlib
 
 import pytest
 
 from tests.jsmod import run_js
 
-SLOVNIK = {
+DICTIONARY = {
     "nav.galerie": {"cs": "Galerie", "en": "Gallery"},
     "bez.en": {"cs": "Jen česky"},
     "prazdne.en": {"cs": "Jen česky", "en": ""},
@@ -16,7 +18,7 @@ SLOVNIK = {
 @pytest.fixture()
 def js():
     def call(body, **args):
-        return run_js("preklad.mjs", body, args={"s": SLOVNIK, **args})
+        return run_js("preklad.mjs", body, args={"s": DICTIONARY, **args})
     return call
 
 
@@ -96,3 +98,38 @@ def test_jazyk_z_cesty(js):
     assert js('out(m.jazykZCesty("/galerie/"));') == "cs"
     assert js('out(m.jazykZCesty("/"));') == "cs"
     assert js('out(m.jazykZCesty("/english/"));') == "cs", "/en musí být celý úsek cesty"
+
+
+# --- language gate (constitution rule #545) ---------------------------------
+
+def test_source_is_in_english():
+    """Comments and identifiers in English (rule #545). The public API stays
+    Czech on purpose (rule #547): the project speaks Czech outwards -- file
+    names, module keys, exported names -- and English inside."""
+    from tests.code_language import czech_lines
+    from tests.public_api import PUBLIC_API
+
+    path = "src/lib/preklad.mjs"
+    assert czech_lines(path, allowed=PUBLIC_API[path]) == []
+
+
+def test_conversion_only_renamed():
+    """The translation renamed things and did nothing else.
+
+    Measured against the file as it stood before the conversion, at the tag
+    `pred-prevodem`. Strings, numbers, punctuation, keywords and the order of
+    statements all have to survive; reaching a key of the data through a
+    string instead of a dot counts as a change, and so does dropping a pair
+    of parentheses. Reformatting is not translating.
+    """
+    from tests.public_api import PUBLIC_API
+    from tests.struktura import rename_only, text_at_tag
+
+    path = "src/lib/preklad.mjs"
+    before = text_at_tag(path)
+    if before is None:
+        pytest.skip("značka pred-prevodem tu není, není proti čemu srovnávat")
+    root = pathlib.Path(__file__).resolve().parents[1]
+    after = (root / path).read_text(encoding="utf-8")
+    assert rename_only(before, after, pathlib.Path(path).suffix,
+                       keep=PUBLIC_API[path]) is None

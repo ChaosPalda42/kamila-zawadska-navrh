@@ -1,106 +1,106 @@
-// C-008 — Prohlížeč na celou obrazovku: index, přepínání dokola, klávesy,
-// přednačtení sousedů. Čistá logika bez DOM; otevírání/zavírání dělá DOM vrstva.
+// C-008 -- the full screen viewer: the index, stepping around in a loop, the keys,
+// preloading the neighbours. Pure logic with no DOM; opening and closing is the DOM layer's.
 
-function jePole(slugy) {
-  return Array.isArray(slugy);
+function isArray(slugs) {
+  return Array.isArray(slugs);
 }
 
 function zabal(index, celkem) {
   return ((index % celkem) + celkem) % celkem;
 }
 
-export function zaloz(slugy, slug) {
-  if (!jePole(slugy)) {
+export function zaloz(slugs, slug) {
+  if (!isArray(slugs)) {
     return { slugy: [], index: 0, otevreno: false };
   }
-  const kopie = [...slugy];
-  const index = kopie.indexOf(slug);
-  return { slugy: kopie, index: index === -1 ? 0 : index, otevreno: false };
+  const copy = [...slugs];
+  const index = copy.indexOf(slug);
+  return { slugy: copy, index: index === -1 ? 0 : index, otevreno: false };
 }
 
-export function otevri(stav, slug) {
-  if (!jePole(stav.slugy) || stav.slugy.length === 0) {
-    return { ...stav, index: 0, otevreno: false };
+export function otevri(state, slug) {
+  if (!isArray(state.slugy) || state.slugy.length === 0) {
+    return { ...state, index: 0, otevreno: false };
   }
-  const index = stav.slugy.indexOf(slug);
+  const index = state.slugy.indexOf(slug);
   if (index === -1) {
-    return { ...stav, index: 0, otevreno: false };
+    return { ...state, index: 0, otevreno: false };
   }
-  return { ...stav, index, otevreno: true };
+  return { ...state, index, otevreno: true };
 }
 
-export function zavri(stav) {
-  return { ...stav, otevreno: false };
+export function zavri(state) {
+  return { ...state, otevreno: false };
 }
 
-export function dalsi(stav) {
-  const celkem = jePole(stav.slugy) ? stav.slugy.length : 0;
+export function dalsi(state) {
+  const celkem = isArray(state.slugy) ? state.slugy.length : 0;
   if (celkem === 0) {
-    return { ...stav, index: 0 };
+    return { ...state, index: 0 };
   }
-  return { ...stav, index: zabal(stav.index + 1, celkem) };
+  return { ...state, index: zabal(state.index + 1, celkem) };
 }
 
-export function predchozi(stav) {
-  const celkem = jePole(stav.slugy) ? stav.slugy.length : 0;
+export function predchozi(state) {
+  const celkem = isArray(state.slugy) ? state.slugy.length : 0;
   if (celkem === 0) {
-    return { ...stav, index: 0 };
+    return { ...state, index: 0 };
   }
-  return { ...stav, index: zabal(stav.index - 1, celkem) };
+  return { ...state, index: zabal(state.index - 1, celkem) };
 }
 
-export function skoc(stav, index) {
+export function skoc(state, index) {
   if (!Number.isInteger(index)) {
-    return { ...stav };
+    return { ...state };
   }
-  const celkem = jePole(stav.slugy) ? stav.slugy.length : 0;
+  const celkem = isArray(state.slugy) ? state.slugy.length : 0;
   if (celkem === 0) {
-    return { ...stav, index: 0 };
+    return { ...state, index: 0 };
   }
-  return { ...stav, index: zabal(index, celkem) };
+  return { ...state, index: zabal(index, celkem) };
 }
 
-export function aktualni(stav) {
-  if (!jePole(stav.slugy) || stav.slugy.length === 0) {
+export function aktualni(state) {
+  if (!isArray(state.slugy) || state.slugy.length === 0) {
     return null;
   }
-  return stav.slugy[zabal(stav.index, stav.slugy.length)] ?? null;
+  return state.slugy[zabal(state.index, state.slugy.length)] ?? null;
 }
 
-export function okoli(stav) {
-  if (!jePole(stav.slugy) || stav.slugy.length === 0) {
+export function okoli(state) {
+  if (!isArray(state.slugy) || state.slugy.length === 0) {
     return { predchozi: null, dalsi: null };
   }
-  const celkem = stav.slugy.length;
+  const celkem = state.slugy.length;
   return {
-    predchozi: stav.slugy[zabal(stav.index - 1, celkem)],
-    dalsi: stav.slugy[zabal(stav.index + 1, celkem)],
+    predchozi: state.slugy[zabal(state.index - 1, celkem)],
+    dalsi: state.slugy[zabal(state.index + 1, celkem)],
   };
 }
 
 const DALSI = new Set(["ArrowRight", "ArrowDown", "PageDown", " ", "n"]);
-const PREDCHOZI = new Set(["ArrowLeft", "ArrowUp", "PageUp", "p"]);
+const PREVIOUS = new Set(["ArrowLeft", "ArrowUp", "PageUp", "p"]);
 
-export function klavesa(kod) {
-  if (typeof kod !== "string") {
+export function klavesa(code) {
+  if (typeof code !== "string") {
     return "";
   }
-  if (kod === "Escape") {
+  if (code === "Escape") {
     return "zavri";
   }
-  const malinko = kod.length === 1 ? kod.toLowerCase() : kod;
+  const malinko = code.length === 1 ? code.toLowerCase() : code;
   if (DALSI.has(malinko)) {
     return "dalsi";
   }
-  if (PREDCHOZI.has(malinko)) {
+  if (PREVIOUS.has(malinko)) {
     return "predchozi";
   }
   return "";
 }
 
-export function pozice(stav) {
-  if (!jePole(stav.slugy) || stav.slugy.length === 0) {
+export function pozice(state) {
+  if (!isArray(state.slugy) || state.slugy.length === 0) {
     return { cislo: 0, celkem: 0 };
   }
-  return { cislo: zabal(stav.index, stav.slugy.length) + 1, celkem: stav.slugy.length };
+  return { cislo: zabal(state.index, state.slugy.length) + 1, celkem: state.slugy.length };
 }
