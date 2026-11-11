@@ -96,6 +96,10 @@
     "cs": "Akce",
     "en": "Events"
   },
+  "galerie.filtr.kurzy": {
+    "cs": "Kurzy",
+    "en": "Courses"
+  },
   "galerie.filtr.zrusit": {
     "cs": "Zrušit filtry",
     "en": "Clear filters"

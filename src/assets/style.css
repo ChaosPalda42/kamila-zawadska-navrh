@@ -347,6 +347,10 @@ p:last-child { margin-bottom: 0; }
 }
 .filtry button:hover { color: var(--inkoust); }
 .filtry button[aria-pressed="true"] { color: var(--inkoust); box-shadow: inset 0 -1px 0 var(--zvyraz); }
+/* Kategorie, ke které ještě nic není: klientka ji chce mít vidět, ale filtr
+   by vedl do prázdné galerie, tak se na ni nedá kliknout. */
+.filtry button[disabled] { color: var(--tichy); opacity: 0.5; cursor: default; }
+.filtry button[disabled]:hover { color: var(--tichy); }
 .filtry .vysledek { font-size: 0.8rem; color: var(--tichy); }
 
 /* ---------- detail díla ---------- */

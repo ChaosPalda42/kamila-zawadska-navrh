@@ -1,5 +1,5 @@
 {
-  "_poznamka": "Ukázková data. Díla, ceny, termíny a texty jsou vymyšlené a reprodukce vygenerované. Skutečné od klientky: e-mail, Instagram, adresa ateliéru a portrét. ZÁSTUPNÉ zůstává: telefon (samé nuly) a odkaz na Facebook (vede na úvodní stránku FB) — klientka dodá číslo a adresu profilu.",
+  "_poznamka": "Ukázková data. Díla, ceny, termíny a texty jsou vymyšlené a reprodukce vygenerované. Skutečné od klientky: e-mail, Instagram, adresa ateliéru, portréty, kategorie filtrů a názvy obou kurzů. ZÁSTUPNÉ zůstává: telefon (samé nuly) a odkaz na Facebook (vede na úvodní stránku FB) — klientka dodá číslo a adresu profilu; u kurzů jsou vymyšlené popisy, ceny, kapacity i termíny.",
   "web": {
     "jmeno": "Kamila Zawadská",
     "domena": "kamilazawadska.com",
@@ -148,6 +148,11 @@
         "en": "Studio"
       }
     }
+  ],
+  "typyAkci": [
+    "vernisaz",
+    "vystava",
+    "atelier"
   ],
   "dila": [
     {
@@ -759,10 +764,31 @@
   ],
   "kurzy": [
     {
-      "id": "pyrografie-zacatecnici",
+      "id": "kurz-malby-akrylem",
       "nazev": {
-        "cs": "Pyrografie pro začátečníky",
-        "en": "Pyrography for beginners"
+        "cs": "Kurz malby akrylem",
+        "en": "Acrylic painting course"
+      },
+      "popis": {
+        "cs": "Dva dny o tom, jak si akryl srovnat v hlavě: podklad, vrstvy a kdy přestat.",
+        "en": "Two days on getting acrylic straight in your head: ground, layers and when to stop."
+      },
+      "delka": {
+        "cs": "2 × 5 hodin",
+        "en": "2 × 5 hours"
+      },
+      "kapacita": 5,
+      "cena": 4200,
+      "terminy": [
+        "2026-12-12",
+        "2027-01-16"
+      ]
+    },
+    {
+      "id": "kurz-pyrografie",
+      "nazev": {
+        "cs": "Kurz pyrografie",
+        "en": "Pyrography course"
       },
       "popis": {
         "cs": "Jeden den, jedna deska, jeden hrot. Odnesete si hotovou práci a vypálené prsty ne.",
@@ -775,48 +801,8 @@
       "kapacita": 6,
       "cena": 2400,
       "terminy": [
-        "2026-12-12",
-        "2027-01-16"
+        "2027-02-07"
       ]
-    },
-    {
-      "id": "malba-olejem",
-      "nazev": {
-        "cs": "Malba olejem od začátku",
-        "en": "Oil painting from scratch"
-      },
-      "popis": {
-        "cs": "Dva dny o tom, jak si olej srovnat v hlavě: podmalba, vrstvy, trpělivost.",
-        "en": "Two days on getting oil paint straight in your head: underpainting, layers, patience."
-      },
-      "delka": {
-        "cs": "2 × 5 hodin",
-        "en": "2 × 5 hours"
-      },
-      "kapacita": 5,
-      "cena": 4200,
-      "terminy": [
-        "2027-01-30",
-        "2027-02-27"
-      ]
-    },
-    {
-      "id": "individualne",
-      "nazev": {
-        "cs": "Individuálně v ateliéru",
-        "en": "One to one in the studio"
-      },
-      "popis": {
-        "cs": "Jen vy a jedna technika. Termín i téma po dohodě.",
-        "en": "Just you and one technique. Date and subject by arrangement."
-      },
-      "delka": {
-        "cs": "3 hodiny",
-        "en": "3 hours"
-      },
-      "kapacita": 1,
-      "cena": 1800,
-      "terminy": []
     }
   ],
   "doprava": [

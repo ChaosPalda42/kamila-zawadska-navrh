@@ -29,7 +29,8 @@ function dlazdice(dilo, o) {
   const cenovka = lzeKoupit(dilo) ? `<span class="cena">${korun(cena(dilo), jazyk)}</span>` : "";
   const link = kam || cestaDila(dilo.slug, jazyk);
   return `<li class="dlazdice" data-slug="${e(dilo.slug)}"
-data-technika="${e(dilo.technika || "")}" data-styl="${e(dilo.styl || "")}" data-album="${e(dilo.album || "")}">
+data-technika="${e(dilo.technika || "")}" data-styl="${e(dilo.styl || "")}" data-album="${e(dilo.album || "")}"
+data-akce="${e(dilo.akce || "")}" data-kurz="${e(dilo.kurz || "")}">
 <a href="${link}" data-otevri="${e(dilo.slug)}">
 <span class="ram">${odznak(dilo, texty, jazyk)}${obrazek(dilo.obrazek, altWorks(dilo, jazyk), { sloupcu, prednost })}</span>
 <span class="popis">
@@ -114,10 +115,30 @@ export function pocetDel(howMany, texty, jazyk) {
 
 /* ---------- the gallery ---------- */
 
+/* Counts for the two rows `pocty()` in src/lib/dila.mjs does not know. That
+   module is held line for line against its pre-translation original by
+   tests/test_dila.py, so a new key cannot be added to it; the gallery counts
+   those two itself. */
+function poctyRady(works, key) {
+  const result = { vse: works.length };
+  for (const work of works) {
+    const value = work[key];
+    if (!value) continue;
+    result[value] = (result[value] || 0) + 1;
+  }
+  return result;
+}
+
+/* One row of the gallery filter. A category with no works is shown as well --
+   the painter wants her whole range on the page, even the techniques that have
+   nothing for sale yet. It is only switched off, so the filter never leads to
+   an empty grid. */
 function filtrovaciRada(klic, titulek, seznam, pocetDle, texty, jazyk) {
-  const items = seznam
-    .filter((x) => pocetDle[x.id])
-    .map((x) => `<button type="button" data-klic="${klic}" data-hodnota="${e(x.id)}" aria-pressed="false">${e(pole(x.nazev, jazyk))} <span class="pocet">${pocetDle[x.id]}</span></button>`);
+  const items = seznam.map((x) => {
+    const kolik = pocetDle[x.id] || 0;
+    const jmeno = typeof x.nazev === "string" ? x.nazev : pole(x.nazev, jazyk);
+    return `<button type="button" data-klic="${klic}" data-hodnota="${e(x.id)}" aria-pressed="false"${kolik ? "" : " disabled"}>${e(jmeno)} <span class="pocet">${kolik}</span></button>`;
+  });
   if (!items.length) return "";
   return `<div class="filtry-rada">
 <span class="verzalky">${e(titulek)}</span>
@@ -163,7 +184,11 @@ function dataForViewer(works, texty, jazyk) {
 
 export function galerieStranka(o) {
   const { site, texty, jazyk } = o;
-  const works = vGalerii(site.dila);
+  /* The work carries an album; the event says what kind of occasion that album
+     was. The filter asks for the kind, so the type is put on the work here. */
+  const typAlbumu = new Map((site.udalosti || []).filter((u) => u.album).map((u) => [u.album, u.typ || ""]));
+  const works = vGalerii(site.dila).map((d) => ({ ...d, akce: typAlbumu.get(d.album) || "" }));
+  const typyAkci = (site.typyAkci || []).map((id) => ({ id, nazev: t(texty, "kalendar.typ." + id, jazyk) }));
   const telo = `
 <section>
 <h1>${e(t(texty, "galerie.titul", jazyk))}</h1>
@@ -173,7 +198,8 @@ export function galerieStranka(o) {
 <div class="filtry" data-filtry>
 ${filtrovaciRada("technika", t(texty, "galerie.filtr.technika", jazyk), site.techniky, pocty(works, "technika"), texty, jazyk)}
 ${filtrovaciRada("styl", t(texty, "galerie.filtr.styl", jazyk), site.styly, pocty(works, "styl"), texty, jazyk)}
-${filtrovaciRada("album", t(texty, "galerie.filtr.udalost", jazyk), site.albumy, pocty(works, "album"), texty, jazyk)}
+${filtrovaciRada("akce", t(texty, "galerie.filtr.udalost", jazyk), typyAkci, poctyRady(works, "akce"), texty, jazyk)}
+${filtrovaciRada("kurz", t(texty, "galerie.filtr.kurzy", jazyk), site.kurzy || [], poctyRady(works, "kurz"), texty, jazyk)}
 <p class="vysledek" data-vysledek data-tvary="${e(JSON.stringify(tvaryPoctu(texty, jazyk)))}">${works.length} ${e(pocetDel(works.length, texty, jazyk))}</p>
 </div>
 <ul class="mrizka ctverec" data-mrizka>${works.map((d, i) => dlazdice(d, { texty, jazyk, sloupcu: 3, prednost: i < 3 })).join("")}</ul>
