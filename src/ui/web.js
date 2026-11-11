@@ -155,7 +155,7 @@
       });
     }
 
-    var vybrano = { technika: "vse", styl: "vse", album: "vse" };
+    var vybrano = { technika: "vse", motiv: "vse", album: "vse" };
     var result = v("[data-vysledek]", panel);
     var nothing = v("[data-nic]");
     // The count's forms ("`dilo` / `dila` / `del`") came from the template;

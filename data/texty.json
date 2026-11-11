@@ -88,7 +88,7 @@
     "cs": "Technika",
     "en": "Technique"
   },
-  "galerie.filtr.styl": {
+  "galerie.filtr.motiv": {
     "cs": "Motiv",
     "en": "Motif"
   },
@@ -103,6 +103,10 @@
   "galerie.filtr.prepinac": {
     "cs": "Filtry",
     "en": "Filters"
+  },
+  "galerie.kurz": {
+    "cs": "Kurz",
+    "en": "Course"
   },
   "galerie.filtr.zrusit": {
     "cs": "Zrušit filtry",

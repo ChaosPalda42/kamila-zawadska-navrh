@@ -221,6 +221,22 @@ function errorsForViewer(texty, jazyk) {
   return `<script type="application/json" data-chyby>${JSON.stringify(dictionary).replace(/</g, "\\u003c")}</script>`;
 }
 
+/* The Instagram and Facebook marks, drawn as lines so they take the colour of
+   the text around them: no brand colours, nothing to download and they hold up
+   at the size of a word. Both are built out of the same rounded square, so the
+   pair sits quietly side by side. The name stays next to the mark -- a mark on
+   its own is a guessing game for whoever does not know it. */
+const MARKS = {
+  instagram: `<svg class="znacka" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2"/><circle cx="12" cy="12" r="4"/><circle class="tecka" cx="17.1" cy="6.9" r="1.05"/></svg>`,
+  facebook: `<svg class="znacka" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2"/><path d="M15.7 8.2h-1.3c-1.1 0-1.8.7-1.8 1.9v10.7"/><path d="M10.4 12.7h4.8"/></svg>`,
+};
+
+/** The links to the painter's two profiles, each with its mark. */
+export function odkazySite(site) {
+  return `<a href="${e(site.web.instagram)}" rel="noopener">${MARKS.instagram}Instagram</a>
+<a href="${e(site.web.facebook)}" rel="noopener">${MARKS.facebook}Facebook</a>`;
+}
+
 /**
  * The whole page.
  * @param {object} o
@@ -267,8 +283,7 @@ ${menu(aktivni, jazyk, texty, o.pocty)}
 <p class="verzalky">${e(t(texty, "kontakt.atelier", jazyk))}</p>
 <p>${e(pole(site.web["ateliér"].nazev, jazyk))}<br>${e(site.web["ateliér"].adresa)}</p>
 <div class="site">
-<a href="${e(site.web.instagram)}" rel="noopener">Instagram</a>
-<a href="${e(site.web.facebook)}" rel="noopener">Facebook</a>
+${odkazySite(site)}
 </div>
 </div>
 ${aktuality(site.udalosti, dnes, jazyk, texty)}

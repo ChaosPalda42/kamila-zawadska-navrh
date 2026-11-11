@@ -1,7 +1,7 @@
 /* The site's individual pages. Every function returns the content HTML; the
    wrapper (menu, news, footer) is added by `layout()`. */
 
-import { layout, e, ukazka, korun, ostryWeb, obrazek } from "./layout.mjs";
+import { layout, e, ukazka, korun, ostryWeb, obrazek, odkazySite } from "./layout.mjs";
 import { t, pole, cesta, cestaDila } from "../lib/preklad.mjs";
 import {
   galerie as vGalerii, eshop as vEshopu, filtr, podleSlugu, sousedi, pocty,
@@ -29,7 +29,7 @@ function dlazdice(dilo, o) {
   const cenovka = lzeKoupit(dilo) ? `<span class="cena">${korun(cena(dilo), jazyk)}</span>` : "";
   const link = kam || cestaDila(dilo.slug, jazyk);
   return `<li class="dlazdice" data-slug="${e(dilo.slug)}"
-data-technika="${e(dilo.technika || "")}" data-styl="${e(dilo.styl || "")}" data-album="${e(dilo.album || "")}"
+data-technika="${e(dilo.technika || "")}" data-motiv="${e(dilo.motiv || "")}" data-album="${e(dilo.album || "")}"
 data-akce="${e(dilo.akce || "")}" data-kurz="${e(dilo.kurz || "")}">
 <a href="${link}" data-otevri="${e(dilo.slug)}">
 <span class="ram">${odznak(dilo, texty, jazyk)}${obrazek(dilo.obrazek, altWorks(dilo, jazyk), { sloupcu, prednost })}</span>
@@ -115,10 +115,12 @@ export function pocetDel(howMany, texty, jazyk) {
 
 /* ---------- the gallery ---------- */
 
-/* Counts for the two rows `pocty()` in src/lib/dila.mjs does not know. That
-   module is held line for line against its pre-translation original by
-   tests/test_dila.py, so a new key cannot be added to it; the gallery counts
-   those two itself. */
+/* Counts for the rows `pocty()` in src/lib/dila.mjs does not know: the events,
+   the courses, and the motif since the key was renamed from `styl`. That module
+   is held line for line against its pre-translation original by
+   tests/test_dila.py -- strings have to survive untouched, so neither a new key
+   nor the new name can go in. Only the technique still comes from there; the
+   gallery counts the rest itself. */
 function poctyRady(works, key) {
   const result = { vse: works.length };
   for (const work of works) {
@@ -200,7 +202,7 @@ export function galerieStranka(o) {
 <div class="filtry-vyjezd" id="filtry-vyjezd">
 <div class="filtry-rady">
 ${filtrovaciRada("technika", t(texty, "galerie.filtr.technika", jazyk), site.techniky, pocty(works, "technika"), texty, jazyk)}
-${filtrovaciRada("styl", t(texty, "galerie.filtr.styl", jazyk), site.styly, pocty(works, "styl"), texty, jazyk)}
+${filtrovaciRada("motiv", t(texty, "galerie.filtr.motiv", jazyk), site.motivy, poctyRady(works, "motiv"), texty, jazyk)}
 ${filtrovaciRada("akce", t(texty, "galerie.filtr.udalost", jazyk), typyAkci, poctyRady(works, "akce"), texty, jazyk)}
 ${filtrovaciRada("kurz", t(texty, "galerie.filtr.kurzy", jazyk), site.kurzy || [], poctyRady(works, "kurz"), texty, jazyk)}
 </div>
@@ -223,12 +225,14 @@ export function diloStranka(o) {
   const vGal = vGalerii(site.dila);
   const sous = sousedi(vGal, dilo.slug);
   const technique = (site.techniky.find((x) => x.id === dilo.technika) || {}).nazev;
-  const style = (site.styly.find((x) => x.id === dilo.styl) || {}).nazev;
+  const motive = (site.motivy.find((x) => x.id === dilo.motiv) || {}).nazev;
   const album = site.albumy.find((x) => x.id === dilo.album);
+  const course = (site.kurzy || []).find((x) => x.id === dilo.kurz);
   const lines = [
     [t(texty, "galerie.filtr.technika", jazyk), technique ? pole(technique, jazyk) : ""],
-    [t(texty, "galerie.filtr.styl", jazyk), style ? pole(style, jazyk) : ""],
+    [t(texty, "galerie.filtr.motiv", jazyk), motive ? pole(motive, jazyk) : ""],
     [t(texty, "galerie.filtr.udalost", jazyk), album ? `${pole(album.nazev, jazyk)}, ${album.rok}` : ""],
+    [t(texty, "galerie.kurz", jazyk), course ? pole(course.nazev, jazyk) : ""],
     ["", dilo.rozmer],
     [t(texty, "stav." + dilo.stav, jazyk), lzeKoupit(dilo) ? korun(cena(dilo), jazyk) : ""],
   ].filter(([, value]) => value);
@@ -567,8 +571,7 @@ ${formFieldsMessage(t(texty, "kontakt.zprava", jazyk))}
 <a href="tel:${e(site.web.telefon.replace(/\s/g, ""))}">${e(site.web.telefon)}</a>
 </p>
 <p class="site">
-<a href="${e(site.web.instagram)}" rel="noopener">Instagram</a>
-<a href="${e(site.web.facebook)}" rel="noopener">Facebook</a>
+${odkazySite(site)}
 </p>
 ${map(site, texty, jazyk)}
 </div>

@@ -36,7 +36,8 @@ const CAPTIONS = {
     nazevCs: "Název česky", nazevEn: "Název anglicky",
     popisCs: "Popis česky", popisEn: "Popis anglicky",
     rok: "Rok", rozmer: "Rozměr (např. 60 × 40 cm)", cena: "Cena v korunách",
-    stav: "Stav", technika: "Technika", styl: "Styl", album: "Patří k akci",
+    stav: "Stav", technika: "Technika", motiv: "Motiv", album: "Patří k akci",
+    kurz: "Patří ke kurzu",
     kde: "Kde se obraz objeví", vGalerii: "V galerii", vEshopu: "V e-shopu k prodeji",
     fotky: "Fotky obrazu",
     pretahni: "Přetáhněte sem fotky, nebo je vyberte z počítače",
@@ -75,7 +76,8 @@ const CAPTIONS = {
     nazevCs: "Title in Czech", nazevEn: "Title in English",
     popisCs: "Description in Czech", popisEn: "Description in English",
     rok: "Year", rozmer: "Size (e.g. 60 × 40 cm)", cena: "Price in CZK",
-    stav: "Status", technika: "Technique", styl: "Style", album: "Belongs to event",
+    stav: "Status", technika: "Technique", motiv: "Motif", album: "Belongs to event",
+    kurz: "Belongs to a course",
     kde: "Where the work appears", vGalerii: "In the gallery", vEshopu: "For sale in the shop",
     fotky: "Photos of the work",
     pretahni: "Drop photos here, or pick them from your computer",
@@ -140,8 +142,9 @@ export function administraceStranka(o) {
   const L = (key) => p(jazyk, key);
   const states = STAVY.map((s) => `<option value="${e(s)}">${e(t(texty, "stav." + s, jazyk))}</option>`).join("");
   const techniques = site.techniky.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
-  const styles = site.styly.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
+  const motives = site.motivy.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
   const albumy = site.albumy.map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
+  const courseOptions = (site.kurzy || []).map((x) => `<option value="${e(x.id)}">${e(pole(x.nazev, jazyk))}</option>`).join("");
   const typy = ["vystava", "vernisaz", "atelier", "kurz"]
     .map((x) => `<option value="${x}">${e(t(texty, "kalendar.typ." + x, jazyk))}</option>`).join("");
 
@@ -189,9 +192,12 @@ ${policko("cena", L("cena"), "number")}
 </div>
 <div class="dvojice-rovnou">
 ${selection("technika", L("technika"), `<option value=""></option>${techniques}`)}
-${selection("styl", L("styl"), `<option value=""></option>${styles}`)}
+${selection("motiv", L("motiv"), `<option value=""></option>${motives}`)}
 </div>
+<div class="dvojice-rovnou">
 ${selection("album", L("album"), `<option value=""></option>${albumy}`)}
+${selection("kurz", L("kurz"), `<option value=""></option>${courseOptions}`)}
+</div>
 <div class="dvojice-rovnou">
 ${textField("popis", L("popisCs"))}
 ${textField("popisEn", L("popisEn"))}

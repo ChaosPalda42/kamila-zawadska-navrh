@@ -208,6 +208,12 @@ p:last-child { margin-bottom: 0; }
 .jazyky a[aria-current="true"] { color: var(--inkoust); border-bottom-color: var(--zvyraz); }
 
 .site { display: flex; gap: 0.9rem; font-family: var(--pismo); font-size: 0.78rem; }
+/* Značky Instagramu a Facebooku jsou kreslené čarami a berou barvu textu —
+   proto `currentColor` a žádná vlastní barva. Velikost je v em, aby rostly
+   s písmem vedle sebe. */
+.site a { display: inline-flex; align-items: center; gap: 0.45em; }
+.znacka { width: 1.2em; height: 1.2em; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.znacka .tecka { fill: currentColor; stroke: none; }
 
 /* Lišta aktualit: rotuje 2–3 nejnovější akce (přepis 03:54).
    Bez JS zůstane vidět první — proto je první položka viditelná ze stylu

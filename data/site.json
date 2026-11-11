@@ -1,5 +1,5 @@
 {
-  "_poznamka": "Ukázková data. Díla, ceny, termíny a texty jsou vymyšlené a reprodukce vygenerované. Skutečné od klientky: e-mail, Instagram, adresa ateliéru, portréty, kategorie filtrů a názvy obou kurzů. ZÁSTUPNÉ zůstává: telefon (samé nuly) a odkaz na Facebook (vede na úvodní stránku FB) — klientka dodá číslo a adresu profilu; u kurzů jsou vymyšlené popisy, ceny, kapacity i termíny.",
+  "_poznamka": "Ukázková data. Díla, ceny, termíny a texty jsou vymyšlené a reprodukce vygenerované. Skutečné od klientky: e-mail, Instagram, adresa ateliéru, portréty, kategorie filtrů a názvy obou kurzů. ZÁSTUPNÉ zůstává: telefon (samé nuly) a odkaz na Facebook (vede na úvodní stránku FB) — klientka dodá číslo a adresu profilu; u kurzů jsou vymyšlené popisy, ceny, kapacity i termíny a vymyšlené je i to, že čtyři díla (Sova, Les po dešti, Velká vlna, Horizont II) vznikla v kurzu — je to jen proto, aby filtr Kurzy v ukázce nebyl prázdný, než klientka dodá fotky z kurzů.",
   "web": {
     "jmeno": "Kamila Zawadská",
     "domena": "kamilazawadska.com",
@@ -55,7 +55,7 @@
       }
     }
   ],
-  "styly": [
+  "motivy": [
     {
       "id": "symbolika",
       "nazev": {
@@ -162,8 +162,9 @@
         "en": "Morning over the Vltava"
       },
       "technika": "malba",
-      "styl": "priroda",
+      "motiv": "priroda",
       "album": "pragovka-2026",
+      "kurz": "",
       "rok": 2026,
       "rozmer": "120 × 80 cm",
       "cena": 42000,
@@ -187,8 +188,9 @@
         "en": "Two Hands"
       },
       "technika": "malba",
-      "styl": "clovek",
+      "motiv": "clovek",
       "album": "ruce-2024",
+      "kurz": "",
       "rok": 2024,
       "rozmer": "70 × 50 cm",
       "cena": 28000,
@@ -212,8 +214,9 @@
         "en": "Flower in the Window"
       },
       "technika": "malba",
-      "styl": "kvetina",
+      "motiv": "kvetina",
       "album": "chvalsky-zamek-2025",
+      "kurz": "",
       "rok": 2025,
       "rozmer": "60 × 60 cm",
       "cena": 19500,
@@ -237,8 +240,9 @@
         "en": "Horizon I"
       },
       "technika": "malba",
-      "styl": "abstrakce",
+      "motiv": "abstrakce",
       "album": "pragovka-2026",
+      "kurz": "",
       "rok": 2026,
       "rozmer": "100 × 100 cm",
       "cena": 36000,
@@ -262,8 +266,9 @@
         "en": "Horizon II"
       },
       "technika": "malba",
-      "styl": "abstrakce",
+      "motiv": "abstrakce",
       "album": "pragovka-2026",
+      "kurz": "kurz-malby-akrylem",
       "rok": 2026,
       "rozmer": "100 × 100 cm",
       "cena": 36000,
@@ -287,8 +292,9 @@
         "en": "Owl"
       },
       "technika": "pyrografie",
-      "styl": "zvire",
+      "motiv": "zvire",
       "album": "atelier",
+      "kurz": "kurz-pyrografie",
       "rok": 2026,
       "rozmer": "40 × 30 cm",
       "cena": 8900,
@@ -312,8 +318,9 @@
         "en": "Forest after Rain"
       },
       "technika": "pyrografie",
-      "styl": "priroda",
+      "motiv": "priroda",
       "album": "atelier",
+      "kurz": "kurz-pyrografie",
       "rok": 2025,
       "rozmer": "50 × 35 cm",
       "cena": 11500,
@@ -337,8 +344,9 @@
         "en": "Portrait of M."
       },
       "technika": "kresba",
-      "styl": "clovek",
+      "motiv": "clovek",
       "album": "ruce-2024",
+      "kurz": "",
       "rok": 2024,
       "rozmer": "42 × 30 cm",
       "cena": 0,
@@ -362,8 +370,9 @@
         "en": "Still Life with Mugs"
       },
       "technika": "malba",
-      "styl": "symbolika",
+      "motiv": "symbolika",
       "album": "chvalsky-zamek-2025",
+      "kurz": "",
       "rok": 2025,
       "rozmer": "50 × 40 cm",
       "cena": 15000,
@@ -387,8 +396,9 @@
         "en": "Bridge"
       },
       "technika": "malba",
-      "styl": "priroda",
+      "motiv": "priroda",
       "album": "pragovka-2026",
+      "kurz": "",
       "rok": 2026,
       "rozmer": "140 × 90 cm",
       "cena": 54000,
@@ -412,8 +422,9 @@
         "en": "Night in the Studio"
       },
       "technika": "malba",
-      "styl": "abstrakce",
+      "motiv": "abstrakce",
       "album": "atelier",
+      "kurz": "",
       "rok": 2026,
       "rozmer": "80 × 60 cm",
       "cena": 24000,
@@ -437,8 +448,9 @@
         "en": "Hand with an Apple"
       },
       "technika": "malba",
-      "styl": "clovek",
+      "motiv": "clovek",
       "album": "ruce-2024",
+      "kurz": "",
       "rok": 2024,
       "rozmer": "60 × 45 cm",
       "cena": 21000,
@@ -462,8 +474,9 @@
         "en": "Field in January"
       },
       "technika": "malba",
-      "styl": "priroda",
+      "motiv": "priroda",
       "album": "chvalsky-zamek-2025",
+      "kurz": "",
       "rok": 2025,
       "rozmer": "90 × 70 cm",
       "cena": 26000,
@@ -487,8 +500,9 @@
         "en": "Drapery Study"
       },
       "technika": "kresba",
-      "styl": "symbolika",
+      "motiv": "symbolika",
       "album": "atelier",
+      "kurz": "",
       "rok": 2026,
       "rozmer": "50 × 35 cm",
       "cena": 4800,
@@ -512,8 +526,9 @@
         "en": "Opening at Pragovka"
       },
       "technika": "",
-      "styl": "",
+      "motiv": "",
       "album": "pragovka-2026",
+      "kurz": "",
       "rok": 2026,
       "rozmer": "",
       "cena": 0,
@@ -537,8 +552,9 @@
         "en": "Installation at Chvaly Castle"
       },
       "technika": "",
-      "styl": "",
+      "motiv": "",
       "album": "chvalsky-zamek-2025",
+      "kurz": "",
       "rok": 2025,
       "rozmer": "",
       "cena": 0,
@@ -562,8 +578,9 @@
         "en": "Hand Drawing I"
       },
       "technika": "kresba",
-      "styl": "clovek",
+      "motiv": "clovek",
       "album": "ruce-2024",
+      "kurz": "",
       "rok": 2024,
       "rozmer": "30 × 21 cm",
       "cena": 3200,
@@ -587,8 +604,9 @@
         "en": "The Big Wave"
       },
       "technika": "malba",
-      "styl": "abstrakce",
+      "motiv": "abstrakce",
       "album": "atelier",
+      "kurz": "kurz-malby-akrylem",
       "rok": 2026,
       "rozmer": "160 × 110 cm",
       "cena": 68000,

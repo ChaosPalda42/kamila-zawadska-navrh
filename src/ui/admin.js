@@ -359,8 +359,9 @@
     f.cena.value = work && typeof work.cena === "number" ? work.cena : "";
     f.stav.value = (work && work.stav) || "v-prodeji";
     f.technika.value = (work && work.technika) || "";
-    f.styl.value = (work && work.styl) || "";
+    f.motiv.value = (work && work.motiv) || "";
     f.album.value = (work && work.album) || "";
+    f.kurz.value = (work && work.kurz) || "";
     f.popis.value = cs(work && work.popis);
     f.popisEn.value = en(work && work.popis);
     f.vGalerii.checked = work ? work.vGalerii === true : true;
@@ -422,8 +423,9 @@
         slug: slug,
         nazev: dvojjazycne(nameCs, f.nazevEn.value.trim()),
         technika: f.technika.value,
-        styl: f.styl.value,
+        motiv: f.motiv.value,
         album: f.album.value,
+        kurz: f.kurz.value,
         rok: number(f.rok.value),
         rozmer: f.rozmer.value.trim(),
         cena: number(f.cena.value),

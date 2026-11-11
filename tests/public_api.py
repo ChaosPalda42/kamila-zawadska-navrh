@@ -224,6 +224,7 @@ PUBLIC_API: dict[str, tuple[str, ...]] = {
         "nastavOstry",
         "nastavOtisk",
         "obrazek",
+        "odkazySite",
         "ostryWeb",
         "pole",
         "poradi",
